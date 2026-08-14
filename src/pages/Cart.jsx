@@ -1,8 +1,15 @@
 import { Link } from "react-router-dom";
-import { Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
+import {
+  Trash2,
+  Plus,
+  Minus,
+  ShoppingBag,
+  ArrowRight,
+} from "lucide-react";
 
 function Cart({ cart, setCart }) {
-  const updateQuantity = (id, change) => {
+  // Increase / decrease quantity
+  function updateQuantity(id, change) {
     setCart((current) =>
       current
         .map((item) =>
@@ -17,34 +24,46 @@ function Cart({ cart, setCart }) {
             : item
         )
     );
-  };
+  }
 
-  const removeItem = (id) => {
+  // Remove product
+  function removeItem(id) {
     setCart((current) =>
       current.filter((item) => item.id !== id)
     );
-  };
+  }
 
+  // Calculate subtotal
   const subtotal = cart.reduce(
     (total, item) =>
       total + item.price * item.quantity,
     0
   );
 
+  // Free shipping above ₹999
   const shipping =
     subtotal >= 999 || subtotal === 0
       ? 0
       : 99;
 
+  // Final total
   const total = subtotal + shipping;
 
+  // Total number of products
+  const totalItems = cart.reduce(
+    (total, item) =>
+      total + item.quantity,
+    0
+  );
+
+  // Empty cart
   if (cart.length === 0) {
     return (
       <div className="cart-page">
 
         <div className="empty-cart">
 
-          <ShoppingBag size={55} />
+          <ShoppingBag size={60} />
 
           <h1>Your Cart Is Empty</h1>
 
@@ -58,6 +77,7 @@ function Cart({ cart, setCart }) {
             className="continue-shopping"
           >
             Continue Shopping
+            <ArrowRight size={18} />
           </Link>
 
         </div>
@@ -71,27 +91,33 @@ function Cart({ cart, setCart }) {
 
       <div className="cart-container">
 
+        {/* HEADER */}
+
         <div className="cart-header">
 
           <div>
             <p>YOUR BAG</p>
-            <h1>Shopping Cart</h1>
+
+            <h1>
+              Shopping Cart
+            </h1>
           </div>
 
           <span>
-            {cart.reduce(
-              (total, item) =>
-                total + item.quantity,
-              0
-            )}{" "}
-            items
+            {totalItems}{" "}
+            {totalItems === 1
+              ? "item"
+              : "items"}
           </span>
 
         </div>
 
+
+        {/* MAIN CART */}
+
         <div className="cart-layout">
 
-          {/* CART PRODUCTS */}
+          {/* PRODUCTS */}
 
           <div className="cart-products">
 
@@ -102,22 +128,35 @@ function Cart({ cart, setCart }) {
                 key={item.id}
               >
 
-                <img
-                  src={item.image}
-                  alt={item.name}
-                />
+                {/* PRODUCT IMAGE */}
+
+                <Link
+                  to={`/product/${item.id}`}
+                >
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                  />
+                </Link>
+
+
+                {/* PRODUCT INFORMATION */}
 
                 <div className="cart-item-info">
 
                   <Link
                     to={`/product/${item.id}`}
                   >
-                    <h3>{item.name}</h3>
+                    <h3>
+                      {item.name}
+                    </h3>
                   </Link>
 
-                  <p>
-                    {item.category}
-                  </p>
+                  {item.category && (
+                    <p>
+                      {item.category}
+                    </p>
+                  )}
 
                   <strong>
                     ₹
@@ -126,11 +165,18 @@ function Cart({ cart, setCart }) {
                     )}
                   </strong>
 
+
+                  {/* ACTIONS */}
+
                   <div className="cart-item-actions">
+
+                    {/* QUANTITY */}
 
                     <div className="quantity-control">
 
                       <button
+                        type="button"
+                        aria-label="Decrease quantity"
                         onClick={() =>
                           updateQuantity(
                             item.id,
@@ -146,6 +192,8 @@ function Cart({ cart, setCart }) {
                       </span>
 
                       <button
+                        type="button"
+                        aria-label="Increase quantity"
                         onClick={() =>
                           updateQuantity(
                             item.id,
@@ -158,7 +206,11 @@ function Cart({ cart, setCart }) {
 
                     </div>
 
+
+                    {/* REMOVE */}
+
                     <button
+                      type="button"
                       className="remove-item"
                       onClick={() =>
                         removeItem(item.id)
@@ -171,6 +223,9 @@ function Cart({ cart, setCart }) {
                   </div>
 
                 </div>
+
+
+                {/* ITEM TOTAL */}
 
                 <div className="cart-item-total">
 
@@ -188,6 +243,9 @@ function Cart({ cart, setCart }) {
 
             ))}
 
+
+            {/* CONTINUE SHOPPING */}
+
             <Link
               to="/shop"
               className="continue-shopping"
@@ -197,15 +255,23 @@ function Cart({ cart, setCart }) {
 
           </div>
 
+
           {/* ORDER SUMMARY */}
 
           <div className="cart-summary">
 
-            <h2>Order Summary</h2>
+            <h2>
+              Order Summary
+            </h2>
+
+
+            {/* SUBTOTAL */}
 
             <div className="summary-row">
 
-              <span>Subtotal</span>
+              <span>
+                Subtotal
+              </span>
 
               <strong>
                 ₹
@@ -216,9 +282,14 @@ function Cart({ cart, setCart }) {
 
             </div>
 
+
+            {/* SHIPPING */}
+
             <div className="summary-row">
 
-              <span>Shipping</span>
+              <span>
+                Shipping
+              </span>
 
               <strong>
                 {shipping === 0
@@ -228,11 +299,17 @@ function Cart({ cart, setCart }) {
 
             </div>
 
+
             <div className="summary-line" />
+
+
+            {/* TOTAL */}
 
             <div className="summary-total">
 
-              <span>Total</span>
+              <span>
+                Total
+              </span>
 
               <strong>
                 ₹
@@ -243,16 +320,31 @@ function Cart({ cart, setCart }) {
 
             </div>
 
+
+            {/* CHECKOUT */}
+
             <Link
-  to="/checkout"
-  className="checkout-button"
->
-  Proceed to Checkout
-</Link>
+              to="/checkout"
+              className="checkout-button"
+            >
+              Proceed to Checkout
+              <ArrowRight size={18} />
+            </Link>
+
+
+            {/* SHIPPING MESSAGE */}
 
             <p className="shipping-note">
-              🚚 Free shipping on orders
-              above ₹999
+
+              🚚{" "}
+              {subtotal >= 999
+                ? "You unlocked FREE shipping!"
+                : `Add ₹${(
+                    999 - subtotal
+                  ).toLocaleString(
+                    "en-IN"
+                  )} more for FREE shipping`}
+
             </p>
 
           </div>

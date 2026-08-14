@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import {
   BrowserRouter,
   Routes,
@@ -12,14 +13,25 @@ import {
   ShoppingBag,
   Menu,
   ArrowRight,
+  User,
 } from "lucide-react";
 
 import Shop from "./pages/Shop";
 import Product from "./pages/Product";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import Orders from "./pages/Orders";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Wishlist from "./pages/Wishlist";
+import Account from "./pages/Account";
 
 import "./index.css";
+
+
+/* =========================================================
+   PRODUCTS
+========================================================= */
 
 const products = [
   {
@@ -52,19 +64,18 @@ const products = [
   },
 ];
 
-function Home({ cart, addToCart }) {
-  const [wishlist, setWishlist] = useState([]);
 
-  function toggleWishlist(id) {
-    setWishlist((current) => {
-      if (current.includes(id)) {
-        return current.filter((item) => item !== id);
-      }
+/* =========================================================
+   HOME PAGE
+========================================================= */
 
-      return [...current, id];
-    });
-  }
-
+function Home({
+  cart,
+  addToCart,
+  user,
+  wishlist,
+  toggleWishlist,
+}) {
   return (
     <div className="app">
 
@@ -77,30 +88,103 @@ function Home({ cart, addToCart }) {
         </Link>
 
         <nav className="nav-links">
-          <Link to="/">Home</Link>
-          <Link to="/shop">Men</Link>
-          <Link to="/shop">Women</Link>
-          <Link to="/shop">Kids</Link>
-          <Link to="/shop">New Arrivals</Link>
 
-          <Link to="/shop" className="sale">
+          <Link to="/">
+            Home
+          </Link>
+
+          <Link to="/shop">
+            Men
+          </Link>
+
+          <Link to="/shop">
+            Women
+          </Link>
+
+          <Link to="/shop">
+            Kids
+          </Link>
+
+          <Link to="/shop">
+            New Arrivals
+          </Link>
+
+          <Link
+            to="/shop"
+            className="sale"
+          >
             Sale
           </Link>
+
         </nav>
+
 
         <div className="nav-actions">
 
-          <Link to="/shop" className="nav-button">
+          {/* SEARCH */}
+
+          <Link
+            to="/shop"
+            className="nav-button"
+            title="Search"
+          >
             <Search size={20} />
           </Link>
 
-          <button className="nav-button">
+
+          {/* ACCOUNT */}
+
+          <Link
+            to="/account"
+            className="nav-button"
+            title="My Account"
+          >
+            <User size={20} />
+          </Link>
+
+
+          {/* WISHLIST */}
+
+          <Link
+            to="/wishlist"
+            className="nav-button"
+            title="Wishlist"
+          >
             <Heart size={20} />
-          </button>
+
+            {wishlist.length > 0 && (
+              <span className="cart-count">
+                {wishlist.length}
+              </span>
+            )}
+          </Link>
+
+
+          {/* USER */}
+
+          {user && (
+            <span className="user-name">
+              👤 {user.name}
+            </span>
+          )}
+
+
+          {!user && (
+            <Link
+              to="/login"
+              className="login-link"
+            >
+              Login
+            </Link>
+          )}
+
+
+          {/* CART */}
 
           <Link
             to="/cart"
             className="nav-button cart-button"
+            title="Cart"
           >
             <ShoppingBag size={20} />
 
@@ -115,13 +199,20 @@ function Home({ cart, addToCart }) {
             )}
           </Link>
 
-          <button className="nav-button mobile-menu">
+
+          {/* MOBILE MENU */}
+
+          <button
+            className="nav-button mobile-menu"
+            type="button"
+          >
             <Menu size={20} />
           </button>
 
         </div>
 
       </header>
+
 
       {/* HERO */}
 
@@ -156,6 +247,7 @@ function Home({ cart, addToCart }) {
 
       </section>
 
+
       {/* CATEGORIES */}
 
       <section className="categories">
@@ -163,79 +255,114 @@ function Home({ cart, addToCart }) {
         <div className="section-header">
 
           <div>
-            <p>EXPLORE</p>
+
+            <p>
+              EXPLORE
+            </p>
 
             <h2>
               Shop By Category
             </h2>
+
           </div>
 
           <Link to="/shop">
+
             View All
+
             <ArrowRight size={16} />
+
           </Link>
 
         </div>
 
+
         <div className="category-grid">
+
+          {/* WOMEN */}
 
           <Link
             to="/shop"
             className="category-card"
           >
+
             <img
               src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=85"
               alt="Women fashion"
             />
 
             <div className="category-overlay">
-              <h3>Women</h3>
+
+              <h3>
+                Women
+              </h3>
 
               <span>
                 Explore Collection →
               </span>
+
             </div>
+
           </Link>
+
+
+          {/* MEN */}
 
           <Link
             to="/shop"
             className="category-card"
           >
+
             <img
               src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=85"
               alt="Men fashion"
             />
 
             <div className="category-overlay">
-              <h3>Men</h3>
+
+              <h3>
+                Men
+              </h3>
 
               <span>
                 Explore Collection →
               </span>
+
             </div>
+
           </Link>
+
+
+          {/* ACCESSORIES */}
 
           <Link
             to="/shop"
             className="category-card"
           >
+
             <img
               src="https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?auto=format&fit=crop&w=900&q=85"
               alt="Fashion accessories"
             />
 
             <div className="category-overlay">
-              <h3>Accessories</h3>
+
+              <h3>
+                Accessories
+              </h3>
 
               <span>
                 Explore Collection →
               </span>
+
             </div>
+
           </Link>
 
         </div>
 
       </section>
+
 
       {/* FEATURED PRODUCTS */}
 
@@ -244,28 +371,39 @@ function Home({ cart, addToCart }) {
         <div className="section-header">
 
           <div>
-            <p>OUR PICKS</p>
+
+            <p>
+              OUR PICKS
+            </p>
 
             <h2>
               Featured Products
             </h2>
+
           </div>
 
           <Link to="/shop">
+
             Shop All
+
             <ArrowRight size={16} />
+
           </Link>
 
         </div>
+
 
         <div className="product-grid">
 
           {products.map((product) => {
 
-            const liked =
-              wishlist.includes(product.id);
+            const liked = wishlist.some(
+              (item) =>
+                item.id === product.id
+            );
 
             return (
+
               <div
                 className="product-card"
                 key={product.id}
@@ -276,18 +414,25 @@ function Home({ cart, addToCart }) {
                   <Link
                     to={`/product/${product.id}`}
                   >
+
                     <img
                       src={product.image}
                       alt={product.name}
                     />
+
                   </Link>
+
+
+                  {/* WISHLIST */}
 
                   <button
                     className="wishlist-button"
+                    type="button"
                     onClick={() =>
-                      toggleWishlist(product.id)
+                      toggleWishlist(product)
                     }
                   >
+
                     <Heart
                       size={20}
                       fill={
@@ -296,28 +441,39 @@ function Home({ cart, addToCart }) {
                           : "none"
                       }
                     />
+
                   </button>
+
+
+                  {/* ADD TO CART */}
 
                   <button
                     className="add-cart-button"
+                    type="button"
                     onClick={() =>
                       addToCart(product)
                     }
                   >
+
                     <ShoppingBag size={17} />
+
                     Add to Cart
+
                   </button>
 
                 </div>
+
 
                 <div className="product-info">
 
                   <Link
                     to={`/product/${product.id}`}
                   >
+
                     <h3>
                       {product.name}
                     </h3>
+
                   </Link>
 
                   <p>
@@ -330,6 +486,7 @@ function Home({ cart, addToCart }) {
                 </div>
 
               </div>
+
             );
           })}
 
@@ -341,42 +498,558 @@ function Home({ cart, addToCart }) {
   );
 }
 
+
+/* =========================================================
+   APP
+========================================================= */
+
 function App() {
+
+  /* =======================================================
+     CART
+  ======================================================= */
+
   const [cart, setCart] = useState([]);
 
-  function addToCart(product) {
-    setCart((current) => {
 
-      const existing = current.find(
-        (item) => item.id === product.id
-      );
+  /* =======================================================
+     USER
+  ======================================================= */
 
-      if (existing) {
-        return current.map((item) =>
-          item.id === product.id
-            ? {
-                ...item,
-                quantity:
-                  item.quantity + 1,
-              }
-            : item
-        );
+  const [user, setUser] = useState(() => {
+
+    try {
+
+      const savedUser =
+        localStorage.getItem("novaUser");
+
+      return savedUser
+        ? JSON.parse(savedUser)
+        : null;
+
+    } catch {
+
+      return null;
+
+    }
+
+  });
+
+
+  /* =======================================================
+     ORDERS
+     Orders are stored separately for every account.
+  ======================================================= */
+
+  const [orders, setOrders] = useState(() => {
+
+    try {
+
+      const savedUser =
+        localStorage.getItem("novaUser");
+
+      if (!savedUser) {
+        return [];
       }
 
+      const currentUser =
+        JSON.parse(savedUser);
+
+      if (!currentUser?.email) {
+        return [];
+      }
+
+      const email =
+        currentUser.email
+          .toLowerCase()
+          .trim();
+
+      const orderKey =
+        `novaOrders_${email}`;
+
+      const savedOrders =
+        localStorage.getItem(orderKey);
+
+      return savedOrders
+        ? JSON.parse(savedOrders)
+        : [];
+
+    } catch {
+
+      return [];
+
+    }
+
+  });
+
+
+  /* =======================================================
+     WISHLIST
+     Wishlist is stored separately for every account.
+  ======================================================= */
+
+  const [wishlist, setWishlist] = useState(() => {
+
+    try {
+
+      const savedUser =
+        localStorage.getItem("novaUser");
+
+      if (!savedUser) {
+        return [];
+      }
+
+      const currentUser =
+        JSON.parse(savedUser);
+
+      if (!currentUser?.email) {
+        return [];
+      }
+
+      const email =
+        currentUser.email
+          .toLowerCase()
+          .trim();
+
+      const wishlistKey =
+        `novaWishlist_${email}`;
+
+      const savedWishlist =
+        localStorage.getItem(wishlistKey);
+
+      return savedWishlist
+        ? JSON.parse(savedWishlist)
+        : [];
+
+    } catch {
+
+      return [];
+
+    }
+
+  });
+
+
+  /* =======================================================
+     LOGIN
+  ======================================================= */
+
+  /* =======================================================
+   LOGIN
+======================================================= */
+
+function handleLogin(userData) {
+  const email = userData?.email
+    ?.toLowerCase()
+    .trim();
+
+  const loggedInUser = {
+    ...userData,
+    email,
+  };
+
+  localStorage.setItem(
+    "novaUser",
+    JSON.stringify(loggedInUser)
+  );
+
+  setUser(loggedInUser);
+
+
+  /* LOAD WISHLIST */
+
+  const wishlistKey =
+    `novaWishlist_${email}`;
+
+  try {
+    const savedWishlist =
+      localStorage.getItem(wishlistKey);
+
+    setWishlist(
+      savedWishlist
+        ? JSON.parse(savedWishlist)
+        : []
+    );
+  } catch {
+    setWishlist([]);
+  }
+
+
+  /* LOAD ORDERS */
+
+  const orderKey =
+    `novaOrders_${email}`;
+
+  try {
+    const savedOrders =
+      localStorage.getItem(orderKey);
+
+    setOrders(
+      savedOrders
+        ? JSON.parse(savedOrders)
+        : []
+    );
+  } catch {
+    setOrders([]);
+  }
+
+
+  /* CLEAR CART */
+
+  setCart([]);
+}
+
+
+  /* =======================================================
+     REGISTER
+  ======================================================= */
+
+  function handleRegister(userData) {
+
+    const email =
+      userData?.email
+        ?.toLowerCase()
+        .trim();
+
+    const registeredUser = {
+      ...userData,
+      email,
+    };
+
+
+    /* SAVE USER */
+
+    localStorage.setItem(
+      "novaUser",
+      JSON.stringify(registeredUser)
+    );
+
+
+    /* SET USER */
+
+    setUser(registeredUser);
+
+
+    /* NEW ACCOUNT = EMPTY WISHLIST */
+
+    setWishlist([]);
+
+
+    /* NEW ACCOUNT = EMPTY ORDERS */
+
+    setOrders([]);
+
+
+    /* NEW ACCOUNT = EMPTY CART */
+
+    setCart([]);
+
+  }
+
+
+  /* =======================================================
+     LOGOUT
+  ======================================================= */
+
+  function handleLogout() {
+
+    /* REMOVE LOGIN */
+
+    localStorage.removeItem(
+      "novaUser"
+    );
+
+
+    /* CLEAR USER */
+
+    setUser(null);
+
+
+    /* CLEAR WISHLIST FROM SCREEN */
+
+    setWishlist([]);
+
+
+    /* CLEAR ORDERS FROM SCREEN */
+
+    setOrders([]);
+
+
+    /* CLEAR CART */
+
+    setCart([]);
+
+  }
+
+
+  /* =======================================================
+     ADD TO CART
+  ======================================================= */
+
+  function addToCart(product) {
+
+    setCart((current) => {
+
+      const existing =
+        current.find(
+          (item) =>
+            item.id === product.id
+        );
+
+
+      if (existing) {
+
+        return current.map(
+          (item) =>
+            item.id === product.id
+              ? {
+                  ...item,
+                  quantity:
+                    item.quantity + 1,
+                }
+              : item
+        );
+
+      }
+
+
       return [
+
         ...current,
+
         {
           ...product,
           quantity: 1,
         },
+
       ];
+
     });
+
   }
 
+
+  /* =======================================================
+     CLEAR CART
+  ======================================================= */
+
+  function clearCart() {
+
+    setCart([]);
+
+  }
+
+
+  /* =======================================================
+     CREATE ORDER
+     
+     IMPORTANT:
+     Orders are saved using the logged-in user's email.
+  ======================================================= */
+
+  /* =========================================================
+   CREATE ORDER
+   SAVE ORDER FOR CURRENT USER
+========================================================= */
+
+/* =========================================================
+   CREATE ORDER
+   SAVE ORDER FOR CURRENT USER
+========================================================= */
+
+function createOrder(orderDetails = {}) {
+  if (!user?.email) {
+    alert("Please login before placing an order.");
+    return null;
+  }
+
+  if (cart.length === 0) {
+    return null;
+  }
+
+  const email = user.email
+    .toLowerCase()
+    .trim();
+
+  const orderKey = `novaOrders_${email}`;
+
+  const total = cart.reduce(
+    (sum, item) =>
+      sum + item.price * item.quantity,
+    0
+  );
+
+  const newOrder = {
+    id: `NOVA-${Date.now()}`,
+
+    date: new Date().toLocaleDateString(
+      "en-IN"
+    ),
+
+    status: "Order Confirmed",
+
+    items: cart.map((item) => ({
+      ...item,
+    })),
+
+    total: total,
+
+    customer:
+      orderDetails.customer || {},
+
+    paymentMethod:
+      orderDetails.paymentMethod || "cod",
+  };
+
+
+  /* ADD ORDER TO CURRENT USER'S ORDERS */
+
+  setOrders((current) => {
+    const updatedOrders = [
+      ...current,
+      newOrder,
+    ];
+
+    /* SAVE ONLY FOR THIS USER */
+
+    localStorage.setItem(
+      orderKey,
+      JSON.stringify(updatedOrders)
+    );
+
+    return updatedOrders;
+  });
+
+  return newOrder;
+}
+
+
+  /* =======================================================
+     REMOVE FROM WISHLIST
+  ======================================================= */
+
+  function removeFromWishlist(
+    productId
+  ) {
+
+    if (!user?.email) {
+      return;
+    }
+
+
+    const email =
+      user.email
+        .toLowerCase()
+        .trim();
+
+
+    const wishlistKey =
+      `novaWishlist_${email}`;
+
+
+    setWishlist((current) => {
+
+      const updatedWishlist =
+        current.filter(
+          (item) =>
+            item.id !== productId
+        );
+
+
+      localStorage.setItem(
+        wishlistKey,
+        JSON.stringify(
+          updatedWishlist
+        )
+      );
+
+
+      return updatedWishlist;
+
+    });
+
+  }
+
+
+  /* =======================================================
+     TOGGLE WISHLIST
+  ======================================================= */
+
+  function toggleWishlist(product) {
+
+    /* LOGIN REQUIRED */
+
+    if (!user?.email) {
+
+      alert(
+        "Please login to add products to your wishlist."
+      );
+
+      return;
+
+    }
+
+
+    const email =
+      user.email
+        .toLowerCase()
+        .trim();
+
+
+    const wishlistKey =
+      `novaWishlist_${email}`;
+
+
+    setWishlist((current) => {
+
+      const exists =
+        current.some(
+          (item) =>
+            item.id === product.id
+        );
+
+
+      const updatedWishlist =
+        exists
+
+          ? current.filter(
+              (item) =>
+                item.id !== product.id
+            )
+
+          : [
+              ...current,
+              product,
+            ];
+
+
+      /* SAVE ONLY FOR CURRENT USER */
+
+      localStorage.setItem(
+        wishlistKey,
+        JSON.stringify(
+          updatedWishlist
+        )
+      );
+
+
+      return updatedWishlist;
+
+    });
+
+  }
+
+
+  /* =======================================================
+     ROUTES
+  ======================================================= */
+
   return (
+
     <BrowserRouter>
 
       <Routes>
+
 
         {/* HOME */}
 
@@ -386,9 +1059,15 @@ function App() {
             <Home
               cart={cart}
               addToCart={addToCart}
+              user={user}
+              wishlist={wishlist}
+              toggleWishlist={
+                toggleWishlist
+              }
             />
           }
         />
+
 
         {/* SHOP */}
 
@@ -400,12 +1079,7 @@ function App() {
             />
           }
         />
-        <Route
-  path="/checkout"
-  element={
-    <Checkout cart={cart} />
-  }
-/>
+
 
         {/* PRODUCT */}
 
@@ -417,6 +1091,7 @@ function App() {
             />
           }
         />
+
 
         {/* CART */}
 
@@ -430,10 +1105,94 @@ function App() {
           }
         />
 
+
+        {/* CHECKOUT */}
+
+        <Route
+          path="/checkout"
+          element={
+            <Checkout
+              cart={cart}
+              clearCart={clearCart}
+              createOrder={createOrder}
+            />
+          }
+        />
+
+
+        {/* ORDERS */}
+
+        <Route
+          path="/orders"
+          element={
+            <Orders
+              orders={orders}
+            />
+          }
+        />
+
+
+        {/* LOGIN */}
+
+        <Route
+          path="/login"
+          element={
+            <Login
+              onLogin={handleLogin}
+            />
+          }
+        />
+
+
+        {/* REGISTER */}
+
+        <Route
+          path="/register"
+          element={
+            <Register
+              onRegister={
+                handleRegister
+              }
+            />
+          }
+        />
+
+
+        {/* ACCOUNT */}
+
+        <Route
+          path="/account"
+          element={
+            <Account
+              user={user}
+              onLogout={handleLogout}
+            />
+          }
+        />
+
+
+        {/* WISHLIST */}
+
+        <Route
+          path="/wishlist"
+          element={
+            <Wishlist
+              wishlist={wishlist}
+              removeFromWishlist={
+                removeFromWishlist
+              }
+              addToCart={addToCart}
+            />
+          }
+        />
+
       </Routes>
 
     </BrowserRouter>
+
   );
+
 }
+
 
 export default App;
