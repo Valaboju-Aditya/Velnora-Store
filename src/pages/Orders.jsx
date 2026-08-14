@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -6,6 +7,8 @@ import {
   Package,
   MapPin,
   CreditCard,
+  ArrowRight,
+  ShoppingBag,
 } from "lucide-react";
 
 function Orders({ orders }) {
@@ -24,13 +27,20 @@ function Orders({ orders }) {
         {/* HEADER */}
 
         <div className="orders-header">
-          <p>YOUR ACCOUNT</p>
+          <div>
+            <p>YOUR ACCOUNT</p>
 
-          <h1>My Orders</h1>
+            <h1>My Orders</h1>
 
-          <span>
-            View your previous orders and order details.
-          </span>
+            <span>
+              View your previous orders and order details.
+            </span>
+          </div>
+
+          <Link to="/shop" className="orders-continue-shopping">
+            Continue Shopping
+            <ArrowRight size={17} />
+          </Link>
         </div>
 
 
@@ -40,8 +50,12 @@ function Orders({ orders }) {
           <div className="empty-orders">
 
             <div className="empty-orders-icon">
-              📦
+              <ShoppingBag size={38} />
             </div>
+
+            <p className="empty-orders-label">
+              YOUR ORDER HISTORY
+            </p>
 
             <h2>No orders yet</h2>
 
@@ -56,6 +70,7 @@ function Orders({ orders }) {
               className="orders-shop-button"
             >
               Start Shopping
+              <ArrowRight size={17} />
             </Link>
 
           </div>
@@ -70,19 +85,31 @@ function Orders({ orders }) {
               const isExpanded =
                 expandedOrder === order.id;
 
+              const itemCount = order.items.reduce(
+                (total, item) =>
+                  total + item.quantity,
+                0
+              );
+
               return (
                 <div
-                  className="order-card"
+                  className={`order-card ${
+                    isExpanded ? "expanded" : ""
+                  }`}
                   key={order.id}
                 >
 
-                  {/* ORDER HEADER */}
+                  {/* =================================================
+                     PREMIUM ORDER HEADER
+                  ================================================= */}
 
-                  <div className="order-top">
+                  <div className="order-card-header">
 
-                    <div>
+                    {/* ORDER ID */}
 
-                      <span>
+                    <div className="order-id-block">
+
+                      <span className="order-label">
                         ORDER ID
                       </span>
 
@@ -92,91 +119,101 @@ function Orders({ orders }) {
 
                     </div>
 
+
+                    {/* STATUS */}
+
                     <div className="order-status">
+                      <span className="status-dot"></span>
                       {order.status}
                     </div>
 
                   </div>
 
 
-                  {/* ORDER SUMMARY */}
+                  {/* =================================================
+                     HORIZONTAL ORDER INFORMATION
+                  ================================================= */}
 
-                  <div className="order-details">
+                  <div className="order-info-grid">
 
-                    <div>
+                    {/* DATE */}
+
+                    <div className="order-info-item">
 
                       <span>
                         DATE
                       </span>
 
-                      <p>
+                      <strong>
                         {order.date}
-                      </p>
+                      </strong>
 
                     </div>
 
 
-                    <div>
+                    {/* ITEMS */}
+
+                    <div className="order-info-item">
 
                       <span>
                         ITEMS
                       </span>
 
-                      <p>
-                        {order.items.reduce(
-                          (total, item) =>
-                            total + item.quantity,
-                          0
-                        )}
-                      </p>
+                      <strong>
+                        {itemCount}
+                      </strong>
 
                     </div>
 
 
-                    <div>
+                    {/* TOTAL */}
+
+                    <div className="order-info-item order-total-item">
 
                       <span>
                         TOTAL
                       </span>
 
-                      <p>
+                      <strong>
                         ₹
                         {order.total.toLocaleString(
                           "en-IN"
                         )}
-                      </p>
+                      </strong>
 
                     </div>
+
+
+                    {/* VIEW DETAILS */}
+
+                    <button
+                      className="order-details-button"
+                      type="button"
+                      onClick={() =>
+                        toggleOrder(order.id)
+                      }
+                    >
+
+                      <span>
+                        {isExpanded
+                          ? "Hide Details"
+                          : "View Details"}
+                      </span>
+
+                      {isExpanded ? (
+                        <ChevronUp size={17} />
+                      ) : (
+                        <ChevronDown size={17} />
+                      )}
+
+                    </button>
 
                   </div>
 
 
-                  {/* VIEW DETAILS BUTTON */}
-
-                  <button
-                    className="order-details-button"
-                    type="button"
-                    onClick={() =>
-                      toggleOrder(order.id)
-                    }
-                  >
-
-                    {isExpanded ? (
-                      <>
-                        Hide Details
-                        <ChevronUp size={18} />
-                      </>
-                    ) : (
-                      <>
-                        View Details
-                        <ChevronDown size={18} />
-                      </>
-                    )}
-
-                  </button>
-
-
-                  {/* EXPANDED DETAILS */}
+                  {/* =================================================
+                     EXPANDED DETAILS
+                  ================================================= */}
 
                   {isExpanded && (
 
@@ -213,7 +250,7 @@ function Orders({ orders }) {
                                 />
 
 
-                                <div>
+                                <div className="order-product-info">
 
                                   <h4>
                                     {item.name}
@@ -288,7 +325,7 @@ function Orders({ orders }) {
                       </div>
 
 
-                      {/* CUSTOMER DETAILS */}
+                      {/* DELIVERY DETAILS */}
 
                       {order.customer &&
                         Object.keys(
@@ -376,10 +413,11 @@ function Orders({ orders }) {
                             </div>
 
                           </div>
+
                         )}
 
 
-                      {/* TOTAL */}
+                      {/* FINAL TOTAL */}
 
                       <div className="order-final-total">
 
@@ -397,6 +435,7 @@ function Orders({ orders }) {
                       </div>
 
                     </div>
+
                   )}
 
                 </div>
