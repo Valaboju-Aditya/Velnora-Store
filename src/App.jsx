@@ -25,6 +25,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Wishlist from "./pages/Wishlist";
 import Account from "./pages/Account";
+import AdminProducts from "./pages/AdminProducts";
+import AdminDashboard from "./pages/AdminDashboard";
 
 import "./index.css";
 
@@ -1169,6 +1171,18 @@ function createOrder(orderDetails = {}) {
             />
           }
         />
+
+        
+
+        <Route
+  path="/admin/products"
+  element={<AdminProducts />}
+/>
+
+        <Route
+  path="/admin"
+  element={<AdminDashboard />}
+/>
 
 
         {/* WISHLIST */}

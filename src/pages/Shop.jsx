@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Search,
@@ -7,78 +7,47 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
-const products = [
-  {
-    id: 1,
-    name: "Oversized Premium T-Shirt",
-    price: 899,
-    category: "Men",
-    image:
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=85",
-  },
-  {
-    id: 2,
-    name: "Classic Denim Jacket",
-    price: 1999,
-    category: "Men",
-    image:
-      "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=700&q=85",
-  },
-  {
-    id: 3,
-    name: "Premium Hoodie",
-    price: 1499,
-    category: "Men",
-    image:
-      "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=700&q=85",
-  },
-  {
-    id: 4,
-    name: "Casual Cotton Shirt",
-    price: 1199,
-    category: "Men",
-    image:
-      "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=700&q=85",
-  },
-  {
-    id: 5,
-    name: "Women's Summer Dress",
-    price: 1599,
-    category: "Women",
-    image:
-      "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=700&q=85",
-  },
-  {
-    id: 6,
-    name: "Women's Casual Outfit",
-    price: 1299,
-    category: "Women",
-    image:
-      "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=700&q=85",
-  },
-  {
-    id: 7,
-    name: "Classic Sneakers",
-    price: 1799,
-    category: "Accessories",
-    image:
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=85",
-  },
-  {
-    id: 8,
-    name: "Premium Sunglasses",
-    price: 999,
-    category: "Accessories",
-    image:
-      "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=700&q=85",
-  },
-];
+
 
 function Shop({ addToCart }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState("default");
   const [wishlist, setWishlist] = useState([]);
+  const [products, setProducts] = useState([]);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState("");
+
+useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/products");
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch products");
+      }
+
+      const data = await response.json();
+
+      setProducts(data);
+    } catch (error) {
+      console.error(error);
+      setError("Unable to load products");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchProducts();
+}, []);
+
+if (loading) {
+  return <div className="loading">Loading products...</div>;
+}
+
+if (error) {
+  return <div className="error-message">{error}</div>;
+}
 
   function toggleWishlist(id) {
     setWishlist((current) => {
