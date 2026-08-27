@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+
 import {
   Trash2,
   Plus,
@@ -8,55 +9,102 @@ import {
 } from "lucide-react";
 
 function Cart({ cart, setCart }) {
-  // Increase / decrease quantity
-  function updateQuantity(id, change) {
+
+  // =========================
+  // UPDATE QUANTITY
+  // =========================
+
+  function updateQuantity(
+    productId,
+    change
+  ) {
     setCart((current) =>
-      current
-        .map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                quantity: Math.max(
-                  1,
-                  item.quantity + change
-                ),
-              }
-            : item
-        )
+      current.map((item) => {
+        const itemId =
+          item._id || item.id;
+
+        if (itemId !== productId) {
+          return item;
+        }
+
+        const stock =
+          Number(item.stock ?? 0);
+
+        let newQuantity =
+          item.quantity + change;
+
+        newQuantity =
+          Math.max(
+            1,
+            newQuantity
+          );
+
+        if (
+          stock > 0 &&
+          newQuantity > stock
+        ) {
+          newQuantity = stock;
+        }
+
+        return {
+          ...item,
+          quantity: newQuantity,
+        };
+      })
     );
   }
 
-  // Remove product
-  function removeItem(id) {
+
+  // =========================
+  // REMOVE PRODUCT
+  // =========================
+
+  function removeItem(productId) {
     setCart((current) =>
-      current.filter((item) => item.id !== id)
+      current.filter((item) => {
+        const itemId =
+          item._id || item.id;
+
+        return itemId !== productId;
+      })
     );
   }
 
-  // Calculate subtotal
+
+  // =========================
+  // CALCULATIONS
+  // =========================
+
   const subtotal = cart.reduce(
     (total, item) =>
-      total + item.price * item.quantity,
+      total +
+      Number(item.price) *
+        Number(item.quantity),
     0
   );
 
-  // Free shipping above ₹999
   const shipping =
-    subtotal >= 999 || subtotal === 0
+    subtotal >= 999 ||
+    subtotal === 0
       ? 0
       : 99;
 
-  // Final total
-  const total = subtotal + shipping;
+  const total =
+    subtotal + shipping;
 
-  // Total number of products
-  const totalItems = cart.reduce(
-    (total, item) =>
-      total + item.quantity,
-    0
-  );
+  const totalItems =
+    cart.reduce(
+      (total, item) =>
+        total +
+        Number(item.quantity),
+      0
+    );
 
-  // Empty cart
+
+  // =========================
+  // EMPTY CART
+  // =========================
+
   if (cart.length === 0) {
     return (
       <div className="cart-page">
@@ -65,7 +113,9 @@ function Cart({ cart, setCart }) {
 
           <ShoppingBag size={60} />
 
-          <h1>Your Cart Is Empty</h1>
+          <h1>
+            Your Cart Is Empty
+          </h1>
 
           <p>
             Looks like you haven't added
@@ -77,6 +127,7 @@ function Cart({ cart, setCart }) {
             className="continue-shopping"
           >
             Continue Shopping
+
             <ArrowRight size={18} />
           </Link>
 
@@ -85,6 +136,11 @@ function Cart({ cart, setCart }) {
       </div>
     );
   }
+
+
+  // =========================
+  // CART PAGE
+  // =========================
 
   return (
     <div className="cart-page">
@@ -96,7 +152,9 @@ function Cart({ cart, setCart }) {
         <div className="cart-header">
 
           <div>
-            <p>YOUR BAG</p>
+            <p>
+              YOUR BAG
+            </p>
 
             <h1>
               Shopping Cart
@@ -117,131 +175,188 @@ function Cart({ cart, setCart }) {
 
         <div className="cart-layout">
 
+
           {/* PRODUCTS */}
 
           <div className="cart-products">
 
-            {cart.map((item) => (
+            {cart.map((item) => {
+              const productId =
+                item._id || item.id;
 
-              <div
-                className="cart-item"
-                key={item.id}
-              >
+              const stock =
+                Number(item.stock ?? 0);
 
-                {/* PRODUCT IMAGE */}
+              const outOfStock =
+                stock <= 0;
 
-                <Link
-                  to={`/product/${item.id}`}
+              const maxReached =
+                stock > 0 &&
+                item.quantity >= stock;
+
+              return (
+
+                <div
+                  className="cart-item"
+                  key={productId}
                 >
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                  />
-                </Link>
 
-
-                {/* PRODUCT INFORMATION */}
-
-                <div className="cart-item-info">
+                  {/* PRODUCT IMAGE */}
 
                   <Link
-                    to={`/product/${item.id}`}
+                    to={`/product/${productId}`}
                   >
-                    <h3>
-                      {item.name}
-                    </h3>
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                    />
                   </Link>
 
-                  {item.category && (
-                    <p>
-                      {item.category}
-                    </p>
-                  )}
 
-                  <strong>
-                    ₹
-                    {item.price.toLocaleString(
-                      "en-IN"
+                  {/* PRODUCT INFORMATION */}
+
+                  <div className="cart-item-info">
+
+                    <Link
+                      to={`/product/${productId}`}
+                    >
+                      <h3>
+                        {item.name}
+                      </h3>
+                    </Link>
+
+
+                    {item.category && (
+                      <p>
+                        {item.category}
+                      </p>
                     )}
-                  </strong>
 
 
-                  {/* ACTIONS */}
+                    <strong>
+                      ₹
+                      {Number(
+                        item.price || 0
+                      ).toLocaleString(
+                        "en-IN"
+                      )}
+                    </strong>
 
-                  <div className="cart-item-actions">
 
-                    {/* QUANTITY */}
+                    {/* STOCK */}
 
-                    <div className="quantity-control">
+                    <p className="cart-stock">
+
+                      {outOfStock
+                        ? "Out of Stock"
+                        : `${stock} in stock`}
+
+                    </p>
+
+
+                    {/* ACTIONS */}
+
+                    <div className="cart-item-actions">
+
+
+                      {/* QUANTITY */}
+
+                      <div className="quantity-control">
+
+                        <button
+                          type="button"
+                          aria-label="Decrease quantity"
+                          onClick={() =>
+                            updateQuantity(
+                              productId,
+                              -1
+                            )
+                          }
+                          disabled={
+                            item.quantity <= 1
+                          }
+                        >
+                          <Minus size={15} />
+                        </button>
+
+
+                        <span>
+                          {item.quantity}
+                        </span>
+
+
+                        <button
+                          type="button"
+                          aria-label="Increase quantity"
+                          onClick={() =>
+                            updateQuantity(
+                              productId,
+                              1
+                            )
+                          }
+                          disabled={
+                            outOfStock ||
+                            maxReached
+                          }
+                        >
+                          <Plus size={15} />
+                        </button>
+
+                      </div>
+
+
+                      {/* STOCK LIMIT MESSAGE */}
+
+                      {maxReached && (
+                        <span className="cart-stock-limit">
+                          Maximum stock reached
+                        </span>
+                      )}
+
+
+                      {/* REMOVE */}
 
                       <button
                         type="button"
-                        aria-label="Decrease quantity"
+                        className="remove-item"
                         onClick={() =>
-                          updateQuantity(
-                            item.id,
-                            -1
+                          removeItem(
+                            productId
                           )
                         }
                       >
-                        <Minus size={15} />
-                      </button>
+                        <Trash2 size={16} />
 
-                      <span>
-                        {item.quantity}
-                      </span>
-
-                      <button
-                        type="button"
-                        aria-label="Increase quantity"
-                        onClick={() =>
-                          updateQuantity(
-                            item.id,
-                            1
-                          )
-                        }
-                      >
-                        <Plus size={15} />
+                        Remove
                       </button>
 
                     </div>
 
+                  </div>
 
-                    {/* REMOVE */}
 
-                    <button
-                      type="button"
-                      className="remove-item"
-                      onClick={() =>
-                        removeItem(item.id)
-                      }
-                    >
-                      <Trash2 size={16} />
-                      Remove
-                    </button>
+                  {/* ITEM TOTAL */}
+
+                  <div className="cart-item-total">
+
+                    ₹
+                    {(
+                      Number(
+                        item.price || 0
+                      ) *
+                      Number(
+                        item.quantity || 0
+                      )
+                    ).toLocaleString(
+                      "en-IN"
+                    )}
 
                   </div>
 
                 </div>
 
-
-                {/* ITEM TOTAL */}
-
-                <div className="cart-item-total">
-
-                  ₹
-                  {(
-                    item.price *
-                    item.quantity
-                  ).toLocaleString(
-                    "en-IN"
-                  )}
-
-                </div>
-
-              </div>
-
-            ))}
+              );
+            })}
 
 
             {/* CONTINUE SHOPPING */}
@@ -328,6 +443,7 @@ function Cart({ cart, setCart }) {
               className="checkout-button"
             >
               Proceed to Checkout
+
               <ArrowRight size={18} />
             </Link>
 
@@ -337,6 +453,7 @@ function Cart({ cart, setCart }) {
             <p className="shipping-note">
 
               🚚{" "}
+
               {subtotal >= 999
                 ? "You unlocked FREE shipping!"
                 : `Add ₹${(

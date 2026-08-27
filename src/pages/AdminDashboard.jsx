@@ -12,22 +12,34 @@ function AdminDashboard() {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const productsResponse = await fetch(
-          "http://localhost:5000/api/products"
+        const token = localStorage.getItem("novaToken");
+
+        const response = await fetch(
+          "http://localhost:5000/api/admin/stats",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
-        if (!productsResponse.ok) {
-          throw new Error("Failed to fetch products");
+        if (!response.ok) {
+          throw new Error("Failed to fetch admin statistics");
         }
 
-        const products = await productsResponse.json();
+        const data = await response.json();
 
-        setStats((prev) => ({
-          ...prev,
-          products: products.length,
-        }));
+        setStats({
+          products: data.products || 0,
+          users: data.users || 0,
+          orders: data.orders || 0,
+          sales: data.sales || 0,
+        });
       } catch (error) {
-        console.error("Failed to load dashboard stats:", error);
+        console.error(
+          "Failed to load dashboard stats:",
+          error
+        );
       }
     };
 
@@ -40,13 +52,16 @@ function AdminDashboard() {
         <div>
           <p>NOVA ADMIN</p>
           <h1>Dashboard</h1>
-          <span>Welcome to your store management panel</span>
+          <span>
+            Welcome to your store management panel
+          </span>
         </div>
       </div>
 
       <div className="admin-stats">
         <div className="admin-stat-card">
           <span>📦</span>
+
           <div>
             <p>Total Products</p>
             <h2>{stats.products}</h2>
@@ -55,6 +70,7 @@ function AdminDashboard() {
 
         <div className="admin-stat-card">
           <span>👥</span>
+
           <div>
             <p>Total Users</p>
             <h2>{stats.users}</h2>
@@ -63,6 +79,7 @@ function AdminDashboard() {
 
         <div className="admin-stat-card">
           <span>🛒</span>
+
           <div>
             <p>Total Orders</p>
             <h2>{stats.orders}</h2>
@@ -71,6 +88,7 @@ function AdminDashboard() {
 
         <div className="admin-stat-card">
           <span>💰</span>
+
           <div>
             <p>Total Sales</p>
             <h2>₹{stats.sales}</h2>
@@ -81,43 +99,49 @@ function AdminDashboard() {
       <div className="admin-dashboard-sections">
         <div className="admin-dashboard-card">
           <h2>Product Management</h2>
+
           <p>
-            Add, edit and delete products from your NOVA Fashion Store.
+            Add, edit and delete products from your
+            NOVA Fashion Store.
           </p>
 
           <Link
             to="/admin/products"
             className="admin-dashboard-button"
           >
-            Manage Products
+            Manage Products →
           </Link>
         </div>
 
         <div className="admin-dashboard-card">
           <h2>User Management</h2>
+
           <p>
-            View and manage registered customers and their accounts.
+            View and manage registered customers and
+            their accounts.
           </p>
 
           <Link
             to="/admin/users"
             className="admin-dashboard-button"
           >
-            Manage Users
+            Manage Users →
           </Link>
         </div>
 
         <div className="admin-dashboard-card">
           <h2>Order Management</h2>
+
           <p>
-            View customer orders and manage order status.
+            View customer orders and manage order
+            status.
           </p>
 
           <Link
             to="/admin/orders"
             className="admin-dashboard-button"
           >
-            Manage Orders
+            Manage Orders →
           </Link>
         </div>
       </div>

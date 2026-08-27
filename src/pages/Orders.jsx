@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ChevronDown,
@@ -11,14 +10,116 @@ import {
   ShoppingBag,
 } from "lucide-react";
 
-function Orders({ orders }) {
+function Orders() {
+  const [orders, setOrders] = useState([]);
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadOrders = async () => {
+      try {
+        const token = localStorage.getItem("novaToken");
+
+        if (!token) {
+          if (!ignore) {
+            setError("Please login to view your orders.");
+            setLoading(false);
+          }
+
+          return;
+        }
+
+        const response = await fetch(
+          "http://localhost:5000/api/orders/my-orders",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message || "Failed to load orders"
+          );
+        }
+
+        if (!ignore) {
+          setOrders(data);
+        }
+      } catch (error) {
+        if (!ignore) {
+          console.error(
+            "Failed to load orders:",
+            error
+          );
+
+          setError(
+            error.message || "Unable to load orders."
+          );
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadOrders();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const toggleOrder = (orderId) => {
     setExpandedOrder((current) =>
       current === orderId ? null : orderId
     );
   };
+
+  if (loading) {
+    return (
+      <div className="orders-page">
+        <div className="orders-container">
+          <div className="empty-orders">
+            <p>Loading your orders...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="orders-page">
+        <div className="orders-container">
+          <div className="empty-orders">
+            <div className="empty-orders-icon">
+              <ShoppingBag size={38} />
+            </div>
+
+            <h2>Unable to load orders</h2>
+
+            <p>{error}</p>
+
+            <Link
+              to="/login"
+              className="orders-shop-button"
+            >
+              Login
+              <ArrowRight size={17} />
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="orders-page">
@@ -37,12 +138,14 @@ function Orders({ orders }) {
             </span>
           </div>
 
-          <Link to="/shop" className="orders-continue-shopping">
+          <Link
+            to="/shop"
+            className="orders-continue-shopping"
+          >
             Continue Shopping
             <ArrowRight size={17} />
           </Link>
         </div>
-
 
         {/* EMPTY ORDERS */}
 
@@ -76,36 +179,41 @@ function Orders({ orders }) {
           </div>
         ) : (
 
-          /* ORDERS */
-
           <div className="orders-list">
 
             {orders.map((order) => {
+              const displayOrderId =
+                order.orderId || order.id;
 
               const isExpanded =
-                expandedOrder === order.id;
+                expandedOrder === displayOrderId;
 
-              const itemCount = order.items.reduce(
-                (total, item) =>
-                  total + item.quantity,
-                0
-              );
+              const itemCount =
+                order.items?.reduce(
+                  (total, item) =>
+                    total + item.quantity,
+                  0
+                ) || 0;
+
+              const orderDate = order.createdAt
+                ? new Date(
+                    order.createdAt
+                  ).toLocaleDateString(
+                    "en-IN"
+                  )
+                : order.date || "N/A";
 
               return (
                 <div
                   className={`order-card ${
                     isExpanded ? "expanded" : ""
                   }`}
-                  key={order.id}
+                  key={order._id || displayOrderId}
                 >
 
-                  {/* =================================================
-                     PREMIUM ORDER HEADER
-                  ================================================= */}
+                  {/* ORDER HEADER */}
 
                   <div className="order-card-header">
-
-                    {/* ORDER ID */}
 
                     <div className="order-id-block">
 
@@ -114,13 +222,10 @@ function Orders({ orders }) {
                       </span>
 
                       <h3>
-                        {order.id}
+                        {displayOrderId}
                       </h3>
 
                     </div>
-
-
-                    {/* STATUS */}
 
                     <div className="order-status">
                       <span className="status-dot"></span>
@@ -129,14 +234,9 @@ function Orders({ orders }) {
 
                   </div>
 
-
-                  {/* =================================================
-                     HORIZONTAL ORDER INFORMATION
-                  ================================================= */}
+                  {/* ORDER INFORMATION */}
 
                   <div className="order-info-grid">
-
-                    {/* DATE */}
 
                     <div className="order-info-item">
 
@@ -145,13 +245,10 @@ function Orders({ orders }) {
                       </span>
 
                       <strong>
-                        {order.date}
+                        {orderDate}
                       </strong>
 
                     </div>
-
-
-                    {/* ITEMS */}
 
                     <div className="order-info-item">
 
@@ -165,9 +262,6 @@ function Orders({ orders }) {
 
                     </div>
 
-
-                    {/* TOTAL */}
-
                     <div className="order-info-item order-total-item">
 
                       <span>
@@ -176,21 +270,20 @@ function Orders({ orders }) {
 
                       <strong>
                         ₹
-                        {order.total.toLocaleString(
+                        {Number(
+                          order.total || 0
+                        ).toLocaleString(
                           "en-IN"
                         )}
                       </strong>
 
                     </div>
 
-
-                    {/* VIEW DETAILS */}
-
                     <button
                       className="order-details-button"
                       type="button"
                       onClick={() =>
-                        toggleOrder(order.id)
+                        toggleOrder(displayOrderId)
                       }
                     >
 
@@ -210,10 +303,7 @@ function Orders({ orders }) {
 
                   </div>
 
-
-                  {/* =================================================
-                     EXPANDED DETAILS
-                  ================================================= */}
+                  {/* EXPANDED DETAILS */}
 
                   {isExpanded && (
 
@@ -233,10 +323,9 @@ function Orders({ orders }) {
 
                         </div>
 
-
                         <div className="order-products">
 
-                          {order.items.map(
+                          {order.items?.map(
                             (item, index) => (
 
                               <div
@@ -248,7 +337,6 @@ function Orders({ orders }) {
                                   src={item.image}
                                   alt={item.name}
                                 />
-
 
                                 <div className="order-product-info">
 
@@ -263,20 +351,25 @@ function Orders({ orders }) {
 
                                   <strong>
                                     ₹
-                                    {item.price.toLocaleString(
+                                    {Number(
+                                      item.price || 0
+                                    ).toLocaleString(
                                       "en-IN"
                                     )}
                                   </strong>
 
                                 </div>
 
-
                                 <div className="order-product-total">
 
                                   ₹
                                   {(
-                                    item.price *
-                                    item.quantity
+                                    Number(
+                                      item.price || 0
+                                    ) *
+                                    Number(
+                                      item.quantity || 0
+                                    )
                                   ).toLocaleString(
                                     "en-IN"
                                   )}
@@ -291,7 +384,6 @@ function Orders({ orders }) {
                         </div>
 
                       </div>
-
 
                       {/* PAYMENT */}
 
@@ -322,8 +414,20 @@ function Orders({ orders }) {
 
                         </div>
 
-                      </div>
+                        <div className="order-info-row">
 
+                          <span>
+                            Payment Status
+                          </span>
+
+                          <strong>
+                            {order.paymentStatus ||
+                              "Pending"}
+                          </strong>
+
+                        </div>
+
+                      </div>
 
                       {/* DELIVERY DETAILS */}
 
@@ -343,7 +447,6 @@ function Orders({ orders }) {
                               </h3>
 
                             </div>
-
 
                             <div className="order-customer">
 
@@ -416,7 +519,6 @@ function Orders({ orders }) {
 
                         )}
 
-
                       {/* FINAL TOTAL */}
 
                       <div className="order-final-total">
@@ -427,7 +529,9 @@ function Orders({ orders }) {
 
                         <strong>
                           ₹
-                          {order.total.toLocaleString(
+                          {Number(
+                            order.total || 0
+                          ).toLocaleString(
                             "en-IN"
                           )}
                         </strong>

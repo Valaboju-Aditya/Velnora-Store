@@ -7,8 +7,9 @@ function Login({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
 
     setError("");
@@ -18,12 +19,49 @@ function Login({ onLogin }) {
       return;
     }
 
-    onLogin({
-      name: email.split("@")[0],
-      email: email,
-    });
+    try {
+      setLoading(true);
 
-    navigate("/");
+      const response = await fetch(
+        "http://localhost:5000/api/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Login failed"
+        );
+      }
+
+      localStorage.setItem(
+        "novaToken",
+        data.token
+      );
+
+      onLogin(data.user);
+
+      navigate("/");
+    } catch (error) {
+      console.error("Login failed:", error);
+
+      setError(
+        error.message ||
+          "Unable to login. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -32,7 +70,9 @@ function Login({ onLogin }) {
 
         <div className="auth-header">
           <p>NOVA ACCOUNT</p>
+
           <h1>Welcome Back</h1>
+
           <span>
             Login to continue shopping with NOVA.
           </span>
@@ -41,28 +81,38 @@ function Login({ onLogin }) {
         <form onSubmit={handleSubmit}>
 
           <div className="form-group">
-            <label>Email Address</label>
+            <label htmlFor="login-email">
+              Email Address
+            </label>
 
             <input
+              id="login-email"
               type="email"
               placeholder="Enter your email"
               value={email}
               onChange={(e) =>
                 setEmail(e.target.value)
               }
+              autoComplete="email"
+              required
             />
           </div>
 
           <div className="form-group">
-            <label>Password</label>
+            <label htmlFor="login-password">
+              Password
+            </label>
 
             <input
+              id="login-password"
               type="password"
               placeholder="Enter your password"
               value={password}
               onChange={(e) =>
                 setPassword(e.target.value)
               }
+              autoComplete="current-password"
+              required
             />
           </div>
 
@@ -75,14 +125,19 @@ function Login({ onLogin }) {
           <button
             type="submit"
             className="auth-button"
+            disabled={loading}
           >
-            Login
+            {loading
+              ? "Logging in..."
+              : "Login"}
           </button>
 
         </form>
 
         <div className="auth-footer">
-          <span>Don't have an account?</span>
+          <span>
+            Don't have an account?
+          </span>
 
           <Link to="/register">
             Create Account

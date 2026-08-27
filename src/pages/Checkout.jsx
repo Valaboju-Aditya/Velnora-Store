@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+
 import {
   ArrowLeft,
   CheckCircle,
@@ -13,8 +14,14 @@ function Checkout({
   clearCart,
   createOrder,
 }) {
-  const [orderPlaced, setOrderPlaced] = useState(false);
-  const [orderId, setOrderId] = useState("");
+  const [orderPlaced, setOrderPlaced] =
+    useState(false);
+
+  const [orderId, setOrderId] =
+    useState("");
+
+  const [processing, setProcessing] =
+    useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -26,38 +33,49 @@ function Checkout({
     pincode: "",
   });
 
-  const [payment, setPayment] = useState("cod");
+  const [payment, setPayment] =
+    useState("cod");
 
-  /* =====================================================
-     CALCULATIONS
-  ===================================================== */
+
+  // =========================
+  // CALCULATIONS
+  // =========================
 
   const subtotal = cart.reduce(
     (total, item) =>
-      total + item.price * item.quantity,
+      total +
+      Number(item.price) *
+        Number(item.quantity),
     0
   );
 
   const shipping =
-    subtotal >= 999 || subtotal === 0
+    subtotal >= 999 ||
+    subtotal === 0
       ? 0
       : 99;
 
-  const total = subtotal + shipping;
+  const total =
+    subtotal + shipping;
 
-  const totalItems = cart.reduce(
-    (total, item) =>
-      total + item.quantity,
-    0
-  );
+  const totalItems =
+    cart.reduce(
+      (total, item) =>
+        total +
+        Number(item.quantity),
+      0
+    );
 
 
-  /* =====================================================
-     HANDLE INPUT
-  ===================================================== */
+  // =========================
+  // HANDLE INPUT
+  // =========================
 
   function handleChange(e) {
-    const { name, value } = e.target;
+    const {
+      name,
+      value,
+    } = e.target;
 
     setForm((current) => ({
       ...current,
@@ -66,48 +84,88 @@ function Checkout({
   }
 
 
-  /* =====================================================
-     SUBMIT ORDER
-  ===================================================== */
+  // =========================
+  // CUSTOMER DATA
+  // =========================
 
-  function handleSubmit(e) {
-    e.preventDefault();
+  function getCustomerData() {
+    return {
+      name:
+        form.name.trim(),
 
-    if (cart.length === 0) {
-      return;
-    }
+      phone:
+        form.phone.trim(),
 
-    /*
-      Send customer details and payment method
-      to App.jsx
-    */
+      email:
+        form.email.trim(),
 
-    const createdOrder = createOrder({
-      customer: {
-        name: form.name,
-        phone: form.phone,
-        email: form.email,
-        address: form.address,
-        city: form.city,
-        state: form.state,
-        pincode: form.pincode,
-      },
+      address:
+        form.address.trim(),
 
-      paymentMethod: payment,
-    });
+      city:
+        form.city.trim(),
+
+      state:
+        form.state.trim(),
+
+      pincode:
+        form.pincode.trim(),
+    };
+  }
 
 
-    /*
-      Only clear the cart and show success
-      if the order was actually created.
-    */
+  // =========================
+  // LOAD RAZORPAY
+  // =========================
 
+  function loadRazorpayScript() {
+    return new Promise(
+      (resolve) => {
+        if (window.Razorpay) {
+          resolve(true);
+          return;
+        }
+
+        const script =
+          document.createElement(
+            "script"
+          );
+
+        script.src =
+          "https://checkout.razorpay.com/v1/checkout.js";
+
+        script.async = true;
+
+        script.onload =
+          () => resolve(true);
+
+        script.onerror =
+          () => resolve(false);
+
+        document.body.appendChild(
+          script
+        );
+      }
+    );
+  }
+
+
+  // =========================
+  // COMPLETE ORDER
+  // =========================
+
+  function completeOrder(
+    createdOrder
+  ) {
     if (!createdOrder) {
       return;
     }
 
-
-    setOrderId(createdOrder.id);
+    setOrderId(
+      createdOrder.id ||
+        createdOrder.orderId ||
+        ""
+    );
 
     clearCart();
 
@@ -115,11 +173,353 @@ function Checkout({
   }
 
 
-  /* =====================================================
-     EMPTY CART
-  ===================================================== */
+  // =========================
+  // COD
+  // =========================
 
-  if (cart.length === 0 && !orderPlaced) {
+  async function placeCodOrder() {
+    const createdOrder =
+      await createOrder({
+        customer:
+          getCustomerData(),
+
+        paymentMethod:
+          "cod",
+      });
+
+    if (!createdOrder) {
+      return false;
+    }
+
+    completeOrder(
+      createdOrder
+    );
+
+    return true;
+  }
+
+
+  // =========================
+  // ONLINE PAYMENT
+  // =========================
+
+  async function placeOnlineOrder() {
+    try {
+      const token =
+        localStorage.getItem(
+          "novaToken"
+        );
+
+      if (!token) {
+        alert(
+          "Please login again before making payment."
+        );
+
+        return;
+      }
+
+
+      // LOAD RAZORPAY SCRIPT
+
+      const loaded =
+        await loadRazorpayScript();
+
+      if (!loaded) {
+        alert(
+          "Unable to load Razorpay. Check your internet connection."
+        );
+
+        return;
+      }
+
+
+      // CREATE RAZORPAY ORDER
+
+      const paymentResponse =
+        await fetch(
+          "http://localhost:5000/api/payments/create-order",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body: JSON.stringify({
+              items:
+                cart.map(
+                  (item) => ({
+                    id:
+                      item._id ||
+                      item.id,
+
+                    quantity:
+                      Number(
+                        item.quantity
+                      ),
+                  })
+                ),
+            }),
+          }
+        );
+
+      const paymentData =
+        await paymentResponse.json();
+
+
+      if (!paymentResponse.ok) {
+        throw new Error(
+          paymentData.message ||
+            "Failed to start payment"
+        );
+      }
+
+
+      if (
+        !paymentData.order ||
+        !paymentData.order.id
+      ) {
+        throw new Error(
+          "Invalid Razorpay order response"
+        );
+      }
+
+
+      // =========================
+      // RAZORPAY OPTIONS
+      // =========================
+
+      const options = {
+        key:
+          paymentData.key,
+
+        amount:
+          paymentData.order.amount,
+
+        currency:
+          paymentData.order.currency,
+
+        name:
+          "NOVA",
+
+        description:
+          "NOVA Fashion Store Order",
+
+        order_id:
+          paymentData.order.id,
+
+        prefill: {
+          name:
+            form.name,
+
+          email:
+            form.email,
+
+          contact:
+            form.phone,
+        },
+
+        notes: {
+          store:
+            "NOVA Fashion Store",
+        },
+
+        theme: {
+          color:
+            "#6c3cff",
+        },
+
+
+        // =========================
+        // PAYMENT SUCCESS
+        // =========================
+
+        handler:
+          async function (
+            response
+          ) {
+            try {
+              setProcessing(true);
+
+
+              // IMPORTANT:
+              // Use the backend-created
+              // Razorpay order ID.
+
+              const createdOrder =
+                await createOrder({
+                  customer:
+                    getCustomerData(),
+
+                  paymentMethod:
+                    "online",
+
+                  razorpayPayment: {
+                    razorpay_order_id:
+                      paymentData.order.id,
+
+                    razorpay_payment_id:
+                      response.razorpay_payment_id,
+
+                    razorpay_signature:
+                      response.razorpay_signature,
+                  },
+                });
+
+
+              if (!createdOrder) {
+                alert(
+                  "Payment completed, but the NOVA order could not be created."
+                );
+
+                return;
+              }
+
+
+              completeOrder(
+                createdOrder
+              );
+
+            } catch (error) {
+              console.error(
+                "Order creation after payment failed:",
+                error
+              );
+
+              alert(
+                error.message ||
+                  "Payment completed but order creation failed."
+              );
+
+            } finally {
+              setProcessing(false);
+            }
+          },
+
+
+        // =========================
+        // CHECKOUT CLOSED
+        // =========================
+
+        modal: {
+          ondismiss: function () {
+            setProcessing(false);
+          },
+        },
+      };
+
+
+      // =========================
+      // OPEN RAZORPAY
+      // =========================
+
+      const razorpay =
+        new window.Razorpay(
+          options
+        );
+
+
+      // =========================
+      // PAYMENT FAILED
+      // =========================
+
+      razorpay.on(
+        "payment.failed",
+        function (response) {
+          console.error(
+            "Payment failed:",
+            response.error
+          );
+
+          alert(
+            response.error
+              ?.description ||
+              "Payment failed. Please try again."
+          );
+
+          setProcessing(false);
+        }
+      );
+
+
+      razorpay.open();
+
+    } catch (error) {
+      console.error(
+        "Online payment error:",
+        error
+      );
+
+      alert(
+        error.message ||
+          "Unable to start online payment"
+      );
+
+      setProcessing(false);
+    }
+  }
+
+
+  // =========================
+  // SUBMIT
+  // =========================
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    if (
+      cart.length === 0 ||
+      processing
+    ) {
+      return;
+    }
+
+    setProcessing(true);
+
+    try {
+      if (
+        payment === "online"
+      ) {
+        await placeOnlineOrder();
+
+        return;
+      }
+
+      await placeCodOrder();
+
+    } catch (error) {
+      console.error(
+        "Checkout error:",
+        error
+      );
+
+      alert(
+        error.message ||
+          "Unable to place order"
+      );
+
+    } finally {
+      if (
+        payment === "cod"
+      ) {
+        setProcessing(false);
+      }
+    }
+  }
+
+
+  // =========================
+  // EMPTY CART
+  // =========================
+
+  if (
+    cart.length === 0 &&
+    !orderPlaced
+  ) {
     return (
       <div className="checkout-page">
 
@@ -147,9 +547,9 @@ function Checkout({
   }
 
 
-  /* =====================================================
-     ORDER SUCCESS
-  ===================================================== */
+  // =========================
+  // SUCCESS
+  // =========================
 
   if (orderPlaced) {
     return (
@@ -211,16 +611,14 @@ function Checkout({
   }
 
 
-  /* =====================================================
-     CHECKOUT PAGE
-  ===================================================== */
+  // =========================
+  // CHECKOUT PAGE
+  // =========================
 
   return (
     <div className="checkout-page">
 
       <div className="checkout-container">
-
-        {/* BACK TO CART */}
 
         <Link
           to="/cart"
@@ -230,8 +628,6 @@ function Checkout({
           Back to Cart
         </Link>
 
-
-        {/* HEADER */}
 
         <div className="checkout-header">
 
@@ -260,16 +656,16 @@ function Checkout({
 
         <div className="checkout-layout">
 
-          {/* =================================================
-              LEFT SIDE
-          ================================================= */}
 
           <form
             className="checkout-form"
-            onSubmit={handleSubmit}
+            onSubmit={
+              handleSubmit
+            }
           >
 
-            {/* CONTACT INFORMATION */}
+
+            {/* CONTACT */}
 
             <section className="checkout-section">
 
@@ -296,8 +692,6 @@ function Checkout({
 
               <div className="form-grid">
 
-                {/* NAME */}
-
                 <div className="form-field full">
 
                   <label htmlFor="name">
@@ -309,7 +703,9 @@ function Checkout({
                     type="text"
                     name="name"
                     value={form.name}
-                    onChange={handleChange}
+                    onChange={
+                      handleChange
+                    }
                     placeholder="Enter your full name"
                     autoComplete="name"
                     required
@@ -317,8 +713,6 @@ function Checkout({
 
                 </div>
 
-
-                {/* PHONE */}
 
                 <div className="form-field">
 
@@ -331,7 +725,9 @@ function Checkout({
                     type="tel"
                     name="phone"
                     value={form.phone}
-                    onChange={handleChange}
+                    onChange={
+                      handleChange
+                    }
                     placeholder="Enter phone number"
                     autoComplete="tel"
                     pattern="[0-9]{10}"
@@ -341,8 +737,6 @@ function Checkout({
 
                 </div>
 
-
-                {/* EMAIL */}
 
                 <div className="form-field">
 
@@ -355,7 +749,9 @@ function Checkout({
                     type="email"
                     name="email"
                     value={form.email}
-                    onChange={handleChange}
+                    onChange={
+                      handleChange
+                    }
                     placeholder="Enter email"
                     autoComplete="email"
                     required
@@ -368,9 +764,7 @@ function Checkout({
             </section>
 
 
-            {/* =================================================
-                DELIVERY ADDRESS
-            ================================================= */}
+            {/* ADDRESS */}
 
             <section className="checkout-section">
 
@@ -397,8 +791,6 @@ function Checkout({
 
               <div className="form-grid">
 
-                {/* ADDRESS */}
-
                 <div className="form-field full">
 
                   <label htmlFor="address">
@@ -408,8 +800,12 @@ function Checkout({
                   <textarea
                     id="address"
                     name="address"
-                    value={form.address}
-                    onChange={handleChange}
+                    value={
+                      form.address
+                    }
+                    onChange={
+                      handleChange
+                    }
                     placeholder="House number, street, area"
                     rows="4"
                     autoComplete="street-address"
@@ -418,8 +814,6 @@ function Checkout({
 
                 </div>
 
-
-                {/* CITY */}
 
                 <div className="form-field">
 
@@ -432,7 +826,9 @@ function Checkout({
                     type="text"
                     name="city"
                     value={form.city}
-                    onChange={handleChange}
+                    onChange={
+                      handleChange
+                    }
                     placeholder="City"
                     autoComplete="address-level2"
                     required
@@ -440,8 +836,6 @@ function Checkout({
 
                 </div>
 
-
-                {/* STATE */}
 
                 <div className="form-field">
 
@@ -453,8 +847,12 @@ function Checkout({
                     id="state"
                     type="text"
                     name="state"
-                    value={form.state}
-                    onChange={handleChange}
+                    value={
+                      form.state
+                    }
+                    onChange={
+                      handleChange
+                    }
                     placeholder="State"
                     autoComplete="address-level1"
                     required
@@ -462,8 +860,6 @@ function Checkout({
 
                 </div>
 
-
-                {/* PINCODE */}
 
                 <div className="form-field">
 
@@ -475,8 +871,12 @@ function Checkout({
                     id="pincode"
                     type="text"
                     name="pincode"
-                    value={form.pincode}
-                    onChange={handleChange}
+                    value={
+                      form.pincode
+                    }
+                    onChange={
+                      handleChange
+                    }
                     placeholder="6-digit PIN"
                     inputMode="numeric"
                     pattern="[0-9]{6}"
@@ -492,9 +892,7 @@ function Checkout({
             </section>
 
 
-            {/* =================================================
-                PAYMENT
-            ================================================= */}
+            {/* PAYMENT */}
 
             <section className="checkout-section">
 
@@ -520,8 +918,6 @@ function Checkout({
 
 
               <div className="payment-options">
-
-                {/* CASH ON DELIVERY */}
 
                 <label
                   className={
@@ -560,8 +956,6 @@ function Checkout({
                 </label>
 
 
-                {/* ONLINE PAYMENT */}
-
                 <label
                   className={
                     payment === "online"
@@ -587,11 +981,11 @@ function Checkout({
                   <div className="payment-option-content">
 
                     <strong>
-                      Online Payment
+                      Razorpay Online Payment
                     </strong>
 
                     <span>
-                      Card, UPI or Net Banking
+                      UPI, Card or Net Banking
                     </span>
 
                   </div>
@@ -603,26 +997,33 @@ function Checkout({
 
               {payment === "online" && (
                 <p className="payment-note">
-                  Online payment is currently
-                  simulated for this demo store.
+                  Razorpay Test Mode is enabled.
+                  No real money will be charged
+                  during testing.
                 </p>
               )}
 
             </section>
 
 
-            {/* =================================================
-                PLACE ORDER
-            ================================================= */}
+            {/* BUTTON */}
 
             <button
               type="submit"
               className="place-order-button"
+              disabled={processing}
             >
-              Place Order · ₹
-              {total.toLocaleString(
-                "en-IN"
-              )}
+
+              {processing
+                ? "Processing..."
+                : payment === "online"
+                ? `Pay ₹${total.toLocaleString(
+                    "en-IN"
+                  )}`
+                : `Place Order · ₹${total.toLocaleString(
+                    "en-IN"
+                  )}`}
+
             </button>
 
 
@@ -638,9 +1039,7 @@ function Checkout({
           </form>
 
 
-          {/* =================================================
-              RIGHT SIDE — ORDER SUMMARY
-          ================================================= */}
+          {/* ORDER SUMMARY */}
 
           <aside className="checkout-summary">
 
@@ -649,65 +1048,66 @@ function Checkout({
             </h2>
 
 
-            {/* PRODUCTS */}
-
             <div className="checkout-products">
 
-              {cart.map((item) => (
+              {cart.map((item) => {
 
-                <div
-                  className="checkout-product"
-                  key={item.id}
-                >
+                const productId =
+                  item._id ||
+                  item.id;
 
-                  <div className="checkout-product-image">
+                return (
+                  <div
+                    className="checkout-product"
+                    key={productId}
+                  >
 
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                    />
+                    <div className="checkout-product-image">
 
-                    <span>
-                      {item.quantity}
-                    </span>
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                      />
+
+                      <span>
+                        {item.quantity}
+                      </span>
+
+                    </div>
+
+
+                    <div className="checkout-product-info">
+
+                      <h3>
+                        {item.name}
+                      </h3>
+
+                      <span>
+                        Qty: {item.quantity}
+                      </span>
+
+                    </div>
+
+
+                    <strong>
+                      ₹
+                      {(
+                        Number(item.price) *
+                        Number(item.quantity)
+                      ).toLocaleString(
+                        "en-IN"
+                      )}
+                    </strong>
 
                   </div>
-
-
-                  <div className="checkout-product-info">
-
-                    <h3>
-                      {item.name}
-                    </h3>
-
-                    <span>
-                      Qty: {item.quantity}
-                    </span>
-
-                  </div>
-
-
-                  <strong>
-                    ₹
-                    {(
-                      item.price *
-                      item.quantity
-                    ).toLocaleString(
-                      "en-IN"
-                    )}
-                  </strong>
-
-                </div>
-
-              ))}
+                );
+              })}
 
             </div>
 
 
             <div className="checkout-summary-line" />
 
-
-            {/* SUBTOTAL */}
 
             <div className="checkout-total-row">
 
@@ -724,8 +1124,6 @@ function Checkout({
 
             </div>
 
-
-            {/* SHIPPING */}
 
             <div className="checkout-total-row">
 
@@ -745,8 +1143,6 @@ function Checkout({
             <div className="checkout-summary-line" />
 
 
-            {/* FINAL TOTAL */}
-
             <div className="checkout-final-total">
 
               <span>
@@ -762,8 +1158,6 @@ function Checkout({
 
             </div>
 
-
-            {/* FREE SHIPPING MESSAGE */}
 
             <p className="checkout-shipping-note">
 
@@ -789,10 +1183,6 @@ function Checkout({
   );
 }
 
-
-/* =========================================================
-   EMPTY CART ICON
-========================================================= */
 
 function ShoppingBagIcon() {
   return (

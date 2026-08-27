@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   BrowserRouter,
@@ -27,44 +27,11 @@ import Wishlist from "./pages/Wishlist";
 import Account from "./pages/Account";
 import AdminProducts from "./pages/AdminProducts";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import AdminOrders from "./pages/AdminOrders";
+import AdminRoute from "./components/AdminRoute";
 
 import "./index.css";
-
-
-/* =========================================================
-   PRODUCTS
-========================================================= */
-
-const products = [
-  {
-    id: 1,
-    name: "Oversized Premium T-Shirt",
-    price: 899,
-    image:
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=85",
-  },
-  {
-    id: 2,
-    name: "Classic Denim Jacket",
-    price: 1999,
-    image:
-      "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=700&q=85",
-  },
-  {
-    id: 3,
-    name: "Premium Hoodie",
-    price: 1499,
-    image:
-      "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=700&q=85",
-  },
-  {
-    id: 4,
-    name: "Casual Cotton Shirt",
-    price: 1199,
-    image:
-      "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=700&q=85",
-  },
-];
 
 
 /* =========================================================
@@ -78,6 +45,60 @@ function Home({
   wishlist,
   toggleWishlist,
 }) {
+  const [products, setProducts] =
+    useState([]);
+
+  const [
+    loadingProducts,
+    setLoadingProducts,
+  ] = useState(true);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadProducts = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/products"
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            "Failed to fetch products"
+          );
+        }
+
+        const data =
+          await response.json();
+
+        if (!ignore) {
+          setProducts(data);
+        }
+      } catch (error) {
+        console.error(
+          "Home products error:",
+          error
+        );
+      } finally {
+        if (!ignore) {
+          setLoadingProducts(false);
+        }
+      }
+    };
+
+    loadProducts();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const featuredProducts =
+    products.filter(
+      (product) =>
+        product.featured === true
+    );
+
   return (
     <div className="app">
 
@@ -85,7 +106,10 @@ function Home({
 
       <header className="navbar">
 
-        <Link to="/" className="logo">
+        <Link
+          to="/"
+          className="logo"
+        >
           NOVA
         </Link>
 
@@ -95,24 +119,24 @@ function Home({
             Home
           </Link>
 
-          <Link to="/shop">
+          <Link to="/shop?category=Men">
             Men
           </Link>
 
-          <Link to="/shop">
+          <Link to="/shop?category=Women">
             Women
           </Link>
 
-          <Link to="/shop">
+          <Link to="/shop?category=Kids">
             Kids
           </Link>
 
-          <Link to="/shop">
+          <Link to="/shop?new=true">
             New Arrivals
           </Link>
 
           <Link
-            to="/shop"
+            to="/shop?sale=true"
             className="sale"
           >
             Sale
@@ -170,7 +194,6 @@ function Home({
             </span>
           )}
 
-
           {!user && (
             <Link
               to="/login"
@@ -194,7 +217,8 @@ function Home({
               <span className="cart-count">
                 {cart.reduce(
                   (total, item) =>
-                    total + item.quantity,
+                    total +
+                    item.quantity,
                   0
                 )}
               </span>
@@ -229,7 +253,9 @@ function Home({
           <h1>
             Define Your
             <br />
-            <span>Own Style.</span>
+            <span>
+              Own Style.
+            </span>
           </h1>
 
           <p className="hero-description">
@@ -269,11 +295,8 @@ function Home({
           </div>
 
           <Link to="/shop">
-
             View All
-
             <ArrowRight size={16} />
-
           </Link>
 
         </div>
@@ -284,7 +307,7 @@ function Home({
           {/* WOMEN */}
 
           <Link
-            to="/shop"
+            to="/shop?category=Women"
             className="category-card"
           >
 
@@ -311,7 +334,7 @@ function Home({
           {/* MEN */}
 
           <Link
-            to="/shop"
+            to="/shop?category=Men"
             className="category-card"
           >
 
@@ -338,7 +361,7 @@ function Home({
           {/* ACCESSORIES */}
 
           <Link
-            to="/shop"
+            to="/shop?category=Accessories"
             className="category-card"
           >
 
@@ -385,11 +408,8 @@ function Home({
           </div>
 
           <Link to="/shop">
-
             Shop All
-
             <ArrowRight size={16} />
-
           </Link>
 
         </div>
@@ -397,100 +417,135 @@ function Home({
 
         <div className="product-grid">
 
-          {products.map((product) => {
+          {loadingProducts ? (
 
-            const liked = wishlist.some(
-              (item) =>
-                item.id === product.id
-            );
+            <p>
+              Loading featured products...
+            </p>
 
-            return (
+          ) : featuredProducts.length === 0 ? (
 
-              <div
-                className="product-card"
-                key={product.id}
-              >
+            <p>
+              No featured products yet.
+            </p>
 
-                <div className="product-image">
+          ) : (
 
-                  <Link
-                    to={`/product/${product.id}`}
+            featuredProducts.map(
+              (product) => {
+
+                const productId =
+                  product._id ||
+                  product.id;
+
+                const liked =
+                  wishlist.some(
+                    (item) =>
+                      (
+                        item._id ||
+                        item.id
+                      ) === productId
+                  );
+
+                return (
+
+                  <div
+                    className="product-card"
+                    key={productId}
                   >
 
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                    />
+                    <div className="product-image">
 
-                  </Link>
-
-
-                  {/* WISHLIST */}
-
-                  <button
-                    className="wishlist-button"
-                    type="button"
-                    onClick={() =>
-                      toggleWishlist(product)
-                    }
-                  >
-
-                    <Heart
-                      size={20}
-                      fill={
-                        liked
-                          ? "currentColor"
-                          : "none"
-                      }
-                    />
-
-                  </button>
+                      <Link
+                        to={`/product/${productId}`}
+                      >
+                        <img
+                          src={
+                            product.image
+                          }
+                          alt={
+                            product.name
+                          }
+                        />
+                      </Link>
 
 
-                  {/* ADD TO CART */}
+                      {/* WISHLIST */}
 
-                  <button
-                    className="add-cart-button"
-                    type="button"
-                    onClick={() =>
-                      addToCart(product)
-                    }
-                  >
+                      <button
+                        className="wishlist-button"
+                        type="button"
+                        onClick={() =>
+                          toggleWishlist(
+                            product
+                          )
+                        }
+                      >
 
-                    <ShoppingBag size={17} />
+                        <Heart
+                          size={20}
+                          fill={
+                            liked
+                              ? "currentColor"
+                              : "none"
+                          }
+                        />
 
-                    Add to Cart
-
-                  </button>
-
-                </div>
+                      </button>
 
 
-                <div className="product-info">
+                      {/* ADD TO CART */}
 
-                  <Link
-                    to={`/product/${product.id}`}
-                  >
+                      <button
+                        className="add-cart-button"
+                        type="button"
+                        onClick={() =>
+                          addToCart(
+                            product
+                          )
+                        }
+                      >
 
-                    <h3>
-                      {product.name}
-                    </h3>
+                        <ShoppingBag
+                          size={17}
+                        />
 
-                  </Link>
+                        Add to Cart
 
-                  <p>
-                    ₹
-                    {product.price.toLocaleString(
-                      "en-IN"
-                    )}
-                  </p>
+                      </button>
 
-                </div>
+                    </div>
 
-              </div>
 
-            );
-          })}
+                    <div className="product-info">
+
+                      <Link
+                        to={`/product/${productId}`}
+                      >
+                        <h3>
+                          {product.name}
+                        </h3>
+                      </Link>
+
+                      <p>
+                        ₹
+                        {Number(
+                          product.price ||
+                          0
+                        ).toLocaleString(
+                          "en-IN"
+                        )}
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                );
+              }
+            )
+
+          )}
 
         </div>
 
@@ -509,102 +564,147 @@ function App() {
 
   /* =======================================================
      CART
+     SAVED SEPARATELY FOR EACH USER
   ======================================================= */
 
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] =
+    useState(() => {
+
+      try {
+
+        const savedUser =
+          localStorage.getItem(
+            "novaUser"
+          );
+
+        if (!savedUser) {
+          return [];
+        }
+
+        const currentUser =
+          JSON.parse(
+            savedUser
+          );
+
+        if (
+          !currentUser?.email
+        ) {
+          return [];
+        }
+
+        const email =
+          currentUser.email
+            .toLowerCase()
+            .trim();
+
+        const cartKey =
+          `novaCart_${email}`;
+
+        const savedCart =
+          localStorage.getItem(
+            cartKey
+          );
+
+        return savedCart
+          ? JSON.parse(
+              savedCart
+            )
+          : [];
+
+      } catch {
+
+        return [];
+
+      }
+
+    });
 
 
   /* =======================================================
      USER
   ======================================================= */
 
-  const [user, setUser] = useState(() => {
+  const [user, setUser] =
+    useState(() => {
 
-    try {
+      try {
 
-      const savedUser =
-        localStorage.getItem("novaUser");
+        const savedUser =
+          localStorage.getItem(
+            "novaUser"
+          );
 
-      return savedUser
-        ? JSON.parse(savedUser)
-        : null;
+        return savedUser
+          ? JSON.parse(
+              savedUser
+            )
+          : null;
 
-    } catch {
+      } catch {
 
-      return null;
+        return null;
 
-    }
+      }
 
-  });
+    });
 
 
   /* =======================================================
-     ORDERS
-     Orders are stored separately for every account.
+     SAVE CART AUTOMATICALLY
   ======================================================= */
 
-  const [orders, setOrders] = useState(() => {
+  useEffect(() => {
 
-    try {
-
-      const savedUser =
-        localStorage.getItem("novaUser");
-
-      if (!savedUser) {
-        return [];
-      }
-
-      const currentUser =
-        JSON.parse(savedUser);
-
-      if (!currentUser?.email) {
-        return [];
-      }
-
-      const email =
-        currentUser.email
-          .toLowerCase()
-          .trim();
-
-      const orderKey =
-        `novaOrders_${email}`;
-
-      const savedOrders =
-        localStorage.getItem(orderKey);
-
-      return savedOrders
-        ? JSON.parse(savedOrders)
-        : [];
-
-    } catch {
-
-      return [];
-
+    if (!user?.email) {
+      return;
     }
 
-  });
+    const email =
+      user.email
+        .toLowerCase()
+        .trim();
+
+    const cartKey =
+      `novaCart_${email}`;
+
+    localStorage.setItem(
+      cartKey,
+      JSON.stringify(
+        cart
+      )
+    );
+
+  }, [cart, user]);
 
 
   /* =======================================================
      WISHLIST
-     Wishlist is stored separately for every account.
   ======================================================= */
 
-  const [wishlist, setWishlist] = useState(() => {
+  const [
+    wishlist,
+    setWishlist,
+  ] = useState(() => {
 
     try {
 
       const savedUser =
-        localStorage.getItem("novaUser");
+        localStorage.getItem(
+          "novaUser"
+        );
 
       if (!savedUser) {
         return [];
       }
 
       const currentUser =
-        JSON.parse(savedUser);
+        JSON.parse(
+          savedUser
+        );
 
-      if (!currentUser?.email) {
+      if (
+        !currentUser?.email
+      ) {
         return [];
       }
 
@@ -617,10 +717,14 @@ function App() {
         `novaWishlist_${email}`;
 
       const savedWishlist =
-        localStorage.getItem(wishlistKey);
+        localStorage.getItem(
+          wishlistKey
+        );
 
       return savedWishlist
-        ? JSON.parse(savedWishlist)
+        ? JSON.parse(
+            savedWishlist
+          )
         : [];
 
     } catch {
@@ -636,84 +740,16 @@ function App() {
      LOGIN
   ======================================================= */
 
-  /* =======================================================
-   LOGIN
-======================================================= */
-
-function handleLogin(userData) {
-  const email = userData?.email
-    ?.toLowerCase()
-    .trim();
-
-  const loggedInUser = {
-    ...userData,
-    email,
-  };
-
-  localStorage.setItem(
-    "novaUser",
-    JSON.stringify(loggedInUser)
-  );
-
-  setUser(loggedInUser);
-
-
-  /* LOAD WISHLIST */
-
-  const wishlistKey =
-    `novaWishlist_${email}`;
-
-  try {
-    const savedWishlist =
-      localStorage.getItem(wishlistKey);
-
-    setWishlist(
-      savedWishlist
-        ? JSON.parse(savedWishlist)
-        : []
-    );
-  } catch {
-    setWishlist([]);
-  }
-
-
-  /* LOAD ORDERS */
-
-  const orderKey =
-    `novaOrders_${email}`;
-
-  try {
-    const savedOrders =
-      localStorage.getItem(orderKey);
-
-    setOrders(
-      savedOrders
-        ? JSON.parse(savedOrders)
-        : []
-    );
-  } catch {
-    setOrders([]);
-  }
-
-
-  /* CLEAR CART */
-
-  setCart([]);
-}
-
-
-  /* =======================================================
-     REGISTER
-  ======================================================= */
-
-  function handleRegister(userData) {
+  function handleLogin(
+    userData
+  ) {
 
     const email =
       userData?.email
         ?.toLowerCase()
         .trim();
 
-    const registeredUser = {
+    const loggedInUser = {
       ...userData,
       email,
     };
@@ -723,28 +759,71 @@ function handleLogin(userData) {
 
     localStorage.setItem(
       "novaUser",
-      JSON.stringify(registeredUser)
+      JSON.stringify(
+        loggedInUser
+      )
     );
 
 
     /* SET USER */
 
-    setUser(registeredUser);
+    setUser(
+      loggedInUser
+    );
 
 
-    /* NEW ACCOUNT = EMPTY WISHLIST */
+    /* LOAD WISHLIST */
 
-    setWishlist([]);
+    const wishlistKey =
+      `novaWishlist_${email}`;
+
+    try {
+
+      const savedWishlist =
+        localStorage.getItem(
+          wishlistKey
+        );
+
+      setWishlist(
+        savedWishlist
+          ? JSON.parse(
+              savedWishlist
+            )
+          : []
+      );
+
+    } catch {
+
+      setWishlist([]);
+
+    }
 
 
-    /* NEW ACCOUNT = EMPTY ORDERS */
+    /* LOAD CART */
 
-    setOrders([]);
+    const cartKey =
+      `novaCart_${email}`;
 
+    try {
 
-    /* NEW ACCOUNT = EMPTY CART */
+      const savedCart =
+        localStorage.getItem(
+          cartKey
+        );
 
-    setCart([]);
+      setCart(
+        savedCart
+          ? JSON.parse(
+              savedCart
+            )
+          : []
+      );
+
+    } catch {
+
+      setCart([]);
+
+    }
 
   }
 
@@ -755,29 +834,17 @@ function handleLogin(userData) {
 
   function handleLogout() {
 
-    /* REMOVE LOGIN */
-
     localStorage.removeItem(
       "novaUser"
     );
 
-
-    /* CLEAR USER */
+    localStorage.removeItem(
+      "novaToken"
+    );
 
     setUser(null);
 
-
-    /* CLEAR WISHLIST FROM SCREEN */
-
     setWishlist([]);
-
-
-    /* CLEAR ORDERS FROM SCREEN */
-
-    setOrders([]);
-
-
-    /* CLEAR CART */
 
     setCart([]);
 
@@ -788,42 +855,54 @@ function handleLogin(userData) {
      ADD TO CART
   ======================================================= */
 
-  function addToCart(product) {
+  function addToCart(
+    product
+  ) {
 
     setCart((current) => {
+
+      const productId =
+        product._id ||
+        product.id;
 
       const existing =
         current.find(
           (item) =>
-            item.id === product.id
+            (
+              item._id ||
+              item.id
+            ) ===
+            productId
         );
-
 
       if (existing) {
 
         return current.map(
           (item) =>
-            item.id === product.id
+            (
+              item._id ||
+              item.id
+            ) ===
+            productId
               ? {
                   ...item,
+
                   quantity:
-                    item.quantity + 1,
+                    item.quantity +
+                    1,
                 }
               : item
         );
 
       }
 
-
       return [
-
         ...current,
 
         {
           ...product,
           quantity: 1,
         },
-
       ];
 
     });
@@ -844,86 +923,197 @@ function handleLogin(userData) {
 
   /* =======================================================
      CREATE ORDER
-     
-     IMPORTANT:
-     Orders are saved using the logged-in user's email.
+     MONGODB ORDER SYSTEM
   ======================================================= */
 
-  /* =========================================================
-   CREATE ORDER
-   SAVE ORDER FOR CURRENT USER
-========================================================= */
+  async function createOrder(
+    orderDetails = {}
+  ) {
 
-/* =========================================================
-   CREATE ORDER
-   SAVE ORDER FOR CURRENT USER
-========================================================= */
+    if (!user?.email) {
 
-function createOrder(orderDetails = {}) {
-  if (!user?.email) {
-    alert("Please login before placing an order.");
-    return null;
+      alert(
+        "Please login before placing an order."
+      );
+
+      return null;
+
+    }
+
+    if (
+      cart.length === 0
+    ) {
+
+      return null;
+
+    }
+
+
+    const total =
+      cart.reduce(
+        (
+          sum,
+          item
+        ) =>
+          sum +
+          Number(
+            item.price
+          ) *
+          Number(
+            item.quantity
+          ),
+        0
+      );
+
+
+    const newOrder = {
+
+      id:
+        `NOVA-${Date.now()}`,
+
+      date:
+        new Date()
+          .toLocaleDateString(
+            "en-IN"
+          ),
+
+      status:
+        "Order Confirmed",
+
+      items:
+        cart.map(
+          (item) => ({
+            ...item,
+          })
+        ),
+
+      total,
+
+      customer:
+        orderDetails.customer ||
+        {},
+
+      paymentMethod:
+        orderDetails.paymentMethod ||
+        "cod",
+
+    };
+
+
+    try {
+
+      const token =
+        localStorage.getItem(
+          "novaToken"
+        );
+
+      if (!token) {
+
+        alert(
+          "Please login again before placing an order."
+        );
+
+        return null;
+
+      }
+
+
+      const response =
+        await fetch(
+          "http://localhost:5000/api/orders",
+          {
+            method:
+              "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body: JSON.stringify({
+  orderId: newOrder.id,
+
+  customer: newOrder.customer,
+
+  items: newOrder.items.map(
+    (item) => ({
+      id: String(
+        item._id || item.id
+      ),
+      name: item.name,
+      price: Number(item.price),
+      quantity: Number(item.quantity),
+      image: item.image || "",
+    })
+  ),
+
+  total: newOrder.total,
+
+  paymentMethod:
+    newOrder.paymentMethod,
+
+  razorpay_order_id:
+    orderDetails
+      .razorpayPayment
+      ?.razorpay_order_id,
+
+  razorpay_payment_id:
+    orderDetails
+      .razorpayPayment
+      ?.razorpay_payment_id,
+
+  razorpay_signature:
+    orderDetails
+      .razorpayPayment
+      ?.razorpay_signature,
+}),
+          }
+        );
+
+
+      const data =
+        await response.json();
+
+
+      if (
+        !response.ok
+      ) {
+
+        throw new Error(
+          data.message ||
+          "Failed to save order"
+        );
+
+      }
+
+
+      return {
+        ...newOrder,
+
+        mongoId:
+          data.order._id,
+      };
+
+    } catch (error) {
+
+      console.error(
+        "Create order failed:",
+        error
+      );
+
+      alert(
+        error.message ||
+        "Failed to place order"
+      );
+
+      return null;
+
+    }
+
   }
-
-  if (cart.length === 0) {
-    return null;
-  }
-
-  const email = user.email
-    .toLowerCase()
-    .trim();
-
-  const orderKey = `novaOrders_${email}`;
-
-  const total = cart.reduce(
-    (sum, item) =>
-      sum + item.price * item.quantity,
-    0
-  );
-
-  const newOrder = {
-    id: `NOVA-${Date.now()}`,
-
-    date: new Date().toLocaleDateString(
-      "en-IN"
-    ),
-
-    status: "Order Confirmed",
-
-    items: cart.map((item) => ({
-      ...item,
-    })),
-
-    total: total,
-
-    customer:
-      orderDetails.customer || {},
-
-    paymentMethod:
-      orderDetails.paymentMethod || "cod",
-  };
-
-
-  /* ADD ORDER TO CURRENT USER'S ORDERS */
-
-  setOrders((current) => {
-    const updatedOrders = [
-      ...current,
-      newOrder,
-    ];
-
-    /* SAVE ONLY FOR THIS USER */
-
-    localStorage.setItem(
-      orderKey,
-      JSON.stringify(updatedOrders)
-    );
-
-    return updatedOrders;
-  });
-
-  return newOrder;
-}
 
 
   /* =======================================================
@@ -938,37 +1128,39 @@ function createOrder(orderDetails = {}) {
       return;
     }
 
-
     const email =
       user.email
         .toLowerCase()
         .trim();
 
-
     const wishlistKey =
       `novaWishlist_${email}`;
 
 
-    setWishlist((current) => {
+    setWishlist(
+      (current) => {
 
-      const updatedWishlist =
-        current.filter(
-          (item) =>
-            item.id !== productId
+        const updatedWishlist =
+          current.filter(
+            (item) =>
+              (
+                item._id ||
+                item.id
+              ) !==
+              productId
+          );
+
+        localStorage.setItem(
+          wishlistKey,
+          JSON.stringify(
+            updatedWishlist
+          )
         );
 
+        return updatedWishlist;
 
-      localStorage.setItem(
-        wishlistKey,
-        JSON.stringify(
-          updatedWishlist
-        )
-      );
-
-
-      return updatedWishlist;
-
-    });
+      }
+    );
 
   }
 
@@ -977,9 +1169,9 @@ function createOrder(orderDetails = {}) {
      TOGGLE WISHLIST
   ======================================================= */
 
-  function toggleWishlist(product) {
-
-    /* LOGIN REQUIRED */
+  function toggleWishlist(
+    product
+  ) {
 
     if (!user?.email) {
 
@@ -997,47 +1189,55 @@ function createOrder(orderDetails = {}) {
         .toLowerCase()
         .trim();
 
-
     const wishlistKey =
       `novaWishlist_${email}`;
 
+    const productId =
+      product._id ||
+      product.id;
 
-    setWishlist((current) => {
 
-      const exists =
-        current.some(
-          (item) =>
-            item.id === product.id
+    setWishlist(
+      (current) => {
+
+        const exists =
+          current.some(
+            (item) =>
+              (
+                item._id ||
+                item.id
+              ) ===
+              productId
+          );
+
+        const updatedWishlist =
+          exists
+            ? current.filter(
+                (item) =>
+                  (
+                    item._id ||
+                    item.id
+                  ) !==
+                  productId
+              )
+            : [
+                ...current,
+                product,
+              ];
+
+
+        localStorage.setItem(
+          wishlistKey,
+          JSON.stringify(
+            updatedWishlist
+          )
         );
 
 
-      const updatedWishlist =
-        exists
+        return updatedWishlist;
 
-          ? current.filter(
-              (item) =>
-                item.id !== product.id
-            )
-
-          : [
-              ...current,
-              product,
-            ];
-
-
-      /* SAVE ONLY FOR CURRENT USER */
-
-      localStorage.setItem(
-        wishlistKey,
-        JSON.stringify(
-          updatedWishlist
-        )
-      );
-
-
-      return updatedWishlist;
-
-    });
+      }
+    );
 
   }
 
@@ -1059,10 +1259,18 @@ function createOrder(orderDetails = {}) {
           path="/"
           element={
             <Home
-              cart={cart}
-              addToCart={addToCart}
-              user={user}
-              wishlist={wishlist}
+              cart={
+                cart
+              }
+              addToCart={
+                addToCart
+              }
+              user={
+                user
+              }
+              wishlist={
+                wishlist
+              }
               toggleWishlist={
                 toggleWishlist
               }
@@ -1077,7 +1285,15 @@ function createOrder(orderDetails = {}) {
           path="/shop"
           element={
             <Shop
-              addToCart={addToCart}
+              addToCart={
+                addToCart
+              }
+              wishlist={
+                wishlist
+              }
+              toggleWishlist={
+                toggleWishlist
+              }
             />
           }
         />
@@ -1089,7 +1305,15 @@ function createOrder(orderDetails = {}) {
           path="/product/:id"
           element={
             <Product
-              addToCart={addToCart}
+              addToCart={
+                addToCart
+              }
+              wishlist={
+                wishlist
+              }
+              toggleWishlist={
+                toggleWishlist
+              }
             />
           }
         />
@@ -1101,8 +1325,12 @@ function createOrder(orderDetails = {}) {
           path="/cart"
           element={
             <Cart
-              cart={cart}
-              setCart={setCart}
+              cart={
+                cart
+              }
+              setCart={
+                setCart
+              }
             />
           }
         />
@@ -1114,9 +1342,15 @@ function createOrder(orderDetails = {}) {
           path="/checkout"
           element={
             <Checkout
-              cart={cart}
-              clearCart={clearCart}
-              createOrder={createOrder}
+              cart={
+                cart
+              }
+              clearCart={
+                clearCart
+              }
+              createOrder={
+                createOrder
+              }
             />
           }
         />
@@ -1127,9 +1361,7 @@ function createOrder(orderDetails = {}) {
         <Route
           path="/orders"
           element={
-            <Orders
-              orders={orders}
-            />
+            <Orders />
           }
         />
 
@@ -1140,7 +1372,9 @@ function createOrder(orderDetails = {}) {
           path="/login"
           element={
             <Login
-              onLogin={handleLogin}
+              onLogin={
+                handleLogin
+              }
             />
           }
         />
@@ -1151,11 +1385,7 @@ function createOrder(orderDetails = {}) {
         <Route
           path="/register"
           element={
-            <Register
-              onRegister={
-                handleRegister
-              }
-            />
+            <Register />
           }
         />
 
@@ -1166,23 +1396,79 @@ function createOrder(orderDetails = {}) {
           path="/account"
           element={
             <Account
-              user={user}
-              onLogout={handleLogout}
+              user={
+                user
+              }
+              onLogout={
+                handleLogout
+              }
             />
           }
         />
 
-        
+
+        {/* ADMIN DASHBOARD */}
 
         <Route
-  path="/admin/products"
-  element={<AdminProducts />}
-/>
+          path="/admin"
+          element={
+            <AdminRoute
+              user={
+                user
+              }
+            >
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+
+
+        {/* ADMIN PRODUCTS */}
 
         <Route
-  path="/admin"
-  element={<AdminDashboard />}
-/>
+          path="/admin/products"
+          element={
+            <AdminRoute
+              user={
+                user
+              }
+            >
+              <AdminProducts />
+            </AdminRoute>
+          }
+        />
+
+
+        {/* ADMIN USERS */}
+
+        <Route
+          path="/admin/users"
+          element={
+            <AdminRoute
+              user={
+                user
+              }
+            >
+              <AdminUsers />
+            </AdminRoute>
+          }
+        />
+
+
+        {/* ADMIN ORDERS */}
+
+        <Route
+          path="/admin/orders"
+          element={
+            <AdminRoute
+              user={
+                user
+              }
+            >
+              <AdminOrders />
+            </AdminRoute>
+          }
+        />
 
 
         {/* WISHLIST */}
@@ -1191,11 +1477,15 @@ function createOrder(orderDetails = {}) {
           path="/wishlist"
           element={
             <Wishlist
-              wishlist={wishlist}
+              wishlist={
+                wishlist
+              }
               removeFromWishlist={
                 removeFromWishlist
               }
-              addToCart={addToCart}
+              addToCart={
+                addToCart
+              }
             />
           }
         />

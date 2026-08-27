@@ -1,5 +1,9 @@
-import { useState,useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Link,
+  useSearchParams,
+} from "react-router-dom";
+
 import {
   Search,
   Heart,
@@ -7,89 +11,219 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
+function Shop({
+  addToCart,
+  wishlist,
+  toggleWishlist,
+}) {
+  const [searchParams] =
+    useSearchParams();
 
+  const [search, setSearch] =
+    useState("");
 
-function Shop({ addToCart }) {
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
-  const [sort, setSort] = useState("default");
-  const [wishlist, setWishlist] = useState([]);
-  const [products, setProducts] = useState([]);
-const [loading, setLoading] = useState(true);
-const [error, setError] = useState("");
+  const [
+    selectedCategory,
+    setSelectedCategory,
+  ] = useState(null);
 
-useEffect(() => {
-  const fetchProducts = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/api/products");
+  const [sort, setSort] =
+    useState("default");
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch products");
-      }
+  const [products, setProducts] =
+    useState([]);
 
-      const data = await response.json();
+  const [loading, setLoading] =
+    useState(true);
 
-      setProducts(data);
-    } catch (error) {
-      console.error(error);
-      setError("Unable to load products");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [error, setError] =
+    useState("");
 
-  fetchProducts();
-}, []);
+  const urlCategory =
+    searchParams.get("category");
 
-if (loading) {
-  return <div className="loading">Loading products...</div>;
-}
+  const category =
+    selectedCategory ||
+    urlCategory ||
+    "All";
 
-if (error) {
-  return <div className="error-message">{error}</div>;
-}
+  const saleOnly =
+    searchParams.get("sale") ===
+    "true";
 
-  function toggleWishlist(id) {
-    setWishlist((current) => {
-      if (current.includes(id)) {
-        return current.filter(
-          (item) => item !== id
+  const newOnly =
+    searchParams.get("new") ===
+    "true";
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadProducts = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/products"
         );
+
+        if (!response.ok) {
+          throw new Error(
+            "Failed to fetch products"
+          );
+        }
+
+        const data =
+          await response.json();
+
+        if (!ignore) {
+          setProducts(data);
+        }
+      } catch (error) {
+        if (!ignore) {
+          console.error(
+            "Failed to load products:",
+            error
+          );
+
+          setError(
+            "Unable to load products"
+          );
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
       }
+    };
 
-      return [...current, id];
-    });
-  }
+    loadProducts();
 
-  let filteredProducts = products.filter(
-    (product) => {
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const categories = useMemo(
+    () => [
+      "All",
+      ...new Set(
+        products
+          .map(
+            (product) =>
+              product.category
+          )
+          .filter(Boolean)
+      ),
+    ],
+    [products]
+  );
+
+  let filteredProducts =
+    products.filter((product) => {
+      const productName =
+        product.name || "";
+
+      const productCategory =
+        product.category || "";
+
       const matchesSearch =
-        product.name
+        productName
           .toLowerCase()
           .includes(
-            search.toLowerCase()
+            search
+              .toLowerCase()
+              .trim()
           );
 
       const matchesCategory =
         category === "All" ||
-        product.category === category;
+        productCategory === category;
+
+      const matchesSale =
+        !saleOnly ||
+        product.sale === true;
 
       return (
         matchesSearch &&
-        matchesCategory
+        matchesCategory &&
+        matchesSale
       );
-    }
-  );
+    });
+
+  if (newOnly) {
+    filteredProducts = [
+      ...filteredProducts,
+    ].sort((a, b) => {
+      const dateA =
+        new Date(
+          a.createdAt || 0
+        ).getTime();
+
+      const dateB =
+        new Date(
+          b.createdAt || 0
+        ).getTime();
+
+      return dateB - dateA;
+    });
+  } else {
+    filteredProducts = [
+      ...filteredProducts,
+    ];
+  }
 
   if (sort === "low") {
     filteredProducts.sort(
-      (a, b) => a.price - b.price
+      (a, b) =>
+        Number(a.price) -
+        Number(b.price)
     );
   }
 
   if (sort === "high") {
     filteredProducts.sort(
-      (a, b) => b.price - a.price
+      (a, b) =>
+        Number(b.price) -
+        Number(a.price)
+    );
+  }
+
+  const pageTitle = saleOnly
+    ? "Sale"
+    : newOnly
+    ? "New Arrivals"
+    : category !== "All"
+    ? category
+    : "Shop All";
+
+  if (loading) {
+    return (
+      <div className="shop-page">
+        <div className="no-products">
+          <h2>
+            Loading products...
+          </h2>
+
+          <p>
+            Please wait while NOVA
+            loads the collection.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="shop-page">
+        <div className="no-products">
+          <h2>
+            Unable to load products
+          </h2>
+
+          <p>
+            {error}
+          </p>
+        </div>
+      </div>
     );
   }
 
@@ -100,10 +234,12 @@ if (error) {
 
       <section className="shop-header">
 
-        <p>OUR COLLECTION</p>
+        <p>
+          OUR COLLECTION
+        </p>
 
         <h1>
-          Shop All
+          {pageTitle}
         </h1>
 
         <span>
@@ -112,6 +248,7 @@ if (error) {
         </span>
 
       </section>
+
 
       {/* CONTROLS */}
 
@@ -134,16 +271,13 @@ if (error) {
 
         </div>
 
+
         <div className="category-buttons">
 
-          {[
-            "All",
-            "Men",
-            "Women",
-            "Accessories",
-          ].map((item) => (
+          {categories.map((item) => (
 
             <button
+              type="button"
               key={item}
               className={
                 category === item
@@ -151,7 +285,9 @@ if (error) {
                   : ""
               }
               onClick={() =>
-                setCategory(item)
+                setSelectedCategory(
+                  item
+                )
               }
             >
               {item}
@@ -160,6 +296,7 @@ if (error) {
           ))}
 
         </div>
+
 
         <div className="sort-box">
 
@@ -175,6 +312,7 @@ if (error) {
               )
             }
           >
+
             <option value="default">
               Sort By
             </option>
@@ -186,17 +324,25 @@ if (error) {
             <option value="high">
               Price: High to Low
             </option>
+
           </select>
 
         </div>
 
       </section>
 
+
       {/* PRODUCT COUNT */}
 
       <div className="shop-count">
-        {filteredProducts.length} products
+
+        {filteredProducts.length}{" "}
+        {filteredProducts.length === 1
+          ? "product"
+          : "products"}
+
       </div>
+
 
       {/* PRODUCTS */}
 
@@ -207,34 +353,80 @@ if (error) {
           {filteredProducts.map(
             (product) => {
 
+              const productId =
+                product._id ||
+                product.id;
+
               const liked =
-                wishlist.includes(
-                  product.id
+                wishlist.some(
+                  (item) =>
+                    (
+                      item._id ||
+                      item.id
+                    ) === productId
                 );
+
+              const stock =
+                Number(
+                  product.stock ?? 0
+                );
+
+              const outOfStock =
+                stock <= 0;
+
+              const lowStock =
+                stock > 0 &&
+                stock <= 5;
 
               return (
 
                 <div
                   className="shop-product"
-                  key={product.id}
+                  key={productId}
                 >
 
                   <div className="shop-product-image">
 
-                    <Link to={`/product/${product.id}`}>
-  <img
-    src={product.image}
-    alt={product.name}
-  />
-</Link>
+                    <Link
+                      to={`/product/${productId}`}
+                    >
+                      <img
+                        src={
+                          product.image
+                        }
+                        alt={
+                          product.name
+                        }
+                      />
+                    </Link>
+
+
+                    {/* STOCK BADGE */}
+
+                    {outOfStock && (
+                      <span className="shop-stock-badge out">
+                        Out of Stock
+                      </span>
+                    )}
+
+                    {lowStock && (
+                      <span className="shop-stock-badge low">
+                        Only {stock} left
+                      </span>
+                    )}
+
+
+                    {/* WISHLIST */}
 
                     <button
+                      type="button"
                       className="shop-wishlist"
                       onClick={() =>
                         toggleWishlist(
-                          product.id
+                          product
                         )
                       }
+                      aria-label="Toggle wishlist"
                     >
 
                       <Heart
@@ -248,35 +440,63 @@ if (error) {
 
                     </button>
 
+
+                    {/* ADD TO CART */}
+
                     <button
+                      type="button"
                       className="add-cart"
-                      onClick={() =>
-                        addToCart(product)
-                      }
+                      disabled={outOfStock}
+                      onClick={() => {
+                        if (
+                          !outOfStock
+                        ) {
+                          addToCart(
+                            product
+                          );
+                        }
+                      }}
                     >
 
                       <ShoppingBag
                         size={17}
                       />
 
-                      Add to Cart
+                      {outOfStock
+                        ? "Out of Stock"
+                        : "Add to Cart"}
 
                     </button>
 
                   </div>
 
+
+                  {/* PRODUCT INFO */}
+
                   <div className="shop-product-info">
 
-                    <Link to={`/product/${product.id}`}>
-  <h3>{product.name}</h3>
-</Link>
+                    <Link
+                      to={`/product/${productId}`}
+                    >
+                      <h3>
+                        {product.name}
+                      </h3>
+                    </Link>
 
                     <p>
                       ₹
-                      {product.price.toLocaleString(
+                      {Number(
+                        product.price || 0
+                      ).toLocaleString(
                         "en-IN"
                       )}
                     </p>
+
+                    {lowStock && (
+                      <span className="shop-low-stock-text">
+                        Hurry, only {stock} remaining
+                      </span>
+                    )}
 
                   </div>
 
@@ -297,7 +517,8 @@ if (error) {
           </h2>
 
           <p>
-            Try another search or category.
+            Try another search
+            or category.
           </p>
 
         </div>

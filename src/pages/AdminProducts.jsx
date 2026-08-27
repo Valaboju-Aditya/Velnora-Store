@@ -70,7 +70,10 @@ function AdminProducts() {
         }
       } catch (error) {
         if (!ignore) {
-          console.error("Failed to fetch products:", error);
+          console.error(
+            "Failed to fetch products:",
+            error
+          );
         }
       }
     };
@@ -87,7 +90,10 @@ function AdminProducts() {
 
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]:
+        type === "checkbox"
+          ? checked
+          : value,
     }));
   };
 
@@ -95,29 +101,62 @@ function AdminProducts() {
     e.preventDefault();
 
     try {
+      const token =
+        localStorage.getItem("novaToken");
+
+      if (!token) {
+        alert(
+          "Your admin session has expired. Please login again."
+        );
+        return;
+      }
+
       const url = editingProduct
         ? `http://localhost:5000/api/products/${editingProduct._id}`
         : "http://localhost:5000/api/products";
 
-      const method = editingProduct ? "PUT" : "POST";
+      const method = editingProduct
+        ? "PUT"
+        : "POST";
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...formData,
-          price: Number(formData.price),
-          stock: Number(formData.stock),
-        }),
-      });
+      const response = await fetch(
+        url,
+        {
+          method,
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            Authorization:
+              `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            ...formData,
+
+            price: Number(
+              formData.price
+            ),
+
+            stock: Number(
+              formData.stock
+            ),
+          }),
+        }
+      );
+
+      const data =
+        await response.json();
 
       if (!response.ok) {
         throw new Error(
-          editingProduct
-            ? "Failed to update product"
-            : "Failed to create product"
+          data.message ||
+            (
+              editingProduct
+                ? "Failed to update product"
+                : "Failed to create product"
+            )
         );
       }
 
@@ -131,12 +170,18 @@ function AdminProducts() {
 
       resetForm();
     } catch (error) {
-      console.error("Product save error:", error);
+      console.error(
+        "Product save error:",
+        error
+      );
 
       alert(
-        editingProduct
-          ? "Failed to update product"
-          : "Failed to add product"
+        error.message ||
+          (
+            editingProduct
+              ? "Failed to update product"
+              : "Failed to add product"
+          )
       );
     }
   };
@@ -145,14 +190,29 @@ function AdminProducts() {
     setEditingProduct(product);
 
     setFormData({
-      name: product.name || "",
-      description: product.description || "",
-      price: product.price || "",
-      category: product.category || "",
-      image: product.image || "",
-      stock: product.stock || "",
-      featured: product.featured || false,
-      sale: product.sale || false,
+      name:
+        product.name || "",
+
+      description:
+        product.description || "",
+
+      price:
+        product.price ?? "",
+
+      category:
+        product.category || "",
+
+      image:
+        product.image || "",
+
+      stock:
+        product.stock ?? "",
+
+      featured:
+        Boolean(product.featured),
+
+      sale:
+        Boolean(product.sale),
     });
 
     setShowForm(true);
@@ -163,52 +223,94 @@ function AdminProducts() {
     });
   };
 
-  const handleDelete = async (productId) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this product?"
-    );
+  const handleDelete =
+    async (productId) => {
+      const confirmed =
+        window.confirm(
+          "Are you sure you want to delete this product?"
+        );
 
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `http://localhost:5000/api/products/${productId}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to delete product");
+      if (!confirmed) {
+        return;
       }
 
-      await fetchProducts();
+      try {
+        const token =
+          localStorage.getItem(
+            "novaToken"
+          );
 
-      alert("Product deleted successfully!");
-    } catch (error) {
-      console.error("Delete product error:", error);
+        if (!token) {
+          alert(
+            "Your admin session has expired. Please login again."
+          );
+          return;
+        }
 
-      alert("Failed to delete product");
-    }
-  };
+        const response =
+          await fetch(
+            `http://localhost:5000/api/products/${productId}`,
+            {
+              method: "DELETE",
+
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+              "Failed to delete product"
+          );
+        }
+
+        await fetchProducts();
+
+        alert(
+          "Product deleted successfully!"
+        );
+      } catch (error) {
+        console.error(
+          "Delete product error:",
+          error
+        );
+
+        alert(
+          error.message ||
+            "Failed to delete product"
+        );
+      }
+    };
 
   return (
     <div className="admin-products-page">
-      <div className="admin-products-header">
-        <div>
-          <p>NOVA ADMIN</p>
 
-          <h1>Manage Products</h1>
+      <div className="admin-products-header">
+
+        <div>
+          <p>
+            NOVA ADMIN
+          </p>
+
+          <h1>
+            Manage Products
+          </h1>
 
           <span>
-            Total Products: {products.length}
+            Total Products:{" "}
+            {products.length}
           </span>
         </div>
 
         <button
           className="admin-add-button"
+          type="button"
           onClick={() => {
             if (showForm) {
               resetForm();
@@ -217,15 +319,20 @@ function AdminProducts() {
             }
           }}
         >
-          {showForm ? "Close Form" : "+ Add Product"}
+          {showForm
+            ? "Close Form"
+            : "+ Add Product"}
         </button>
+
       </div>
 
       {showForm && (
+
         <form
           className="admin-product-form"
           onSubmit={handleSubmit}
         >
+
           <h2>
             {editingProduct
               ? "Edit Product"
@@ -244,7 +351,9 @@ function AdminProducts() {
           <textarea
             name="description"
             placeholder="Product description"
-            value={formData.description}
+            value={
+              formData.description
+            }
             onChange={handleChange}
           />
 
@@ -262,7 +371,9 @@ function AdminProducts() {
             type="text"
             name="category"
             placeholder="Category"
-            value={formData.category}
+            value={
+              formData.category
+            }
             onChange={handleChange}
             required
           />
@@ -290,7 +401,9 @@ function AdminProducts() {
             <input
               type="checkbox"
               name="featured"
-              checked={formData.featured}
+              checked={
+                formData.featured
+              }
               onChange={handleChange}
             />
 
@@ -301,7 +414,9 @@ function AdminProducts() {
             <input
               type="checkbox"
               name="sale"
-              checked={formData.sale}
+              checked={
+                formData.sale
+              }
               onChange={handleChange}
             />
 
@@ -309,94 +424,147 @@ function AdminProducts() {
           </label>
 
           <div className="admin-form-actions">
-            <button type="submit">
+
+            <button
+              type="submit"
+            >
               {editingProduct
                 ? "Update Product"
                 : "Add Product"}
             </button>
 
             {editingProduct && (
+
               <button
                 type="button"
                 onClick={resetForm}
               >
                 Cancel Edit
               </button>
+
             )}
+
           </div>
+
         </form>
+
       )}
 
       <div className="admin-products-list">
+
         {products.length === 0 ? (
+
           <div className="admin-empty-products">
-            <h2>No products found</h2>
+
+            <h2>
+              No products found
+            </h2>
 
             <p>
-              Add your first product using the
-              button above.
+              Add your first product
+              using the button above.
             </p>
+
           </div>
+
         ) : (
-          products.map((product) => (
-            <div
-              className="admin-product-card"
-              key={product._id}
-            >
-              <img
-                src={product.image}
-                alt={product.name}
-              />
 
-              <div className="admin-product-info">
-                <h2>{product.name}</h2>
+          products.map(
+            (product) => (
 
-                <p className="admin-product-price">
-                  ₹{product.price}
-                </p>
+              <div
+                className="admin-product-card"
+                key={product._id}
+              >
 
-                <p>
-                  Category: {product.category}
-                </p>
+                <img
+                  src={
+                    product.image
+                  }
+                  alt={
+                    product.name
+                  }
+                />
 
-                <p>
-                  Stock: {product.stock}
-                </p>
+                <div className="admin-product-info">
 
-                {product.featured && (
-                  <span className="admin-badge">
-                    Featured
-                  </span>
-                )}
+                  <h2>
+                    {product.name}
+                  </h2>
 
-                {product.sale && (
-                  <span className="admin-badge sale-badge">
-                    Sale
-                  </span>
-                )}
+                  <p className="admin-product-price">
+                    ₹
+                    {Number(
+                      product.price ||
+                        0
+                    ).toLocaleString(
+                      "en-IN"
+                    )}
+                  </p>
 
-                <div className="admin-product-actions">
-                  <button
-                    type="button"
-                    onClick={() => handleEdit(product)}
-                  >
-                    Edit
-                  </button>
+                  <p>
+                    Category:{" "}
+                    {product.category}
+                  </p>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleDelete(product._id)
-                    }
-                  >
-                    Delete
-                  </button>
+                  <p>
+                    Stock:{" "}
+                    {product.stock}
+                  </p>
+
+                  {product.featured && (
+
+                    <span className="admin-badge">
+                      Featured
+                    </span>
+
+                  )}
+
+                  {product.sale && (
+
+                    <span className="admin-badge sale-badge">
+                      Sale
+                    </span>
+
+                  )}
+
+                  <div className="admin-product-actions">
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleEdit(
+                          product
+                        )
+                      }
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleDelete(
+                          product._id
+                        )
+                      }
+                    >
+                      Delete
+                    </button>
+
+                  </div>
+
                 </div>
+
               </div>
-            </div>
-          ))
+
+            )
+          )
+
         )}
+
       </div>
+
     </div>
   );
 }

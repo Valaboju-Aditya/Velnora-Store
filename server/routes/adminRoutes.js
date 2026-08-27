@@ -1,0 +1,410 @@
+const express = require("express");
+const mongoose = require("mongoose");
+
+const User = require("../models/User");
+const Product = require("../models/Product");
+const Order = require("../models/Order");
+
+const protect = require("../middleware/authMiddleware");
+const adminOnly = require("../middleware/adminMiddleware");
+
+const router = express.Router();
+
+router.use(protect, adminOnly);
+
+
+// =========================
+// ADMIN DASHBOARD STATS
+// =========================
+
+router.get("/stats", async (req, res) => {
+  try {
+    const totalUsers =
+      await User.countDocuments();
+
+    const totalProducts =
+      await Product.countDocuments();
+
+    const totalOrders =
+      await Order.countDocuments();
+
+    const salesResult =
+      await Order.aggregate([
+        {
+          $match: {
+            status: {
+              $ne: "Cancelled",
+            },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+
+            totalSales: {
+              $sum: "$total",
+            },
+          },
+        },
+      ]);
+
+    const totalSales =
+      salesResult.length > 0
+        ? salesResult[0].totalSales
+        : 0;
+
+    res.json({
+      users: totalUsers,
+      products: totalProducts,
+      orders: totalOrders,
+      sales: totalSales,
+    });
+  } catch (error) {
+    console.error(
+      "Failed to fetch admin stats:",
+      error
+    );
+
+    res.status(500).json({
+      message:
+        "Failed to fetch admin statistics",
+    });
+  }
+});
+
+
+// =========================
+// GET ALL USERS
+// =========================
+
+router.get(
+  "/users",
+  async (req, res) => {
+    try {
+      const users =
+        await User.find()
+          .select("-password")
+          .sort({
+            createdAt: -1,
+          });
+
+      res.json(users);
+    } catch (error) {
+      console.error(
+        "Failed to fetch users:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Failed to fetch users",
+      });
+    }
+  }
+);
+
+
+// =========================
+// DELETE USER
+// =========================
+
+router.delete(
+  "/users/:id",
+  async (req, res) => {
+    try {
+      const user =
+        await User.findByIdAndDelete(
+          req.params.id
+        );
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+      }
+
+      res.json({
+        message:
+          "User deleted successfully",
+      });
+    } catch (error) {
+      console.error(
+        "Failed to delete user:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Failed to delete user",
+      });
+    }
+  }
+);
+
+
+// =========================
+// GET ALL ORDERS
+// =========================
+
+router.get(
+  "/orders",
+  async (req, res) => {
+    try {
+      const orders =
+        await Order.find()
+          .populate(
+            "userId",
+            "name email"
+          )
+          .sort({
+            createdAt: -1,
+          });
+
+      res.json(orders);
+    } catch (error) {
+      console.error(
+        "Failed to fetch orders:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Failed to fetch orders",
+      });
+    }
+  }
+);
+
+
+// =========================
+// UPDATE ORDER STATUS
+// WITH STOCK RESTORATION
+// =========================
+
+router.put(
+  "/orders/:id/status",
+  async (req, res) => {
+    const session =
+      await mongoose.startSession();
+
+    try {
+      const { status } =
+        req.body;
+
+      const allowedStatuses = [
+        "Order Confirmed",
+        "Processing",
+        "Shipped",
+        "Delivered",
+        "Cancelled",
+      ];
+
+      if (
+        !allowedStatuses.includes(
+          status
+        )
+      ) {
+        return res.status(400).json({
+          message:
+            "Invalid order status",
+        });
+      }
+
+      session.startTransaction();
+
+
+      // =========================
+      // FIND ORDER
+      // =========================
+
+      const order =
+        await Order.findById(
+          req.params.id
+        ).session(session);
+
+      if (!order) {
+        await session.abortTransaction();
+
+        return res.status(404).json({
+          message:
+            "Order not found",
+        });
+      }
+
+
+      const previousStatus =
+        order.status;
+
+
+      // =========================
+      // SAME STATUS
+      // =========================
+
+      if (
+        previousStatus === status
+      ) {
+        await session.commitTransaction();
+
+        return res.json({
+          message:
+            "Order status is already up to date",
+          order,
+        });
+      }
+
+
+      // =========================
+      // DO NOT REOPEN CANCELLED
+      // =========================
+
+      if (
+        previousStatus ===
+          "Cancelled" &&
+        status !== "Cancelled"
+      ) {
+        await session.abortTransaction();
+
+        return res.status(400).json({
+          message:
+            "Cancelled orders cannot be reopened",
+        });
+      }
+
+
+      // =========================
+      // OPTIONAL SAFETY:
+      // DO NOT CANCEL DELIVERED
+      // =========================
+
+      if (
+        previousStatus ===
+          "Delivered" &&
+        status === "Cancelled"
+      ) {
+        await session.abortTransaction();
+
+        return res.status(400).json({
+          message:
+            "Delivered orders cannot be cancelled",
+        });
+      }
+
+
+      // =========================
+      // RESTORE STOCK
+      // ONLY WHEN FIRST CANCELLED
+      // =========================
+
+      if (
+        status === "Cancelled" &&
+        previousStatus !==
+          "Cancelled"
+      ) {
+        for (
+          const item of order.items
+        ) {
+          const quantity =
+            Number(
+              item.quantity
+            );
+
+          if (
+            !item.id ||
+            !Number.isInteger(
+              quantity
+            ) ||
+            quantity <= 0
+          ) {
+            throw new Error(
+              "Invalid order item data"
+            );
+          }
+
+          const product =
+            await Product.findById(
+              item.id
+            ).session(session);
+
+          if (!product) {
+            console.warn(
+              `Product ${item.id} no longer exists. Stock restoration skipped.`
+            );
+
+            continue;
+          }
+
+          product.stock =
+            Number(
+              product.stock || 0
+            ) + quantity;
+
+          await product.save({
+            session,
+          });
+        }
+      }
+
+
+      // =========================
+      // UPDATE STATUS
+      // =========================
+
+      order.status =
+        status;
+
+      await order.save({
+        session,
+      });
+
+
+      await session.commitTransaction();
+
+
+      // =========================
+      // RETURN UPDATED ORDER
+      // =========================
+
+      const updatedOrder =
+        await Order.findById(
+          order._id
+        ).populate(
+          "userId",
+          "name email"
+        );
+
+      res.json({
+        message:
+          status === "Cancelled"
+            ? "Order cancelled and stock restored successfully"
+            : "Order status updated successfully",
+
+        order:
+          updatedOrder,
+      });
+
+    } catch (error) {
+      if (
+        session.inTransaction()
+      ) {
+        await session.abortTransaction();
+      }
+
+      console.error(
+        "Failed to update order status:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Failed to update order status",
+      });
+
+    } finally {
+      await session.endSession();
+    }
+  }
+);
+
+
+module.exports = router;

@@ -9,14 +9,21 @@ function Register({ onRegister }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] =
     useState("");
-  const [error, setError] = useState("");
 
-  function handleSubmit(e) {
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e) {
     e.preventDefault();
 
     setError("");
 
-    if (!name || !email || !password || !confirmPassword) {
+    if (
+      !name ||
+      !email ||
+      !password ||
+      !confirmPassword
+    ) {
       setError("Please fill in all fields.");
       return;
     }
@@ -33,14 +40,54 @@ function Register({ onRegister }) {
       return;
     }
 
-    const newUser = {
-      name: name,
-      email: email,
-    };
+    try {
+      setLoading(true);
 
-    onRegister(newUser);
+      const response = await fetch(
+        "http://localhost:5000/api/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+          }),
+        }
+      );
 
-    navigate("/");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Registration failed"
+        );
+      }
+
+      if (onRegister) {
+        onRegister(data.user);
+      }
+
+      alert(
+        "Registration successful. Please login."
+      );
+
+      navigate("/login");
+    } catch (error) {
+      console.error(
+        "Registration failed:",
+        error
+      );
+
+      setError(
+        error.message ||
+          "Unable to register. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -60,54 +107,74 @@ function Register({ onRegister }) {
         <form onSubmit={handleSubmit}>
 
           <div className="form-group">
-            <label>Full Name</label>
+            <label htmlFor="register-name">
+              Full Name
+            </label>
 
             <input
+              id="register-name"
               type="text"
               placeholder="Enter your name"
               value={name}
               onChange={(e) =>
                 setName(e.target.value)
               }
+              autoComplete="name"
+              required
             />
           </div>
 
           <div className="form-group">
-            <label>Email Address</label>
+            <label htmlFor="register-email">
+              Email Address
+            </label>
 
             <input
+              id="register-email"
               type="email"
               placeholder="Enter your email"
               value={email}
               onChange={(e) =>
                 setEmail(e.target.value)
               }
+              autoComplete="email"
+              required
             />
           </div>
 
           <div className="form-group">
-            <label>Password</label>
+            <label htmlFor="register-password">
+              Password
+            </label>
 
             <input
+              id="register-password"
               type="password"
               placeholder="Create a password"
               value={password}
               onChange={(e) =>
                 setPassword(e.target.value)
               }
+              autoComplete="new-password"
+              required
             />
           </div>
 
           <div className="form-group">
-            <label>Confirm Password</label>
+            <label htmlFor="register-confirm-password">
+              Confirm Password
+            </label>
 
             <input
+              id="register-confirm-password"
               type="password"
               placeholder="Confirm your password"
               value={confirmPassword}
               onChange={(e) =>
                 setConfirmPassword(e.target.value)
               }
+              autoComplete="new-password"
+              required
             />
           </div>
 
@@ -120,13 +187,17 @@ function Register({ onRegister }) {
           <button
             type="submit"
             className="auth-button"
+            disabled={loading}
           >
-            Create Account
+            {loading
+              ? "Creating Account..."
+              : "Create Account"}
           </button>
 
         </form>
 
         <div className="auth-footer">
+
           <span>
             Already have an account?
           </span>
@@ -134,6 +205,7 @@ function Register({ onRegister }) {
           <Link to="/login">
             Login
           </Link>
+
         </div>
 
       </div>
