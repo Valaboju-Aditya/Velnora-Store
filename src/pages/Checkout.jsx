@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { API_URL } from "../config";
 
 import {
   ArrowLeft,
@@ -237,7 +238,7 @@ function Checkout({
 
       const paymentResponse =
         await fetch(
-          "http://localhost:5000/api/payments/create-order",
+          `${API_URL}/api/payments/create-order`,
           {
             method: "POST",
 

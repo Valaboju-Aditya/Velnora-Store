@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { API_URL } from "../config";
 import {
   ChevronDown,
   ChevronUp,
@@ -33,7 +34,7 @@ function Orders() {
         }
 
         const response = await fetch(
-          "http://localhost:5000/api/orders/my-orders",
+          `${API_URL}/api/orders/my-orders`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

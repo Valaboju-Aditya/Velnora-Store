@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "../config";
 
 import {
   Link,
@@ -34,9 +35,7 @@ function Product({
 
     const loadProduct = async () => {
       try {
-        const response = await fetch(
-          `http://localhost:5000/api/products/${id}`
-        );
+        const response = await fetch(`${API_URL}/api/products/${id}`);
 
         if (!response.ok) {
           throw new Error(

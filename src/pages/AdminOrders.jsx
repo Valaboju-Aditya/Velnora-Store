@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "../config";
 
 function AdminOrders() {
   const [orders, setOrders] = useState([]);
@@ -12,7 +13,7 @@ function AdminOrders() {
         const token = localStorage.getItem("novaToken");
 
         const response = await fetch(
-          "http://localhost:5000/api/admin/orders",
+          `${API_URL}/api/admin/orders`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -58,7 +59,7 @@ function AdminOrders() {
       const token = localStorage.getItem("novaToken");
 
       const response = await fetch(
-        `http://localhost:5000/api/admin/orders/${orderId}/status`,
+        `${API_URL}/api/admin/orders/${orderId}/status`,
         {
           method: "PUT",
           headers: {

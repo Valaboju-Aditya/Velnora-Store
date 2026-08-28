@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "./config";
 
 import {
   BrowserRouter,
@@ -59,7 +60,7 @@ function Home({
     const loadProducts = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/products"
+          `${API_URL}/api/products`
         );
 
         if (!response.ok) {
@@ -1020,7 +1021,7 @@ function App() {
 
       const response =
         await fetch(
-          "http://localhost:5000/api/orders",
+          `${API_URL}/api/orders`,
           {
             method:
               "POST",

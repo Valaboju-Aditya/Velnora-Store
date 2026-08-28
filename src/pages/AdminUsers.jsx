@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "../config";
 
 function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -12,7 +13,7 @@ function AdminUsers() {
         const token = localStorage.getItem("novaToken");
 
         const response = await fetch(
-          "http://localhost:5000/api/admin/users",
+          `${API_URL}/api/admin/users`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -63,7 +64,7 @@ function AdminUsers() {
       const token = localStorage.getItem("novaToken");
 
       const response = await fetch(
-        `http://localhost:5000/api/admin/users/${id}`,
+       `${API_URL}/api/admin/users/${id}`,
         {
           method: "DELETE",
           headers: {

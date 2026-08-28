@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { API_URL } from "../config";
 
 function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -15,7 +16,7 @@ function AdminDashboard() {
         const token = localStorage.getItem("novaToken");
 
         const response = await fetch(
-          "http://localhost:5000/api/admin/stats",
+          `${API_URL}/api/admin/stats`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

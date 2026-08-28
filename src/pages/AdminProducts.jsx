@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "../config";
 
 function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -35,7 +36,7 @@ function AdminProducts() {
   const fetchProducts = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5000/api/products"
+        `${API_URL}/api/products`
       );
 
       if (!response.ok) {
@@ -56,7 +57,7 @@ function AdminProducts() {
     const loadProducts = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/products"
+          `${API_URL}/api/products`
         );
 
         if (!response.ok) {
@@ -112,8 +113,8 @@ function AdminProducts() {
       }
 
       const url = editingProduct
-        ? `http://localhost:5000/api/products/${editingProduct._id}`
-        : "http://localhost:5000/api/products";
+        ? `${API_URL}/api/products/${editingProduct._id}`
+        : `${API_URL}/api/products`;
 
       const method = editingProduct
         ? "PUT"
@@ -249,7 +250,7 @@ function AdminProducts() {
 
         const response =
           await fetch(
-            `http://localhost:5000/api/products/${productId}`,
+            `${API_URL}/api/products/${productId}`,
             {
               method: "DELETE",
 
