@@ -8737,11 +8737,12 @@ button:last-child {
 }
 @media (max-width: 750px) {
   .navbar {
+    position: relative;
     height: 56px;
     padding: 0 14px;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
   }
 
   .navbar .nav-links {
@@ -8753,7 +8754,8 @@ button:last-child {
   }
 
   .navbar .logo {
-    margin: 0;
+    margin: 0 !important;
     font-size: 22px;
+    text-align: center;
   }
 }
