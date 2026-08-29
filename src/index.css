@@ -8712,3 +8712,48 @@ button:last-child {
     stroke-width: 2.4;
   }
 }
+@media (max-width: 750px) {
+  .nav-links,
+  .nav-icons {
+    display: none !important;
+  }
+
+  .navbar {
+    height: 56px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    margin: 0;
+  }
+}
+@media (max-width: 750px) {
+  .mobile-menu-button {
+    display: none !important;
+  }
+}
+@media (max-width: 750px) {
+  .navbar {
+    height: 56px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .navbar .nav-links {
+    display: none !important;
+  }
+
+  .navbar .nav-actions {
+    display: none !important;
+  }
+
+  .navbar .logo {
+    margin: 0;
+    font-size: 22px;
+  }
+}
