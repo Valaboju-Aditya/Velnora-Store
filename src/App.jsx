@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { API_URL } from "./config";
+import MobileBottomNav from "./components/MobileBottomNav";
 
 import {
   BrowserRouter,
@@ -100,10 +101,19 @@ function Home({
         product.featured === true
     );
 
+  const cartCount =
+    cart.reduce(
+      (total, item) =>
+        total + item.quantity,
+      0
+    );
+
   return (
     <div className="app">
 
-      {/* NAVBAR */}
+      {/* =====================================================
+          NAVBAR
+      ===================================================== */}
 
       <header className="navbar">
 
@@ -216,12 +226,7 @@ function Home({
 
             {cart.length > 0 && (
               <span className="cart-count">
-                {cart.reduce(
-                  (total, item) =>
-                    total +
-                    item.quantity,
-                  0
-                )}
+                {cartCount}
               </span>
             )}
           </Link>
@@ -232,6 +237,7 @@ function Home({
           <button
             className="nav-button mobile-menu"
             type="button"
+            aria-label="Open menu"
           >
             <Menu size={20} />
           </button>
@@ -239,9 +245,25 @@ function Home({
         </div>
 
       </header>
+      <div className="mobile-search-bar">
+  <Search size={18} />
+
+  <Link to="/shop">
+    Search for products, brands and more
+  </Link>
+</div>
 
 
-      {/* HERO */}
+      {/* =====================================================
+          MOBILE BOTTOM NAVIGATION
+      ===================================================== */}
+
+      
+
+
+      {/* =====================================================
+          HERO
+      ===================================================== */}
 
       <section className="hero">
 
@@ -254,6 +276,7 @@ function Home({
           <h1>
             Define Your
             <br />
+
             <span>
               Own Style.
             </span>
@@ -269,6 +292,7 @@ function Home({
             className="hero-button"
           >
             Shop Collection
+
             <ArrowRight size={18} />
           </Link>
 
@@ -277,7 +301,9 @@ function Home({
       </section>
 
 
-      {/* CATEGORIES */}
+      {/* =====================================================
+          CATEGORIES
+      ===================================================== */}
 
       <section className="categories">
 
@@ -295,8 +321,10 @@ function Home({
 
           </div>
 
+
           <Link to="/shop">
             View All
+
             <ArrowRight size={16} />
           </Link>
 
@@ -304,6 +332,7 @@ function Home({
 
 
         <div className="category-grid">
+
 
           {/* WOMEN */}
 
@@ -390,7 +419,9 @@ function Home({
       </section>
 
 
-      {/* FEATURED PRODUCTS */}
+      {/* =====================================================
+          FEATURED PRODUCTS
+      ===================================================== */}
 
       <section className="featured">
 
@@ -408,8 +439,10 @@ function Home({
 
           </div>
 
+
           <Link to="/shop">
             Shop All
+
             <ArrowRight size={16} />
           </Link>
 
@@ -461,12 +494,8 @@ function Home({
                         to={`/product/${productId}`}
                       >
                         <img
-                          src={
-                            product.image
-                          }
-                          alt={
-                            product.name
-                          }
+                          src={product.image}
+                          alt={product.name}
                         />
                       </Link>
 
@@ -476,6 +505,11 @@ function Home({
                       <button
                         className="wishlist-button"
                         type="button"
+                        aria-label={
+                          liked
+                            ? "Remove from wishlist"
+                            : "Add to wishlist"
+                        }
                         onClick={() =>
                           toggleWishlist(
                             product
@@ -587,9 +621,7 @@ function App() {
             savedUser
           );
 
-        if (
-          !currentUser?.email
-        ) {
+        if (!currentUser?.email) {
           return [];
         }
 
@@ -703,9 +735,7 @@ function App() {
           savedUser
         );
 
-      if (
-        !currentUser?.email
-      ) {
+      if (!currentUser?.email) {
         return [];
       }
 
@@ -756,8 +786,6 @@ function App() {
     };
 
 
-    /* SAVE USER */
-
     localStorage.setItem(
       "novaUser",
       JSON.stringify(
@@ -766,14 +794,10 @@ function App() {
     );
 
 
-    /* SET USER */
-
     setUser(
       loggedInUser
     );
 
-
-    /* LOAD WISHLIST */
 
     const wishlistKey =
       `novaWishlist_${email}`;
@@ -799,8 +823,6 @@ function App() {
 
     }
 
-
-    /* LOAD CART */
 
     const cartKey =
       `novaCart_${email}`;
@@ -872,8 +894,7 @@ function App() {
             (
               item._id ||
               item.id
-            ) ===
-            productId
+            ) === productId
         );
 
       if (existing) {
@@ -883,14 +904,11 @@ function App() {
             (
               item._id ||
               item.id
-            ) ===
-            productId
+            ) === productId
               ? {
                   ...item,
-
                   quantity:
-                    item.quantity +
-                    1,
+                    item.quantity + 1,
                 }
               : item
         );
@@ -899,7 +917,6 @@ function App() {
 
       return [
         ...current,
-
         {
           ...product,
           quantity: 1,
@@ -916,15 +933,12 @@ function App() {
   ======================================================= */
 
   function clearCart() {
-
     setCart([]);
-
   }
 
 
   /* =======================================================
      CREATE ORDER
-     MONGODB ORDER SYSTEM
   ======================================================= */
 
   async function createOrder(
@@ -941,12 +955,9 @@ function App() {
 
     }
 
-    if (
-      cart.length === 0
-    ) {
 
+    if (cart.length === 0) {
       return null;
-
     }
 
 
@@ -1008,6 +1019,7 @@ function App() {
           "novaToken"
         );
 
+
       if (!token) {
 
         alert(
@@ -1034,43 +1046,63 @@ function App() {
                 `Bearer ${token}`,
             },
 
-            body: JSON.stringify({
-  orderId: newOrder.id,
+            body:
+              JSON.stringify({
 
-  customer: newOrder.customer,
+                orderId:
+                  newOrder.id,
 
-  items: newOrder.items.map(
-    (item) => ({
-      id: String(
-        item._id || item.id
-      ),
-      name: item.name,
-      price: Number(item.price),
-      quantity: Number(item.quantity),
-      image: item.image || "",
-    })
-  ),
+                customer:
+                  newOrder.customer,
 
-  total: newOrder.total,
+                items:
+                  newOrder.items.map(
+                    (item) => ({
+                      id: String(
+                        item._id ||
+                        item.id
+                      ),
 
-  paymentMethod:
-    newOrder.paymentMethod,
+                      name:
+                        item.name,
 
-  razorpay_order_id:
-    orderDetails
-      .razorpayPayment
-      ?.razorpay_order_id,
+                      price:
+                        Number(
+                          item.price
+                        ),
 
-  razorpay_payment_id:
-    orderDetails
-      .razorpayPayment
-      ?.razorpay_payment_id,
+                      quantity:
+                        Number(
+                          item.quantity
+                        ),
 
-  razorpay_signature:
-    orderDetails
-      .razorpayPayment
-      ?.razorpay_signature,
-}),
+                      image:
+                        item.image ||
+                        "",
+                    })
+                  ),
+
+                total:
+                  newOrder.total,
+
+                paymentMethod:
+                  newOrder.paymentMethod,
+
+                razorpay_order_id:
+                  orderDetails
+                    .razorpayPayment
+                    ?.razorpay_order_id,
+
+                razorpay_payment_id:
+                  orderDetails
+                    .razorpayPayment
+                    ?.razorpay_payment_id,
+
+                razorpay_signature:
+                  orderDetails
+                    .razorpayPayment
+                    ?.razorpay_signature,
+              }),
           }
         );
 
@@ -1079,9 +1111,7 @@ function App() {
         await response.json();
 
 
-      if (
-        !response.ok
-      ) {
+      if (!response.ok) {
 
         throw new Error(
           data.message ||
@@ -1147,8 +1177,7 @@ function App() {
               (
                 item._id ||
                 item.id
-              ) !==
-              productId
+              ) !== productId
           );
 
         localStorage.setItem(
@@ -1207,9 +1236,9 @@ function App() {
               (
                 item._id ||
                 item.id
-              ) ===
-              productId
+              ) === productId
           );
+
 
         const updatedWishlist =
           exists
@@ -1218,8 +1247,7 @@ function App() {
                   (
                     item._id ||
                     item.id
-                  ) !==
-                  productId
+                  ) !== productId
               )
             : [
                 ...current,
@@ -1260,21 +1288,11 @@ function App() {
           path="/"
           element={
             <Home
-              cart={
-                cart
-              }
-              addToCart={
-                addToCart
-              }
-              user={
-                user
-              }
-              wishlist={
-                wishlist
-              }
-              toggleWishlist={
-                toggleWishlist
-              }
+              cart={cart}
+              addToCart={addToCart}
+              user={user}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
             />
           }
         />
@@ -1286,15 +1304,9 @@ function App() {
           path="/shop"
           element={
             <Shop
-              addToCart={
-                addToCart
-              }
-              wishlist={
-                wishlist
-              }
-              toggleWishlist={
-                toggleWishlist
-              }
+              addToCart={addToCart}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
             />
           }
         />
@@ -1306,15 +1318,9 @@ function App() {
           path="/product/:id"
           element={
             <Product
-              addToCart={
-                addToCart
-              }
-              wishlist={
-                wishlist
-              }
-              toggleWishlist={
-                toggleWishlist
-              }
+              addToCart={addToCart}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
             />
           }
         />
@@ -1326,12 +1332,8 @@ function App() {
           path="/cart"
           element={
             <Cart
-              cart={
-                cart
-              }
-              setCart={
-                setCart
-              }
+              cart={cart}
+              setCart={setCart}
             />
           }
         />
@@ -1343,15 +1345,9 @@ function App() {
           path="/checkout"
           element={
             <Checkout
-              cart={
-                cart
-              }
-              clearCart={
-                clearCart
-              }
-              createOrder={
-                createOrder
-              }
+              cart={cart}
+              clearCart={clearCart}
+              createOrder={createOrder}
             />
           }
         />
@@ -1373,9 +1369,7 @@ function App() {
           path="/login"
           element={
             <Login
-              onLogin={
-                handleLogin
-              }
+              onLogin={handleLogin}
             />
           }
         />
@@ -1397,12 +1391,8 @@ function App() {
           path="/account"
           element={
             <Account
-              user={
-                user
-              }
-              onLogout={
-                handleLogout
-              }
+              user={user}
+              onLogout={handleLogout}
             />
           }
         />
@@ -1414,9 +1404,7 @@ function App() {
           path="/admin"
           element={
             <AdminRoute
-              user={
-                user
-              }
+              user={user}
             >
               <AdminDashboard />
             </AdminRoute>
@@ -1430,9 +1418,7 @@ function App() {
           path="/admin/products"
           element={
             <AdminRoute
-              user={
-                user
-              }
+              user={user}
             >
               <AdminProducts />
             </AdminRoute>
@@ -1446,9 +1432,7 @@ function App() {
           path="/admin/users"
           element={
             <AdminRoute
-              user={
-                user
-              }
+              user={user}
             >
               <AdminUsers />
             </AdminRoute>
@@ -1462,14 +1446,13 @@ function App() {
           path="/admin/orders"
           element={
             <AdminRoute
-              user={
-                user
-              }
+              user={user}
             >
               <AdminOrders />
             </AdminRoute>
           }
         />
+        
 
 
         {/* WISHLIST */}
@@ -1478,20 +1461,21 @@ function App() {
           path="/wishlist"
           element={
             <Wishlist
-              wishlist={
-                wishlist
-              }
+              wishlist={wishlist}
               removeFromWishlist={
                 removeFromWishlist
               }
-              addToCart={
-                addToCart
-              }
+              addToCart={addToCart}
             />
           }
         />
+        
 
       </Routes>
+      <MobileBottomNav
+  cart={cart}
+  wishlist={wishlist}
+/>
 
     </BrowserRouter>
 

@@ -1,5 +1,6 @@
 import { API_URL } from "../config";
 import { useEffect, useMemo, useState } from "react";
+
 import {
   Link,
   useSearchParams,
@@ -11,6 +12,7 @@ import {
   ShoppingBag,
   SlidersHorizontal,
 } from "lucide-react";
+
 
 function Shop({
   addToCart,
@@ -40,6 +42,7 @@ function Shop({
   const [error, setError] =
     useState("");
 
+
   const urlCategory =
     searchParams.get("category");
 
@@ -56,147 +59,222 @@ function Shop({
     searchParams.get("new") ===
     "true";
 
+
+  /* =========================================================
+     LOAD PRODUCTS
+  ========================================================= */
+
   useEffect(() => {
     let ignore = false;
 
-    const loadProducts = async () => {
-      try {
-        const response = await fetch(`${API_URL}/api/products`);
+    const loadProducts =
+      async () => {
+        try {
+          const response =
+            await fetch(
+              `${API_URL}/api/products`
+            );
 
-        if (!response.ok) {
-          throw new Error(
-            "Failed to fetch products"
-          );
-        }
+          if (!response.ok) {
+            throw new Error(
+              "Failed to fetch products"
+            );
+          }
 
-        const data =
-          await response.json();
+          const data =
+            await response.json();
 
-        if (!ignore) {
-          setProducts(data);
-        }
-      } catch (error) {
-        if (!ignore) {
-          console.error(
-            "Failed to load products:",
-            error
-          );
+          if (!ignore) {
+            setProducts(data);
+          }
 
-          setError(
-            "Unable to load products"
-          );
+        } catch (error) {
+
+          if (!ignore) {
+
+            console.error(
+              "Failed to load products:",
+              error
+            );
+
+            setError(
+              "Unable to load products"
+            );
+
+          }
+
+        } finally {
+
+          if (!ignore) {
+            setLoading(false);
+          }
+
         }
-      } finally {
-        if (!ignore) {
-          setLoading(false);
-        }
-      }
-    };
+      };
 
     loadProducts();
 
     return () => {
       ignore = true;
     };
+
   }, []);
 
-  const categories = useMemo(
-    () => [
-      "All",
-      ...new Set(
-        products
-          .map(
-            (product) =>
-              product.category
-          )
-          .filter(Boolean)
-      ),
-    ],
-    [products]
-  );
+
+  /* =========================================================
+     CATEGORIES
+  ========================================================= */
+
+  const categories =
+    useMemo(
+      () => [
+        "All",
+
+        ...new Set(
+          products
+            .map(
+              (product) =>
+                product.category
+            )
+            .filter(Boolean)
+        ),
+      ],
+      [products]
+    );
+
+
+  /* =========================================================
+     FILTER PRODUCTS
+  ========================================================= */
 
   let filteredProducts =
-    products.filter((product) => {
-      const productName =
-        product.name || "";
+    products.filter(
+      (product) => {
 
-      const productCategory =
-        product.category || "";
+        const productName =
+          product.name || "";
 
-      const matchesSearch =
-        productName
-          .toLowerCase()
-          .includes(
-            search
-              .toLowerCase()
-              .trim()
-          );
+        const productCategory =
+          product.category || "";
 
-      const matchesCategory =
-        category === "All" ||
-        productCategory === category;
 
-      const matchesSale =
-        !saleOnly ||
-        product.sale === true;
+        const matchesSearch =
+          productName
+            .toLowerCase()
+            .includes(
+              search
+                .toLowerCase()
+                .trim()
+            );
 
-      return (
-        matchesSearch &&
-        matchesCategory &&
-        matchesSale
-      );
-    });
+
+        const matchesCategory =
+          category === "All" ||
+          productCategory ===
+            category;
+
+
+        const matchesSale =
+          !saleOnly ||
+          product.sale === true;
+
+
+        return (
+          matchesSearch &&
+          matchesCategory &&
+          matchesSale
+        );
+      }
+    );
+
+
+  /* =========================================================
+     NEW ARRIVALS
+  ========================================================= */
 
   if (newOnly) {
+
     filteredProducts = [
       ...filteredProducts,
-    ].sort((a, b) => {
-      const dateA =
-        new Date(
-          a.createdAt || 0
-        ).getTime();
+    ].sort(
+      (a, b) => {
 
-      const dateB =
-        new Date(
-          b.createdAt || 0
-        ).getTime();
+        const dateA =
+          new Date(
+            a.createdAt || 0
+          ).getTime();
 
-      return dateB - dateA;
-    });
+        const dateB =
+          new Date(
+            b.createdAt || 0
+          ).getTime();
+
+        return dateB - dateA;
+
+      }
+    );
+
   } else {
+
     filteredProducts = [
       ...filteredProducts,
     ];
+
   }
 
+
+  /* =========================================================
+     SORT
+  ========================================================= */
+
   if (sort === "low") {
+
     filteredProducts.sort(
       (a, b) =>
         Number(a.price) -
         Number(b.price)
     );
+
   }
 
+
   if (sort === "high") {
+
     filteredProducts.sort(
       (a, b) =>
         Number(b.price) -
         Number(a.price)
     );
+
   }
 
-  const pageTitle = saleOnly
-    ? "Sale"
-    : newOnly
-    ? "New Arrivals"
-    : category !== "All"
-    ? category
-    : "Shop All";
+
+  /* =========================================================
+     PAGE TITLE
+  ========================================================= */
+
+  const pageTitle =
+    saleOnly
+      ? "Sale"
+      : newOnly
+      ? "New Arrivals"
+      : category !== "All"
+      ? category
+      : "Shop All";
+
+
+  /* =========================================================
+     LOADING
+  ========================================================= */
 
   if (loading) {
+
     return (
+
       <div className="shop-page">
+
         <div className="no-products">
+
           <h2>
             Loading products...
           </h2>
@@ -205,15 +283,28 @@ function Shop({
             Please wait while NOVA
             loads the collection.
           </p>
+
         </div>
+
       </div>
+
     );
+
   }
 
+
+  /* =========================================================
+     ERROR
+  ========================================================= */
+
   if (error) {
+
     return (
+
       <div className="shop-page">
+
         <div className="no-products">
+
           <h2>
             Unable to load products
           </h2>
@@ -221,15 +312,24 @@ function Shop({
           <p>
             {error}
           </p>
+
         </div>
+
       </div>
+
     );
+
   }
 
+
   return (
+
     <div className="shop-page">
 
-      {/* SHOP HEADER */}
+
+      {/* =====================================================
+          SHOP HEADER
+      ===================================================== */}
 
       <section className="shop-header">
 
@@ -249,9 +349,14 @@ function Shop({
       </section>
 
 
-      {/* CONTROLS */}
+      {/* =====================================================
+          MOBILE / DESKTOP SEARCH
+      ===================================================== */}
 
       <section className="shop-controls">
+
+
+        {/* SEARCH */}
 
         <div className="search-box">
 
@@ -259,43 +364,54 @@ function Shop({
 
           <input
             type="text"
-            placeholder="Search products..."
+            placeholder="Search products, styles and more..."
             value={search}
-            onChange={(event) =>
-              setSearch(
-                event.target.value
-              )
+            onChange={
+              (event) =>
+                setSearch(
+                  event.target.value
+                )
             }
           />
 
         </div>
 
 
+        {/* =================================================
+            CATEGORY CHIPS
+        ================================================= */}
+
         <div className="category-buttons">
 
-          {categories.map((item) => (
+          {categories.map(
+            (item) => (
 
-            <button
-              type="button"
-              key={item}
-              className={
-                category === item
-                  ? "active"
-                  : ""
-              }
-              onClick={() =>
-                setSelectedCategory(
-                  item
-                )
-              }
-            >
-              {item}
-            </button>
+              <button
+                type="button"
+                key={item}
+                className={
+                  category === item
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setSelectedCategory(
+                    item
+                  )
+                }
+              >
+                {item}
+              </button>
 
-          ))}
+            )
+          )}
 
         </div>
 
+
+        {/* =================================================
+            SORT
+        ================================================= */}
 
         <div className="sort-box">
 
@@ -305,10 +421,11 @@ function Shop({
 
           <select
             value={sort}
-            onChange={(event) =>
-              setSort(
-                event.target.value
-              )
+            onChange={
+              (event) =>
+                setSort(
+                  event.target.value
+                )
             }
           >
 
@@ -331,19 +448,37 @@ function Shop({
       </section>
 
 
-      {/* PRODUCT COUNT */}
+      {/* =====================================================
+          PRODUCT RESULTS HEADER
+      ===================================================== */}
 
-      <div className="shop-count">
+      <div className="shop-results-bar">
 
-        {filteredProducts.length}{" "}
-        {filteredProducts.length === 1
-          ? "product"
-          : "products"}
+        <div className="shop-count">
+
+          {filteredProducts.length}{" "}
+
+          {filteredProducts.length === 1
+            ? "product"
+            : "products"}
+
+        </div>
+
+
+        {category !== "All" && (
+
+          <span className="shop-current-category">
+            {category}
+          </span>
+
+        )}
 
       </div>
 
 
-      {/* PRODUCTS */}
+      {/* =====================================================
+          PRODUCTS
+      ===================================================== */}
 
       {filteredProducts.length > 0 ? (
 
@@ -356,6 +491,7 @@ function Shop({
                 product._id ||
                 product.id;
 
+
               const liked =
                 wishlist.some(
                   (item) =>
@@ -365,53 +501,65 @@ function Shop({
                     ) === productId
                 );
 
+
               const stock =
                 Number(
                   product.stock ?? 0
                 );
 
+
               const outOfStock =
                 stock <= 0;
+
 
               const lowStock =
                 stock > 0 &&
                 stock <= 5;
 
+
               return (
 
-                <div
+                <article
                   className="shop-product"
                   key={productId}
                 >
 
+
+                  {/* PRODUCT IMAGE */}
+
                   <div className="shop-product-image">
+
 
                     <Link
                       to={`/product/${productId}`}
                     >
+
                       <img
-                        src={
-                          product.image
-                        }
-                        alt={
-                          product.name
-                        }
+                        src={product.image}
+                        alt={product.name}
+                        loading="lazy"
                       />
+
                     </Link>
 
 
                     {/* STOCK BADGE */}
 
                     {outOfStock && (
+
                       <span className="shop-stock-badge out">
                         Out of Stock
                       </span>
+
                     )}
 
+
                     {lowStock && (
+
                       <span className="shop-stock-badge low">
                         Only {stock} left
                       </span>
+
                     )}
 
 
@@ -425,7 +573,11 @@ function Shop({
                           product
                         )
                       }
-                      aria-label="Toggle wishlist"
+                      aria-label={
+                        liked
+                          ? "Remove from wishlist"
+                          : "Add to wishlist"
+                      }
                     >
 
                       <Heart
@@ -447,13 +599,15 @@ function Shop({
                       className="add-cart"
                       disabled={outOfStock}
                       onClick={() => {
-                        if (
-                          !outOfStock
-                        ) {
+
+                        if (!outOfStock) {
+
                           addToCart(
                             product
                           );
+
                         }
+
                       }}
                     >
 
@@ -461,47 +615,62 @@ function Shop({
                         size={17}
                       />
 
-                      {outOfStock
-                        ? "Out of Stock"
-                        : "Add to Cart"}
+                      <span>
+                        {outOfStock
+                          ? "Out of Stock"
+                          : "Add to Cart"}
+                      </span>
 
                     </button>
 
                   </div>
 
 
-                  {/* PRODUCT INFO */}
+                  {/* PRODUCT INFORMATION */}
 
                   <div className="shop-product-info">
 
                     <Link
                       to={`/product/${productId}`}
                     >
+
                       <h3>
                         {product.name}
                       </h3>
+
                     </Link>
 
-                    <p>
+
+                    <p className="shop-product-price">
+
                       ₹
                       {Number(
-                        product.price || 0
+                        product.price ||
+                        0
                       ).toLocaleString(
                         "en-IN"
                       )}
+
                     </p>
 
+
                     {lowStock && (
+
                       <span className="shop-low-stock-text">
-                        Hurry, only {stock} remaining
+
+                        Hurry, only{" "}
+                        {stock} remaining
+
                       </span>
+
                     )}
 
                   </div>
 
-                </div>
+                </article>
 
               );
+
             }
           )}
 
@@ -510,6 +679,8 @@ function Shop({
       ) : (
 
         <div className="no-products">
+
+          <Search size={32} />
 
           <h2>
             No products found
@@ -525,7 +696,9 @@ function Shop({
       )}
 
     </div>
+
   );
+
 }
 
 export default Shop;

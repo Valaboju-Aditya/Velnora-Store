@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+
 import {
   User,
   Package,
@@ -6,6 +7,8 @@ import {
   ShoppingBag,
   LogOut,
   ChevronRight,
+  MapPin,
+  ShieldCheck,
 } from "lucide-react";
 
 function Account({ user, onLogout }) {
@@ -18,119 +21,200 @@ function Account({ user, onLogout }) {
 
   return (
     <div className="account-page">
+
       <div className="account-container">
-        {/* Header */}
-        <div className="account-header">
-          <p className="account-label">YOUR ACCOUNT</p>
 
-          <h1>My Account</h1>
+        {/* PROFILE HEADER */}
 
-          <p>
-            Manage your profile, orders, wishlist and
-            account settings.
-          </p>
-        </div>
+        <div className="account-profile-card">
 
-        {/* User Profile */}
-        <div className="account-profile">
-          <div className="profile-icon">
-            <User size={32} />
+          <div className="account-avatar">
+            <User size={26} />
           </div>
 
-          <div className="profile-info">
+          <div className="account-profile-details">
+
+            <span>Welcome</span>
+
             <h2>
               {user?.name || "NOVA Customer"}
             </h2>
 
             <p>
-              {user?.email || "Welcome to NOVA"}
+              {user?.email || "NOVA Customer"}
             </p>
+
           </div>
+
         </div>
 
-        {/* Account Options */}
-        <div className="account-grid">
-          {/* Orders */}
-          <Link
-            to="/orders"
-            className="account-card"
-          >
-            <div className="account-card-icon">
-              <Package size={24} />
-            </div>
 
-            <div className="account-card-content">
-              <h3>My Orders</h3>
+        {/* SHOPPING SECTION */}
 
-              <p>
-                View your previous orders and
-                order details.
-              </p>
-            </div>
+        <div className="account-section">
 
-            <ChevronRight size={20} />
-          </Link>
+          <h3 className="account-section-title">
+            My Shopping
+          </h3>
 
-          {/* Wishlist */}
-          <Link
-            to="/wishlist"
-            className="account-card"
-          >
-            <div className="account-card-icon">
-              <Heart size={24} />
-            </div>
+          <div className="account-menu">
 
-            <div className="account-card-content">
-              <h3>My Wishlist</h3>
+            <Link
+              to="/orders"
+              className="account-menu-item"
+            >
 
-              <p>
-                View products you have saved
-                for later.
-              </p>
-            </div>
+              <div className="account-menu-icon">
+                <Package size={19} />
+              </div>
 
-            <ChevronRight size={20} />
-          </Link>
+              <div className="account-menu-text">
 
-          {/* Shopping */}
-          <Link
-            to="/shop"
-            className="account-card"
-          >
-            <div className="account-card-icon">
-              <ShoppingBag size={24} />
-            </div>
+                <strong>
+                  My Orders
+                </strong>
 
-            <div className="account-card-content">
-              <h3>Continue Shopping</h3>
+                <span>
+                  Track and view your orders
+                </span>
 
-              <p>
-                Explore the latest NOVA fashion
-                collection.
-              </p>
-            </div>
+              </div>
 
-            <ChevronRight size={20} />
-          </Link>
+              <ChevronRight size={17} />
+
+            </Link>
+
+
+            <Link
+              to="/wishlist"
+              className="account-menu-item"
+            >
+
+              <div className="account-menu-icon">
+                <Heart size={19} />
+              </div>
+
+              <div className="account-menu-text">
+
+                <strong>
+                  Wishlist
+                </strong>
+
+                <span>
+                  Your saved products
+                </span>
+
+              </div>
+
+              <ChevronRight size={17} />
+
+            </Link>
+
+
+            <Link
+              to="/shop"
+              className="account-menu-item"
+            >
+
+              <div className="account-menu-icon">
+                <ShoppingBag size={19} />
+              </div>
+
+              <div className="account-menu-text">
+
+                <strong>
+                  Continue Shopping
+                </strong>
+
+                <span>
+                  Explore latest products
+                </span>
+
+              </div>
+
+              <ChevronRight size={17} />
+
+            </Link>
+
+          </div>
+
         </div>
 
-        {/* Logout */}
+
+        {/* ACCOUNT SECTION */}
+
+        <div className="account-section">
+
+          <h3 className="account-section-title">
+            Account
+          </h3>
+
+          <div className="account-menu">
+
+            <div className="account-menu-item">
+
+              <div className="account-menu-icon">
+                <MapPin size={19} />
+              </div>
+
+              <div className="account-menu-text">
+
+                <strong>
+                  Saved Addresses
+                </strong>
+
+                <span>
+                  Manage delivery addresses
+                </span>
+
+              </div>
+
+              <ChevronRight size={17} />
+
+            </div>
+
+
+            <div className="account-menu-item">
+
+              <div className="account-menu-icon">
+                <ShieldCheck size={19} />
+              </div>
+
+              <div className="account-menu-text">
+
+                <strong>
+                  Account Details
+                </strong>
+
+                <span>
+                  Personal information
+                </span>
+
+              </div>
+
+              <ChevronRight size={17} />
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        {/* LOGOUT */}
+
         <button
-          className="account-logout"
+          type="button"
+          className="account-logout-new"
           onClick={handleLogout}
         >
-          <LogOut size={20} />
+          <LogOut size={17} />
+
           Logout
         </button>
 
-        {/* Back Home */}
-        <Link
-          to="/"
-          className="account-home-link"
-        >
-          ← Back to Home
-        </Link>
       </div>
+
     </div>
   );
 }
