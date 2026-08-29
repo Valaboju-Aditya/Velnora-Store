@@ -369,9 +369,9 @@ function Home({
           >
 
             <img
-              src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=85"
-              alt="Men fashion"
-            />
+  src="https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=900&q=85"
+  alt="Men fashion"
+/>
 
             <div className="category-overlay">
 
