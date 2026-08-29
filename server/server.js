@@ -35,7 +35,15 @@ const MONGO_URI =
 // CORS
 // =========================
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://velnora-store.onrender.com",
+      "http://localhost:5173",
+    ],
+    credentials: true,
+  })
+);
 
 
 // =========================
