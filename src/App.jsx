@@ -32,6 +32,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminOrders from "./pages/AdminOrders";
 import AdminRoute from "./components/AdminRoute";
+import Addresses from "./pages/Addresses";
+import AccountDetails from "./pages/AccountDetails";
 
 import "./index.css";
 
@@ -1452,6 +1454,14 @@ function App() {
             </AdminRoute>
           }
         />
+        <Route
+  path="/account/addresses"
+  element={<Addresses />}
+/>
+<Route
+  path="/account/details"
+  element={<AccountDetails user={user} />}
+/>
         
 
 

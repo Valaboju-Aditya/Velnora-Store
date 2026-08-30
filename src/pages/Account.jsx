@@ -21,19 +21,16 @@ function Account({ user, onLogout }) {
 
   return (
     <div className="account-page">
-
       <div className="account-container">
 
         {/* PROFILE HEADER */}
 
         <div className="account-profile-card">
-
           <div className="account-avatar">
             <User size={26} />
           </div>
 
           <div className="account-profile-details">
-
             <span>Welcome</span>
 
             <h2>
@@ -43,33 +40,30 @@ function Account({ user, onLogout }) {
             <p>
               {user?.email || "NOVA Customer"}
             </p>
-
           </div>
-
         </div>
 
 
         {/* SHOPPING SECTION */}
 
         <div className="account-section">
-
           <h3 className="account-section-title">
             My Shopping
           </h3>
 
           <div className="account-menu">
 
+            {/* MY ORDERS */}
+
             <Link
               to="/orders"
               className="account-menu-item"
             >
-
               <div className="account-menu-icon">
                 <Package size={19} />
               </div>
 
               <div className="account-menu-text">
-
                 <strong>
                   My Orders
                 </strong>
@@ -77,25 +71,23 @@ function Account({ user, onLogout }) {
                 <span>
                   Track and view your orders
                 </span>
-
               </div>
 
               <ChevronRight size={17} />
-
             </Link>
 
+
+            {/* WISHLIST */}
 
             <Link
               to="/wishlist"
               className="account-menu-item"
             >
-
               <div className="account-menu-icon">
                 <Heart size={19} />
               </div>
 
               <div className="account-menu-text">
-
                 <strong>
                   Wishlist
                 </strong>
@@ -103,25 +95,23 @@ function Account({ user, onLogout }) {
                 <span>
                   Your saved products
                 </span>
-
               </div>
 
               <ChevronRight size={17} />
-
             </Link>
 
+
+            {/* CONTINUE SHOPPING */}
 
             <Link
               to="/shop"
               className="account-menu-item"
             >
-
               <div className="account-menu-icon">
                 <ShoppingBag size={19} />
               </div>
 
               <div className="account-menu-text">
-
                 <strong>
                   Continue Shopping
                 </strong>
@@ -129,36 +119,35 @@ function Account({ user, onLogout }) {
                 <span>
                   Explore latest products
                 </span>
-
               </div>
 
               <ChevronRight size={17} />
-
             </Link>
 
           </div>
-
         </div>
 
 
         {/* ACCOUNT SECTION */}
 
         <div className="account-section">
-
           <h3 className="account-section-title">
             Account
           </h3>
 
           <div className="account-menu">
 
-            <div className="account-menu-item">
+            {/* SAVED ADDRESSES */}
 
+            <Link
+              to="/account/addresses"
+              className="account-menu-item"
+            >
               <div className="account-menu-icon">
                 <MapPin size={19} />
               </div>
 
               <div className="account-menu-text">
-
                 <strong>
                   Saved Addresses
                 </strong>
@@ -166,22 +155,23 @@ function Account({ user, onLogout }) {
                 <span>
                   Manage delivery addresses
                 </span>
-
               </div>
 
               <ChevronRight size={17} />
+            </Link>
 
-            </div>
 
+            {/* ACCOUNT DETAILS */}
 
-            <div className="account-menu-item">
-
+            <Link
+              to="/account/details"
+              className="account-menu-item"
+            >
               <div className="account-menu-icon">
                 <ShieldCheck size={19} />
               </div>
 
               <div className="account-menu-text">
-
                 <strong>
                   Account Details
                 </strong>
@@ -189,15 +179,12 @@ function Account({ user, onLogout }) {
                 <span>
                   Personal information
                 </span>
-
               </div>
 
               <ChevronRight size={17} />
-
-            </div>
+            </Link>
 
           </div>
-
         </div>
 
 
@@ -209,12 +196,10 @@ function Account({ user, onLogout }) {
           onClick={handleLogout}
         >
           <LogOut size={17} />
-
           Logout
         </button>
 
       </div>
-
     </div>
   );
 }

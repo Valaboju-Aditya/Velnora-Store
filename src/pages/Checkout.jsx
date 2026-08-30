@@ -10,6 +10,80 @@ import {
   CreditCard,
 } from "lucide-react";
 
+
+function readSavedUser() {
+  try {
+    return (
+      JSON.parse(
+        localStorage.getItem("novaUser")
+      ) || {}
+    );
+  } catch {
+    return {};
+  }
+}
+
+
+function readSavedAddresses() {
+  try {
+    return (
+      JSON.parse(
+        localStorage.getItem("novaAddresses")
+      ) || []
+    );
+  } catch {
+    return [];
+  }
+}
+
+
+function getInitialCheckoutForm() {
+  const savedUser = readSavedUser();
+
+  const savedAddresses =
+    readSavedAddresses();
+
+  const defaultAddress =
+    savedAddresses.find(
+      (address) => address.isDefault
+    ) ||
+    savedAddresses[0] ||
+    {};
+
+  return {
+    name:
+      defaultAddress.fullName ||
+      savedUser.name ||
+      "",
+
+    phone:
+      defaultAddress.phone ||
+      savedUser.phone ||
+      "",
+
+    email:
+      savedUser.email ||
+      "",
+
+    address:
+      defaultAddress.addressLine ||
+      "",
+
+    city:
+      defaultAddress.city ||
+      "",
+
+    state:
+      defaultAddress.state ||
+      "",
+
+    pincode:
+      defaultAddress.pincode ||
+      "",
+  };
+}
+
+
 function Checkout({
   cart,
   clearCart,
@@ -24,15 +98,9 @@ function Checkout({
   const [processing, setProcessing] =
     useState(false);
 
-  const [form, setForm] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    address: "",
-    city: "",
-    state: "",
-    pincode: "",
-  });
+  const [form, setForm] = useState(
+    getInitialCheckoutForm
+  );
 
   const [payment, setPayment] =
     useState("cod");
@@ -346,11 +414,6 @@ function Checkout({
             try {
               setProcessing(true);
 
-
-              // IMPORTANT:
-              // Use the backend-created
-              // Razorpay order ID.
-
               const createdOrder =
                 await createOrder({
                   customer:
@@ -523,9 +586,7 @@ function Checkout({
   ) {
     return (
       <div className="checkout-page">
-
         <div className="checkout-empty">
-
           <ShoppingBagIcon />
 
           <h1>
@@ -540,9 +601,7 @@ function Checkout({
           <Link to="/shop">
             Continue Shopping
           </Link>
-
         </div>
-
       </div>
     );
   }
@@ -555,9 +614,7 @@ function Checkout({
   if (orderPlaced) {
     return (
       <div className="checkout-page">
-
         <div className="order-success">
-
           <CheckCircle
             size={72}
             className="success-icon"
@@ -588,7 +645,6 @@ function Checkout({
           </p>
 
           <div className="success-actions">
-
             <Link
               to="/orders"
               className="view-orders-button"
@@ -602,11 +658,8 @@ function Checkout({
             >
               Continue Shopping
             </Link>
-
           </div>
-
         </div>
-
       </div>
     );
   }
@@ -618,7 +671,6 @@ function Checkout({
 
   return (
     <div className="checkout-page">
-
       <div className="checkout-container">
 
         <Link
@@ -631,7 +683,6 @@ function Checkout({
 
 
         <div className="checkout-header">
-
           <div className="checkout-title-icon">
             <ShieldCheck size={22} />
           </div>
@@ -651,12 +702,10 @@ function Checkout({
               : "items"}{" "}
             in your order
           </span>
-
         </div>
 
 
         <div className="checkout-layout">
-
 
           <form
             className="checkout-form"
@@ -671,13 +720,11 @@ function Checkout({
             <section className="checkout-section">
 
               <div className="checkout-section-title">
-
                 <div className="checkout-icon">
                   <CreditCard size={20} />
                 </div>
 
                 <div>
-
                   <h2>
                     Contact Information
                   </h2>
@@ -685,16 +732,13 @@ function Checkout({
                   <p>
                     Enter your contact details
                   </p>
-
                 </div>
-
               </div>
 
 
               <div className="form-grid">
 
                 <div className="form-field full">
-
                   <label htmlFor="name">
                     Full Name
                   </label>
@@ -711,12 +755,10 @@ function Checkout({
                     autoComplete="name"
                     required
                   />
-
                 </div>
 
 
                 <div className="form-field">
-
                   <label htmlFor="phone">
                     Phone Number
                   </label>
@@ -735,12 +777,10 @@ function Checkout({
                     maxLength="10"
                     required
                   />
-
                 </div>
 
 
                 <div className="form-field">
-
                   <label htmlFor="email">
                     Email Address
                   </label>
@@ -757,7 +797,6 @@ function Checkout({
                     autoComplete="email"
                     required
                   />
-
                 </div>
 
               </div>
@@ -770,13 +809,11 @@ function Checkout({
             <section className="checkout-section">
 
               <div className="checkout-section-title">
-
                 <div className="checkout-icon">
                   <MapPin size={20} />
                 </div>
 
                 <div>
-
                   <h2>
                     Delivery Address
                   </h2>
@@ -784,16 +821,27 @@ function Checkout({
                   <p>
                     Where should we deliver your order?
                   </p>
-
                 </div>
+              </div>
 
+
+              <div className="checkout-saved-address">
+                <MapPin size={16} />
+
+                <span>
+                  Your default saved address is
+                  automatically filled below.
+                </span>
+
+                <Link to="/account/addresses">
+                  Manage Addresses
+                </Link>
               </div>
 
 
               <div className="form-grid">
 
                 <div className="form-field full">
-
                   <label htmlFor="address">
                     Address
                   </label>
@@ -812,12 +860,10 @@ function Checkout({
                     autoComplete="street-address"
                     required
                   />
-
                 </div>
 
 
                 <div className="form-field">
-
                   <label htmlFor="city">
                     City
                   </label>
@@ -834,12 +880,10 @@ function Checkout({
                     autoComplete="address-level2"
                     required
                   />
-
                 </div>
 
 
                 <div className="form-field">
-
                   <label htmlFor="state">
                     State
                   </label>
@@ -858,12 +902,10 @@ function Checkout({
                     autoComplete="address-level1"
                     required
                   />
-
                 </div>
 
 
                 <div className="form-field">
-
                   <label htmlFor="pincode">
                     PIN Code
                   </label>
@@ -885,7 +927,6 @@ function Checkout({
                     autoComplete="postal-code"
                     required
                   />
-
                 </div>
 
               </div>
@@ -898,13 +939,11 @@ function Checkout({
             <section className="checkout-section">
 
               <div className="checkout-section-title">
-
                 <div className="checkout-icon">
                   <CreditCard size={20} />
                 </div>
 
                 <div>
-
                   <h2>
                     Payment Method
                   </h2>
@@ -912,9 +951,7 @@ function Checkout({
                   <p>
                     Choose how you want to pay
                   </p>
-
                 </div>
-
               </div>
 
 
@@ -927,7 +964,6 @@ function Checkout({
                       : "payment-option"
                   }
                 >
-
                   <input
                     type="radio"
                     name="payment"
@@ -943,7 +979,6 @@ function Checkout({
                   />
 
                   <div className="payment-option-content">
-
                     <strong>
                       Cash on Delivery
                     </strong>
@@ -951,9 +986,7 @@ function Checkout({
                     <span>
                       Pay when your order arrives
                     </span>
-
                   </div>
-
                 </label>
 
 
@@ -964,7 +997,6 @@ function Checkout({
                       : "payment-option"
                   }
                 >
-
                   <input
                     type="radio"
                     name="payment"
@@ -980,7 +1012,6 @@ function Checkout({
                   />
 
                   <div className="payment-option-content">
-
                     <strong>
                       Razorpay Online Payment
                     </strong>
@@ -988,9 +1019,7 @@ function Checkout({
                     <span>
                       UPI, Card or Net Banking
                     </span>
-
                   </div>
-
                 </label>
 
               </div>
@@ -1014,7 +1043,6 @@ function Checkout({
               className="place-order-button"
               disabled={processing}
             >
-
               {processing
                 ? "Processing..."
                 : payment === "online"
@@ -1024,17 +1052,14 @@ function Checkout({
                 : `Place Order · ₹${total.toLocaleString(
                     "en-IN"
                   )}`}
-
             </button>
 
 
             <p className="checkout-security">
-
               <ShieldCheck size={16} />
 
               Your information is securely
               handled by NOVA.
-
             </p>
 
           </form>
@@ -1064,7 +1089,6 @@ function Checkout({
                   >
 
                     <div className="checkout-product-image">
-
                       <img
                         src={item.image}
                         alt={item.name}
@@ -1073,12 +1097,10 @@ function Checkout({
                       <span>
                         {item.quantity}
                       </span>
-
                     </div>
 
 
                     <div className="checkout-product-info">
-
                       <h3>
                         {item.name}
                       </h3>
@@ -1086,7 +1108,6 @@ function Checkout({
                       <span>
                         Qty: {item.quantity}
                       </span>
-
                     </div>
 
 
@@ -1111,7 +1132,6 @@ function Checkout({
 
 
             <div className="checkout-total-row">
-
               <span>
                 Subtotal
               </span>
@@ -1122,12 +1142,10 @@ function Checkout({
                   "en-IN"
                 )}
               </strong>
-
             </div>
 
 
             <div className="checkout-total-row">
-
               <span>
                 Shipping
               </span>
@@ -1137,7 +1155,6 @@ function Checkout({
                   ? "FREE"
                   : `₹${shipping}`}
               </strong>
-
             </div>
 
 
@@ -1145,7 +1162,6 @@ function Checkout({
 
 
             <div className="checkout-final-total">
-
               <span>
                 Total
               </span>
@@ -1156,12 +1172,10 @@ function Checkout({
                   "en-IN"
                 )}
               </strong>
-
             </div>
 
 
             <p className="checkout-shipping-note">
-
               🚚{" "}
 
               {shipping === 0
@@ -1171,7 +1185,6 @@ function Checkout({
                   ).toLocaleString(
                     "en-IN"
                   )} more for free shipping`}
-
             </p>
 
           </aside>
@@ -1179,7 +1192,6 @@ function Checkout({
         </div>
 
       </div>
-
     </div>
   );
 }
