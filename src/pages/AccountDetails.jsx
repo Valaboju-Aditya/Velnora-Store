@@ -15,7 +15,10 @@ import { Link } from "react-router-dom";
 import { API_URL } from "../config";
 
 
-function AccountDetails() {
+function AccountDetails({
+  user,
+  onUserUpdate,
+}) {
   const [formData, setFormData] =
     useState({
       name: "",
@@ -84,11 +87,17 @@ function AccountDetails() {
         if (!ignore) {
           setFormData({
             name:
-              data.name || "",
+              data.name ||
+              user?.name ||
+              "",
             email:
-              data.email || "",
+              data.email ||
+              user?.email ||
+              "",
             phone:
-              data.phone || "",
+              data.phone ||
+              user?.phone ||
+              "",
           });
         }
       } catch (requestError) {
@@ -115,7 +124,11 @@ function AccountDetails() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [
+    user?.name,
+    user?.email,
+    user?.phone,
+  ]);
 
 
   function handleChange(event) {
@@ -191,15 +204,6 @@ function AccountDetails() {
         );
       }
 
-      setFormData({
-        name:
-          data.name || "",
-        email:
-          data.email || "",
-        phone:
-          data.phone || "",
-      });
-
       const currentUser =
         JSON.parse(
           localStorage.getItem(
@@ -209,16 +213,37 @@ function AccountDetails() {
 
       const updatedUser = {
         ...currentUser,
+
+        _id:
+          data._id ||
+          currentUser._id,
+
         name:
           data.name || "",
+
         email:
           data.email || "",
+
         phone:
           data.phone || "",
+
         role:
           data.role ||
           currentUser.role,
       };
+
+
+      setFormData({
+        name:
+          updatedUser.name,
+
+        email:
+          updatedUser.email,
+
+        phone:
+          updatedUser.phone,
+      });
+
 
       localStorage.setItem(
         "novaUser",
@@ -227,7 +252,16 @@ function AccountDetails() {
         )
       );
 
+
+      if (onUserUpdate) {
+        onUserUpdate(
+          updatedUser
+        );
+      }
+
+
       setSaved(true);
+
     } catch (requestError) {
       console.error(
         "Update account error:",
@@ -246,7 +280,9 @@ function AccountDetails() {
 
   return (
     <main className="account-details-page">
+
       <div className="account-details-container">
+
         <Link
           to="/account"
           className="account-details-back"
@@ -258,7 +294,9 @@ function AccountDetails() {
           Back to Account
         </Link>
 
+
         <div className="account-details-header">
+
           <p>
             MY ACCOUNT
           </p>
@@ -271,17 +309,25 @@ function AccountDetails() {
             Manage your personal
             information
           </span>
+
         </div>
 
+
         <section className="account-details-card">
+
           <div className="account-details-profile">
+
             <div className="account-details-avatar">
+
               <User
                 size={28}
               />
+
             </div>
 
+
             <div>
+
               <h2>
                 {formData.name ||
                   "NOVA Customer"}
@@ -291,34 +337,42 @@ function AccountDetails() {
                 {formData.email ||
                   "Customer account"}
               </p>
+
             </div>
+
           </div>
 
+
           {loading ? (
-            <div
-              className="account-details-success"
-            >
-              Loading account
-              details...
+
+            <div className="account-details-success">
+              Loading account details...
             </div>
+
           ) : (
+
             <form
               className="account-details-form"
               onSubmit={
                 handleSubmit
               }
             >
+
               <div className="account-details-field">
+
                 <label
                   htmlFor="account-name"
                 >
                   Full Name
                 </label>
 
+
                 <div className="account-details-input">
+
                   <User
                     size={17}
                   />
+
 
                   <input
                     id="account-name"
@@ -333,20 +387,27 @@ function AccountDetails() {
                     placeholder="Enter your name"
                     required
                   />
+
                 </div>
+
               </div>
 
+
               <div className="account-details-field">
+
                 <label
                   htmlFor="account-email"
                 >
                   Email Address
                 </label>
 
+
                 <div className="account-details-input">
+
                   <Mail
                     size={17}
                   />
+
 
                   <input
                     id="account-email"
@@ -361,20 +422,27 @@ function AccountDetails() {
                     placeholder="Enter your email"
                     required
                   />
+
                 </div>
+
               </div>
 
+
               <div className="account-details-field">
+
                 <label
                   htmlFor="account-phone"
                 >
                   Phone Number
                 </label>
 
+
                 <div className="account-details-input">
+
                   <Phone
                     size={17}
                   />
+
 
                   <input
                     id="account-phone"
@@ -388,8 +456,11 @@ function AccountDetails() {
                     }
                     placeholder="Enter your phone number"
                   />
+
                 </div>
+
               </div>
+
 
               {error && (
                 <div className="account-details-success">
@@ -397,12 +468,13 @@ function AccountDetails() {
                 </div>
               )}
 
+
               {saved && (
                 <div className="account-details-success">
-                  Account details
-                  saved successfully.
+                  Account details saved successfully.
                 </div>
               )}
+
 
               <button
                 type="submit"
@@ -411,18 +483,26 @@ function AccountDetails() {
                   saving
                 }
               >
+
                 <Save
                   size={17}
                 />
 
+
                 {saving
                   ? "Saving..."
                   : "Save Changes"}
+
               </button>
+
             </form>
+
           )}
+
         </section>
+
       </div>
+
     </main>
   );
 }

@@ -1005,6 +1005,21 @@ function App() {
 
   }
 
+  function handleUserUpdate(updatedUserData) {
+  setUser((currentUser) => {
+    const updatedUser = {
+      ...currentUser,
+      ...updatedUserData,
+    };
+
+    localStorage.setItem(
+      "novaUser",
+      JSON.stringify(updatedUser)
+    );
+
+    return updatedUser;
+  });
+}
 
   /* =======================================================
      LOGOUT
@@ -1558,13 +1573,16 @@ function App() {
         {/* ACCOUNT DETAILS */}
 
         <Route
-          path="/account/details"
-          element={
-            <AccountDetails
-              user={user}
-            />
-          }
-        />
+  path="/account/details"
+  element={
+    <AccountDetails
+      user={user}
+      onUserUpdate={
+        handleUserUpdate
+      }
+    />
+  }
+/>
 
 
         {/* ADMIN DASHBOARD */}
