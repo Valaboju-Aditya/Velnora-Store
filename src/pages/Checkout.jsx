@@ -1,6 +1,15 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { API_URL } from "../config";
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  Link,
+} from "react-router-dom";
+
+import {
+  API_URL,
+} from "../config";
 
 import {
   ArrowLeft,
@@ -15,7 +24,9 @@ function readSavedUser() {
   try {
     return (
       JSON.parse(
-        localStorage.getItem("novaUser")
+        localStorage.getItem(
+          "novaUser"
+        )
       ) || {}
     );
   } catch {
@@ -24,62 +35,27 @@ function readSavedUser() {
 }
 
 
-function readSavedAddresses() {
-  try {
-    return (
-      JSON.parse(
-        localStorage.getItem("novaAddresses")
-      ) || []
-    );
-  } catch {
-    return [];
-  }
-}
-
-
 function getInitialCheckoutForm() {
-  const savedUser = readSavedUser();
-
-  const savedAddresses =
-    readSavedAddresses();
-
-  const defaultAddress =
-    savedAddresses.find(
-      (address) => address.isDefault
-    ) ||
-    savedAddresses[0] ||
-    {};
+  const savedUser =
+    readSavedUser();
 
   return {
     name:
-      defaultAddress.fullName ||
-      savedUser.name ||
-      "",
+      savedUser.name || "",
 
     phone:
-      defaultAddress.phone ||
-      savedUser.phone ||
-      "",
+      savedUser.phone || "",
 
     email:
-      savedUser.email ||
-      "",
+      savedUser.email || "",
 
-    address:
-      defaultAddress.addressLine ||
-      "",
+    address: "",
 
-    city:
-      defaultAddress.city ||
-      "",
+    city: "",
 
-    state:
-      defaultAddress.state ||
-      "",
+    state: "",
 
-    pincode:
-      defaultAddress.pincode ||
-      "",
+    pincode: "",
   };
 }
 
@@ -89,34 +65,246 @@ function Checkout({
   clearCart,
   createOrder,
 }) {
-  const [orderPlaced, setOrderPlaced] =
-    useState(false);
+  const [
+    orderPlaced,
+    setOrderPlaced,
+  ] = useState(false);
 
-  const [orderId, setOrderId] =
-    useState("");
+  const [
+    orderId,
+    setOrderId,
+  ] = useState("");
 
-  const [processing, setProcessing] =
-    useState(false);
+  const [
+    processing,
+    setProcessing,
+  ] = useState(false);
 
-  const [form, setForm] = useState(
+  const [
+    loadingAddress,
+    setLoadingAddress,
+  ] = useState(true);
+
+  const [
+    addressMessage,
+    setAddressMessage,
+  ] = useState("");
+
+  const [
+    form,
+    setForm,
+  ] = useState(
     getInitialCheckoutForm
   );
 
-  const [payment, setPayment] =
-    useState("cod");
+  const [
+    payment,
+    setPayment,
+  ] = useState("cod");
+
+
+  // =========================
+  // LOAD ACCOUNT + ADDRESS
+  // =========================
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadCheckoutData() {
+      const token =
+        localStorage.getItem(
+          "novaToken"
+        );
+
+      if (!token) {
+        if (!ignore) {
+          setLoadingAddress(false);
+          setAddressMessage(
+            "Please login to load your saved address."
+          );
+        }
+
+        return;
+      }
+
+      try {
+        const [
+          accountResponse,
+          addressResponse,
+        ] =
+          await Promise.all([
+            fetch(
+              `${API_URL}/api/user-data/account`,
+              {
+                headers: {
+                  Authorization:
+                    `Bearer ${token}`,
+                },
+              }
+            ),
+
+            fetch(
+              `${API_URL}/api/user-data/addresses`,
+              {
+                headers: {
+                  Authorization:
+                    `Bearer ${token}`,
+                },
+              }
+            ),
+          ]);
+
+        const accountData =
+          await accountResponse
+            .json()
+            .catch(() => ({}));
+
+        const addressesData =
+          await addressResponse
+            .json()
+            .catch(() => []);
+
+        if (
+          !accountResponse.ok
+        ) {
+          throw new Error(
+            accountData.message ||
+              "Failed to load account details"
+          );
+        }
+
+        if (
+          !addressResponse.ok
+        ) {
+          throw new Error(
+            addressesData.message ||
+              "Failed to load saved addresses"
+          );
+        }
+
+        const addresses =
+          Array.isArray(
+            addressesData
+          )
+            ? addressesData
+            : [];
+
+        const defaultAddress =
+          addresses.find(
+            (address) =>
+              address.isDefault
+          ) ||
+          addresses[0] ||
+          null;
+
+        if (!ignore) {
+          setForm(
+            (current) => ({
+              ...current,
+
+              name:
+                defaultAddress
+                  ?.fullName ||
+                accountData.name ||
+                current.name ||
+                "",
+
+              phone:
+                defaultAddress
+                  ?.phone ||
+                accountData.phone ||
+                current.phone ||
+                "",
+
+              email:
+                accountData.email ||
+                current.email ||
+                "",
+
+              address:
+                defaultAddress
+                  ?.addressLine ||
+                "",
+
+              city:
+                defaultAddress
+                  ?.city ||
+                "",
+
+              state:
+                defaultAddress
+                  ?.state ||
+                "",
+
+              pincode:
+                defaultAddress
+                  ?.pincode ||
+                "",
+            })
+          );
+
+          if (
+            defaultAddress
+          ) {
+            setAddressMessage(
+              defaultAddress.isDefault
+                ? "Your default saved address has been loaded."
+                : "Your saved address has been loaded."
+            );
+          } else {
+            setAddressMessage(
+              "No saved address found. Enter your delivery address below."
+            );
+          }
+        }
+      } catch (error) {
+        console.error(
+          "Checkout data load error:",
+          error
+        );
+
+        if (!ignore) {
+          setAddressMessage(
+            error.message ||
+              "Unable to load saved address."
+          );
+        }
+      } finally {
+        if (!ignore) {
+          setLoadingAddress(
+            false
+          );
+        }
+      }
+    }
+
+    loadCheckoutData();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
 
   // =========================
   // CALCULATIONS
   // =========================
 
-  const subtotal = cart.reduce(
-    (total, item) =>
-      total +
-      Number(item.price) *
-        Number(item.quantity),
-    0
-  );
+  const subtotal =
+    cart.reduce(
+      (
+        total,
+        item
+      ) =>
+        total +
+        Number(
+          item.price
+        ) *
+          Number(
+            item.quantity
+          ),
+      0
+    );
 
   const shipping =
     subtotal >= 999 ||
@@ -125,13 +313,19 @@ function Checkout({
       : 99;
 
   const total =
-    subtotal + shipping;
+    subtotal +
+    shipping;
 
   const totalItems =
     cart.reduce(
-      (total, item) =>
+      (
+        total,
+        item
+      ) =>
         total +
-        Number(item.quantity),
+        Number(
+          item.quantity
+        ),
       0
     );
 
@@ -140,16 +334,20 @@ function Checkout({
   // HANDLE INPUT
   // =========================
 
-  function handleChange(e) {
+  function handleChange(
+    event
+  ) {
     const {
       name,
       value,
-    } = e.target;
+    } = event.target;
 
-    setForm((current) => ({
-      ...current,
-      [name]: value,
-    }));
+    setForm(
+      (current) => ({
+        ...current,
+        [name]: value,
+      })
+    );
   }
 
 
@@ -190,7 +388,9 @@ function Checkout({
   function loadRazorpayScript() {
     return new Promise(
       (resolve) => {
-        if (window.Razorpay) {
+        if (
+          window.Razorpay
+        ) {
           resolve(true);
           return;
         }
@@ -203,13 +403,16 @@ function Checkout({
         script.src =
           "https://checkout.razorpay.com/v1/checkout.js";
 
-        script.async = true;
+        script.async =
+          true;
 
         script.onload =
-          () => resolve(true);
+          () =>
+            resolve(true);
 
         script.onerror =
-          () => resolve(false);
+          () =>
+            resolve(false);
 
         document.body.appendChild(
           script
@@ -238,7 +441,9 @@ function Checkout({
 
     clearCart();
 
-    setOrderPlaced(true);
+    setOrderPlaced(
+      true
+    );
   }
 
 
@@ -287,9 +492,6 @@ function Checkout({
         return;
       }
 
-
-      // LOAD RAZORPAY SCRIPT
-
       const loaded =
         await loadRazorpayScript();
 
@@ -301,14 +503,12 @@ function Checkout({
         return;
       }
 
-
-      // CREATE RAZORPAY ORDER
-
       const paymentResponse =
         await fetch(
           `${API_URL}/api/payments/create-order`,
           {
-            method: "POST",
+            method:
+              "POST",
 
             headers: {
               "Content-Type":
@@ -318,35 +518,39 @@ function Checkout({
                 `Bearer ${token}`,
             },
 
-            body: JSON.stringify({
-              items:
-                cart.map(
-                  (item) => ({
-                    id:
-                      item._id ||
-                      item.id,
+            body:
+              JSON.stringify({
+                items:
+                  cart.map(
+                    (
+                      item
+                    ) => ({
+                      id:
+                        item._id ||
+                        item.id,
 
-                    quantity:
-                      Number(
-                        item.quantity
-                      ),
-                  })
-                ),
-            }),
+                      quantity:
+                        Number(
+                          item.quantity
+                        ),
+                    })
+                  ),
+              }),
           }
         );
 
       const paymentData =
-        await paymentResponse.json();
+        await paymentResponse
+          .json();
 
-
-      if (!paymentResponse.ok) {
+      if (
+        !paymentResponse.ok
+      ) {
         throw new Error(
           paymentData.message ||
             "Failed to start payment"
         );
       }
-
 
       if (
         !paymentData.order ||
@@ -357,20 +561,17 @@ function Checkout({
         );
       }
 
-
-      // =========================
-      // RAZORPAY OPTIONS
-      // =========================
-
       const options = {
         key:
           paymentData.key,
 
         amount:
-          paymentData.order.amount,
+          paymentData.order
+            .amount,
 
         currency:
-          paymentData.order.currency,
+          paymentData.order
+            .currency,
 
         name:
           "NOVA",
@@ -379,7 +580,8 @@ function Checkout({
           "NOVA Fashion Store Order",
 
         order_id:
-          paymentData.order.id,
+          paymentData.order
+            .id,
 
         prefill: {
           name:
@@ -402,17 +604,14 @@ function Checkout({
             "#6c3cff",
         },
 
-
-        // =========================
-        // PAYMENT SUCCESS
-        // =========================
-
         handler:
           async function (
             response
           ) {
             try {
-              setProcessing(true);
+              setProcessing(
+                true
+              );
 
               const createdOrder =
                 await createOrder({
@@ -422,20 +621,26 @@ function Checkout({
                   paymentMethod:
                     "online",
 
-                  razorpayPayment: {
-                    razorpay_order_id:
-                      paymentData.order.id,
+                  razorpayPayment:
+                    {
+                      razorpay_order_id:
+                        paymentData
+                          .order
+                          .id,
 
-                    razorpay_payment_id:
-                      response.razorpay_payment_id,
+                      razorpay_payment_id:
+                        response
+                          .razorpay_payment_id,
 
-                    razorpay_signature:
-                      response.razorpay_signature,
-                  },
+                      razorpay_signature:
+                        response
+                          .razorpay_signature,
+                    },
                 });
 
-
-              if (!createdOrder) {
+              if (
+                !createdOrder
+              ) {
                 alert(
                   "Payment completed, but the NOVA order could not be created."
                 );
@@ -443,12 +648,12 @@ function Checkout({
                 return;
               }
 
-
               completeOrder(
                 createdOrder
               );
-
-            } catch (error) {
+            } catch (
+              error
+            ) {
               console.error(
                 "Order creation after payment failed:",
                 error
@@ -458,42 +663,33 @@ function Checkout({
                 error.message ||
                   "Payment completed but order creation failed."
               );
-
             } finally {
-              setProcessing(false);
+              setProcessing(
+                false
+              );
             }
           },
 
-
-        // =========================
-        // CHECKOUT CLOSED
-        // =========================
-
         modal: {
-          ondismiss: function () {
-            setProcessing(false);
-          },
+          ondismiss:
+            function () {
+              setProcessing(
+                false
+              );
+            },
         },
       };
-
-
-      // =========================
-      // OPEN RAZORPAY
-      // =========================
 
       const razorpay =
         new window.Razorpay(
           options
         );
 
-
-      // =========================
-      // PAYMENT FAILED
-      // =========================
-
       razorpay.on(
         "payment.failed",
-        function (response) {
+        function (
+          response
+        ) {
           console.error(
             "Payment failed:",
             response.error
@@ -505,14 +701,16 @@ function Checkout({
               "Payment failed. Please try again."
           );
 
-          setProcessing(false);
+          setProcessing(
+            false
+          );
         }
       );
 
-
       razorpay.open();
-
-    } catch (error) {
+    } catch (
+      error
+    ) {
       console.error(
         "Online payment error:",
         error
@@ -523,7 +721,9 @@ function Checkout({
           "Unable to start online payment"
       );
 
-      setProcessing(false);
+      setProcessing(
+        false
+      );
     }
   }
 
@@ -532,8 +732,10 @@ function Checkout({
   // SUBMIT
   // =========================
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleSubmit(
+    event
+  ) {
+    event.preventDefault();
 
     if (
       cart.length === 0 ||
@@ -542,11 +744,14 @@ function Checkout({
       return;
     }
 
-    setProcessing(true);
+    setProcessing(
+      true
+    );
 
     try {
       if (
-        payment === "online"
+        payment ===
+        "online"
       ) {
         await placeOnlineOrder();
 
@@ -554,8 +759,9 @@ function Checkout({
       }
 
       await placeCodOrder();
-
-    } catch (error) {
+    } catch (
+      error
+    ) {
       console.error(
         "Checkout error:",
         error
@@ -565,12 +771,14 @@ function Checkout({
         error.message ||
           "Unable to place order"
       );
-
     } finally {
       if (
-        payment === "cod"
+        payment ===
+        "cod"
       ) {
-        setProcessing(false);
+        setProcessing(
+          false
+        );
       }
     }
   }
@@ -594,8 +802,8 @@ function Checkout({
           </h1>
 
           <p>
-            Add some products before
-            checking out.
+            Add some products
+            before checking out.
           </p>
 
           <Link to="/shop">
@@ -629,8 +837,8 @@ function Checkout({
           </h1>
 
           <p>
-            Your NOVA order has been
-            successfully placed.
+            Your NOVA order has
+            been successfully placed.
           </p>
 
           {orderId && (
@@ -640,8 +848,9 @@ function Checkout({
           )}
 
           <p className="success-message">
-            We have received your order
-            and will process it shortly.
+            We have received your
+            order and will process it
+            shortly.
           </p>
 
           <div className="success-actions">
@@ -672,19 +881,22 @@ function Checkout({
   return (
     <div className="checkout-page">
       <div className="checkout-container">
-
         <Link
           to="/cart"
           className="back-cart"
         >
-          <ArrowLeft size={17} />
+          <ArrowLeft
+            size={17}
+          />
+
           Back to Cart
         </Link>
 
-
         <div className="checkout-header">
           <div className="checkout-title-icon">
-            <ShieldCheck size={22} />
+            <ShieldCheck
+              size={22}
+            />
           </div>
 
           <p>
@@ -704,24 +916,21 @@ function Checkout({
           </span>
         </div>
 
-
         <div className="checkout-layout">
-
           <form
             className="checkout-form"
             onSubmit={
               handleSubmit
             }
           >
-
-
             {/* CONTACT */}
 
             <section className="checkout-section">
-
               <div className="checkout-section-title">
                 <div className="checkout-icon">
-                  <CreditCard size={20} />
+                  <CreditCard
+                    size={20}
+                  />
                 </div>
 
                 <div>
@@ -730,16 +939,17 @@ function Checkout({
                   </h2>
 
                   <p>
-                    Enter your contact details
+                    Enter your contact
+                    details
                   </p>
                 </div>
               </div>
 
-
               <div className="form-grid">
-
                 <div className="form-field full">
-                  <label htmlFor="name">
+                  <label
+                    htmlFor="name"
+                  >
                     Full Name
                   </label>
 
@@ -747,7 +957,9 @@ function Checkout({
                     id="name"
                     type="text"
                     name="name"
-                    value={form.name}
+                    value={
+                      form.name
+                    }
                     onChange={
                       handleChange
                     }
@@ -757,9 +969,10 @@ function Checkout({
                   />
                 </div>
 
-
                 <div className="form-field">
-                  <label htmlFor="phone">
+                  <label
+                    htmlFor="phone"
+                  >
                     Phone Number
                   </label>
 
@@ -767,7 +980,9 @@ function Checkout({
                     id="phone"
                     type="tel"
                     name="phone"
-                    value={form.phone}
+                    value={
+                      form.phone
+                    }
                     onChange={
                       handleChange
                     }
@@ -779,9 +994,10 @@ function Checkout({
                   />
                 </div>
 
-
                 <div className="form-field">
-                  <label htmlFor="email">
+                  <label
+                    htmlFor="email"
+                  >
                     Email Address
                   </label>
 
@@ -789,7 +1005,9 @@ function Checkout({
                     id="email"
                     type="email"
                     name="email"
-                    value={form.email}
+                    value={
+                      form.email
+                    }
                     onChange={
                       handleChange
                     }
@@ -798,19 +1016,18 @@ function Checkout({
                     required
                   />
                 </div>
-
               </div>
-
             </section>
 
 
             {/* ADDRESS */}
 
             <section className="checkout-section">
-
               <div className="checkout-section-title">
                 <div className="checkout-icon">
-                  <MapPin size={20} />
+                  <MapPin
+                    size={20}
+                  />
                 </div>
 
                 <div>
@@ -819,18 +1036,21 @@ function Checkout({
                   </h2>
 
                   <p>
-                    Where should we deliver your order?
+                    Where should we
+                    deliver your order?
                   </p>
                 </div>
               </div>
 
-
               <div className="checkout-saved-address">
-                <MapPin size={16} />
+                <MapPin
+                  size={16}
+                />
 
                 <span>
-                  Your default saved address is
-                  automatically filled below.
+                  {loadingAddress
+                    ? "Loading your saved address..."
+                    : addressMessage}
                 </span>
 
                 <Link to="/account/addresses">
@@ -838,11 +1058,11 @@ function Checkout({
                 </Link>
               </div>
 
-
               <div className="form-grid">
-
                 <div className="form-field full">
-                  <label htmlFor="address">
+                  <label
+                    htmlFor="address"
+                  >
                     Address
                   </label>
 
@@ -862,9 +1082,10 @@ function Checkout({
                   />
                 </div>
 
-
                 <div className="form-field">
-                  <label htmlFor="city">
+                  <label
+                    htmlFor="city"
+                  >
                     City
                   </label>
 
@@ -872,7 +1093,9 @@ function Checkout({
                     id="city"
                     type="text"
                     name="city"
-                    value={form.city}
+                    value={
+                      form.city
+                    }
                     onChange={
                       handleChange
                     }
@@ -882,9 +1105,10 @@ function Checkout({
                   />
                 </div>
 
-
                 <div className="form-field">
-                  <label htmlFor="state">
+                  <label
+                    htmlFor="state"
+                  >
                     State
                   </label>
 
@@ -904,9 +1128,10 @@ function Checkout({
                   />
                 </div>
 
-
                 <div className="form-field">
-                  <label htmlFor="pincode">
+                  <label
+                    htmlFor="pincode"
+                  >
                     PIN Code
                   </label>
 
@@ -928,19 +1153,18 @@ function Checkout({
                     required
                   />
                 </div>
-
               </div>
-
             </section>
 
 
             {/* PAYMENT */}
 
             <section className="checkout-section">
-
               <div className="checkout-section-title">
                 <div className="checkout-icon">
-                  <CreditCard size={20} />
+                  <CreditCard
+                    size={20}
+                  />
                 </div>
 
                 <div>
@@ -949,17 +1173,17 @@ function Checkout({
                   </h2>
 
                   <p>
-                    Choose how you want to pay
+                    Choose how you
+                    want to pay
                   </p>
                 </div>
               </div>
 
-
               <div className="payment-options">
-
                 <label
                   className={
-                    payment === "cod"
+                    payment ===
+                    "cod"
                       ? "payment-option selected"
                       : "payment-option"
                   }
@@ -969,11 +1193,16 @@ function Checkout({
                     name="payment"
                     value="cod"
                     checked={
-                      payment === "cod"
+                      payment ===
+                      "cod"
                     }
-                    onChange={(e) =>
+                    onChange={(
+                      event
+                    ) =>
                       setPayment(
-                        e.target.value
+                        event
+                          .target
+                          .value
                       )
                     }
                   />
@@ -984,15 +1213,16 @@ function Checkout({
                     </strong>
 
                     <span>
-                      Pay when your order arrives
+                      Pay when your
+                      order arrives
                     </span>
                   </div>
                 </label>
 
-
                 <label
                   className={
-                    payment === "online"
+                    payment ===
+                    "online"
                       ? "payment-option selected"
                       : "payment-option"
                   }
@@ -1002,37 +1232,43 @@ function Checkout({
                     name="payment"
                     value="online"
                     checked={
-                      payment === "online"
+                      payment ===
+                      "online"
                     }
-                    onChange={(e) =>
+                    onChange={(
+                      event
+                    ) =>
                       setPayment(
-                        e.target.value
+                        event
+                          .target
+                          .value
                       )
                     }
                   />
 
                   <div className="payment-option-content">
                     <strong>
-                      Razorpay Online Payment
+                      Razorpay Online
+                      Payment
                     </strong>
 
                     <span>
-                      UPI, Card or Net Banking
+                      UPI, Card or Net
+                      Banking
                     </span>
                   </div>
                 </label>
-
               </div>
 
-
-              {payment === "online" && (
+              {payment ===
+                "online" && (
                 <p className="payment-note">
-                  Razorpay Test Mode is enabled.
-                  No real money will be charged
+                  Razorpay Test Mode
+                  is enabled. No real
+                  money will be charged
                   during testing.
                 </p>
               )}
-
             </section>
 
 
@@ -1041,11 +1277,17 @@ function Checkout({
             <button
               type="submit"
               className="place-order-button"
-              disabled={processing}
+              disabled={
+                processing ||
+                loadingAddress
+              }
             >
               {processing
                 ? "Processing..."
-                : payment === "online"
+                : loadingAddress
+                ? "Loading Address..."
+                : payment ===
+                  "online"
                 ? `Pay ₹${total.toLocaleString(
                     "en-IN"
                   )}`
@@ -1054,82 +1296,91 @@ function Checkout({
                   )}`}
             </button>
 
-
             <p className="checkout-security">
-              <ShieldCheck size={16} />
+              <ShieldCheck
+                size={16}
+              />
 
-              Your information is securely
-              handled by NOVA.
+              Your information is
+              securely handled by
+              NOVA.
             </p>
-
           </form>
 
 
           {/* ORDER SUMMARY */}
 
           <aside className="checkout-summary">
-
             <h2>
               Your Order
             </h2>
 
-
             <div className="checkout-products">
+              {cart.map(
+                (item) => {
+                  const productId =
+                    item._id ||
+                    item.id;
 
-              {cart.map((item) => {
+                  return (
+                    <div
+                      className="checkout-product"
+                      key={
+                        productId
+                      }
+                    >
+                      <div className="checkout-product-image">
+                        <img
+                          src={
+                            item.image
+                          }
+                          alt={
+                            item.name
+                          }
+                        />
 
-                const productId =
-                  item._id ||
-                  item.id;
+                        <span>
+                          {
+                            item.quantity
+                          }
+                        </span>
+                      </div>
 
-                return (
-                  <div
-                    className="checkout-product"
-                    key={productId}
-                  >
+                      <div className="checkout-product-info">
+                        <h3>
+                          {
+                            item.name
+                          }
+                        </h3>
 
-                    <div className="checkout-product-image">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                      />
+                        <span>
+                          Qty:{" "}
+                          {
+                            item.quantity
+                          }
+                        </span>
+                      </div>
 
-                      <span>
-                        {item.quantity}
-                      </span>
+                      <strong>
+                        ₹
+                        {(
+                          Number(
+                            item.price
+                          ) *
+                          Number(
+                            item.quantity
+                          )
+                        ).toLocaleString(
+                          "en-IN"
+                        )}
+                      </strong>
                     </div>
-
-
-                    <div className="checkout-product-info">
-                      <h3>
-                        {item.name}
-                      </h3>
-
-                      <span>
-                        Qty: {item.quantity}
-                      </span>
-                    </div>
-
-
-                    <strong>
-                      ₹
-                      {(
-                        Number(item.price) *
-                        Number(item.quantity)
-                      ).toLocaleString(
-                        "en-IN"
-                      )}
-                    </strong>
-
-                  </div>
-                );
-              })}
-
+                  );
+                }
+              )}
             </div>
 
-
             <div className="checkout-summary-line" />
-
 
             <div className="checkout-total-row">
               <span>
@@ -1144,7 +1395,6 @@ function Checkout({
               </strong>
             </div>
 
-
             <div className="checkout-total-row">
               <span>
                 Shipping
@@ -1157,9 +1407,7 @@ function Checkout({
               </strong>
             </div>
 
-
             <div className="checkout-summary-line" />
-
 
             <div className="checkout-final-total">
               <span>
@@ -1174,23 +1422,19 @@ function Checkout({
               </strong>
             </div>
 
-
             <p className="checkout-shipping-note">
               🚚{" "}
-
               {shipping === 0
                 ? "Free shipping unlocked!"
                 : `Add ₹${(
-                    999 - subtotal
+                    999 -
+                    subtotal
                   ).toLocaleString(
                     "en-IN"
                   )} more for free shipping`}
             </p>
-
           </aside>
-
         </div>
-
       </div>
     </div>
   );
