@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
-import { API_URL } from "./config";
-import MobileBottomNav from "./components/MobileBottomNav";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import {
   BrowserRouter,
   Routes,
   Route,
   Link,
+  useLocation,
 } from "react-router-dom";
 
 import {
@@ -18,6 +20,12 @@ import {
   User,
 } from "lucide-react";
 
+import { API_URL } from "./config";
+
+import MobileBottomNav from "./components/MobileBottomNav";
+import Footer from "./components/Footer";
+import AdminRoute from "./components/AdminRoute";
+
 import Shop from "./pages/Shop";
 import Product from "./pages/Product";
 import Cart from "./pages/Cart";
@@ -27,14 +35,14 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Wishlist from "./pages/Wishlist";
 import Account from "./pages/Account";
+import Addresses from "./pages/Addresses";
+import AccountDetails from "./pages/AccountDetails";
+import NotFound from "./pages/NotFound";
+
 import AdminProducts from "./pages/AdminProducts";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminOrders from "./pages/AdminOrders";
-import AdminRoute from "./components/AdminRoute";
-import Addresses from "./pages/Addresses";
-import AccountDetails from "./pages/AccountDetails";
-import NotFound from "./pages/NotFound";
 
 import "./index.css";
 
@@ -50,22 +58,26 @@ function Home({
   wishlist,
   toggleWishlist,
 }) {
-  const [products, setProducts] =
-    useState([]);
+  const [
+    products,
+    setProducts,
+  ] = useState([]);
 
   const [
     loadingProducts,
     setLoadingProducts,
   ] = useState(true);
 
+
   useEffect(() => {
     let ignore = false;
 
-    const loadProducts = async () => {
+    async function loadProducts() {
       try {
-        const response = await fetch(
-          `${API_URL}/api/products`
-        );
+        const response =
+          await fetch(
+            `${API_URL}/api/products`
+          );
 
         if (!response.ok) {
           throw new Error(
@@ -77,7 +89,11 @@ function Home({
           await response.json();
 
         if (!ignore) {
-          setProducts(data);
+          setProducts(
+            Array.isArray(data)
+              ? data
+              : []
+          );
         }
       } catch (error) {
         console.error(
@@ -89,7 +105,7 @@ function Home({
           setLoadingProducts(false);
         }
       }
-    };
+    }
 
     loadProducts();
 
@@ -98,19 +114,24 @@ function Home({
     };
   }, []);
 
+
   const featuredProducts =
     products.filter(
       (product) =>
         product.featured === true
     );
 
+
   const cartCount =
     cart.reduce(
       (total, item) =>
         total +
-        Number(item.quantity || 0),
+        Number(
+          item.quantity || 0
+        ),
       0
     );
+
 
   return (
     <div className="app">
@@ -127,6 +148,7 @@ function Home({
         >
           NOVA
         </Link>
+
 
         <nav className="nav-links">
 
@@ -195,13 +217,11 @@ function Home({
           </Link>
 
 
-          {user && (
+          {user ? (
             <span className="user-name">
               👤 {user.name}
             </span>
-          )}
-
-          {!user && (
+          ) : (
             <Link
               to="/login"
               className="login-link"
@@ -218,7 +238,7 @@ function Home({
           >
             <ShoppingBag size={20} />
 
-            {cart.length > 0 && (
+            {cartCount > 0 && (
               <span className="cart-count">
                 {cartCount}
               </span>
@@ -238,6 +258,10 @@ function Home({
 
       </header>
 
+
+      {/* =====================================================
+          MOBILE SEARCH
+      ===================================================== */}
 
       <div className="mobile-search-bar">
 
@@ -262,6 +286,7 @@ function Home({
             NEW COLLECTION 2026
           </p>
 
+
           <h1>
             Define Your
             <br />
@@ -271,10 +296,12 @@ function Home({
             </span>
           </h1>
 
+
           <p className="hero-description">
             Discover premium fashion designed
             for people who don't follow trends.
           </p>
+
 
           <Link
             to="/shop"
@@ -322,21 +349,18 @@ function Home({
 
         <div className="category-grid">
 
-
           {/* WOMEN */}
 
           <Link
             to="/shop?category=Women"
             className="category-card"
           >
-
             <img
               src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=85"
               alt="Women fashion"
             />
 
             <div className="category-overlay">
-
               <h3>
                 Women
               </h3>
@@ -344,9 +368,7 @@ function Home({
               <span>
                 Explore Collection →
               </span>
-
             </div>
-
           </Link>
 
 
@@ -356,14 +378,12 @@ function Home({
             to="/shop?category=Men"
             className="category-card"
           >
-
             <img
               src="https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=900&q=85"
               alt="Men fashion"
             />
 
             <div className="category-overlay">
-
               <h3>
                 Men
               </h3>
@@ -371,9 +391,7 @@ function Home({
               <span>
                 Explore Collection →
               </span>
-
             </div>
-
           </Link>
 
 
@@ -383,14 +401,12 @@ function Home({
             to="/shop?category=Accessories"
             className="category-card"
           >
-
             <img
               src="https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?auto=format&fit=crop&w=900&q=85"
               alt="Fashion accessories"
             />
 
             <div className="category-overlay">
-
               <h3>
                 Accessories
               </h3>
@@ -398,9 +414,7 @@ function Home({
               <span>
                 Explore Collection →
               </span>
-
             </div>
-
           </Link>
 
         </div>
@@ -461,17 +475,19 @@ function Home({
                   product._id ||
                   product.id;
 
+
                 const liked =
                   wishlist.some(
                     (item) =>
-                      (
+                      String(
                         item._id ||
                         item.id
-                      ) === productId
+                      ) ===
+                      String(productId)
                   );
 
-                return (
 
+                return (
                   <div
                     className="product-card"
                     key={productId}
@@ -483,8 +499,12 @@ function Home({
                         to={`/product/${productId}`}
                       >
                         <img
-                          src={product.image}
-                          alt={product.name}
+                          src={
+                            product.image
+                          }
+                          alt={
+                            product.name
+                          }
                           loading="lazy"
                         />
                       </Link>
@@ -504,7 +524,6 @@ function Home({
                           )
                         }
                       >
-
                         <Heart
                           size={20}
                           fill={
@@ -513,7 +532,6 @@ function Home({
                               : "none"
                           }
                         />
-
                       </button>
 
 
@@ -526,13 +544,11 @@ function Home({
                           )
                         }
                       >
-
                         <ShoppingBag
                           size={17}
                         />
 
                         Add to Cart
-
                       </button>
 
                     </div>
@@ -548,6 +564,7 @@ function Home({
                         </h3>
                       </Link>
 
+
                       <p>
                         ₹
                         {Number(
@@ -561,7 +578,6 @@ function Home({
                     </div>
 
                   </div>
-
                 );
               }
             )
@@ -578,6 +594,36 @@ function Home({
 
 
 /* =========================================================
+   FOOTER CONTROLLER
+========================================================= */
+
+function SiteFooter() {
+  const location =
+    useLocation();
+
+
+  const hideFooter =
+    location.pathname.startsWith(
+      "/admin"
+    ) ||
+    location.pathname ===
+      "/login" ||
+    location.pathname ===
+      "/register" ||
+    location.pathname ===
+      "/checkout";
+
+
+  if (hideFooter) {
+    return null;
+  }
+
+
+  return <Footer />;
+}
+
+
+/* =========================================================
    APP
 ========================================================= */
 
@@ -587,35 +633,38 @@ function App() {
      USER
   ======================================================= */
 
-  const [user, setUser] =
-    useState(() => {
+  const [
+    user,
+    setUser,
+  ] = useState(() => {
 
-      try {
+    try {
+      const savedUser =
+        localStorage.getItem(
+          "novaUser"
+        );
 
-        const savedUser =
-          localStorage.getItem(
-            "novaUser"
-          );
+      return savedUser
+        ? JSON.parse(
+            savedUser
+          )
+        : null;
 
-        return savedUser
-          ? JSON.parse(savedUser)
-          : null;
+    } catch {
+      return null;
+    }
 
-      } catch {
-
-        return null;
-
-      }
-
-    });
+  });
 
 
   /* =======================================================
      CART
   ======================================================= */
 
-  const [cart, setCart] =
-    useState([]);
+  const [
+    cart,
+    setCart,
+  ] = useState([]);
 
 
   /* =======================================================
@@ -629,7 +678,7 @@ function App() {
 
 
   /* =======================================================
-     SERVER DATA READY
+     USER DATA LOADED
   ======================================================= */
 
   const [
@@ -643,16 +692,17 @@ function App() {
   ======================================================= */
 
   useEffect(() => {
-
     let ignore = false;
+
 
     async function loadUserData() {
 
       if (!user) {
-
         setCart([]);
         setWishlist([]);
-        setUserDataLoaded(false);
+        setUserDataLoaded(
+          false
+        );
 
         return;
       }
@@ -665,10 +715,11 @@ function App() {
 
 
       if (!token) {
-
         setCart([]);
         setWishlist([]);
-        setUserDataLoaded(false);
+        setUserDataLoaded(
+          false
+        );
 
         return;
       }
@@ -682,33 +733,33 @@ function App() {
         const [
           cartResponse,
           wishlistResponse,
-        ] = await Promise.all([
+        ] =
+          await Promise.all([
 
-          fetch(
-            `${API_URL}/api/user-data/cart`,
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          ),
+            fetch(
+              `${API_URL}/api/user-data/cart`,
+              {
+                headers: {
+                  Authorization:
+                    `Bearer ${token}`,
+                },
+              }
+            ),
 
-          fetch(
-            `${API_URL}/api/user-data/wishlist`,
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          ),
+            fetch(
+              `${API_URL}/api/user-data/wishlist`,
+              {
+                headers: {
+                  Authorization:
+                    `Bearer ${token}`,
+                },
+              }
+            ),
 
-        ]);
+          ]);
 
 
         if (!cartResponse.ok) {
-
           const data =
             await cartResponse
               .json()
@@ -716,14 +767,12 @@ function App() {
 
           throw new Error(
             data.message ||
-            "Failed to load cart"
+              "Failed to load cart"
           );
-
         }
 
 
         if (!wishlistResponse.ok) {
-
           const data =
             await wishlistResponse
               .json()
@@ -731,39 +780,44 @@ function App() {
 
           throw new Error(
             data.message ||
-            "Failed to load wishlist"
+              "Failed to load wishlist"
           );
-
         }
 
 
         const [
           serverCart,
           serverWishlist,
-        ] = await Promise.all([
-
-          cartResponse.json(),
-
-          wishlistResponse.json(),
-
-        ]);
+        ] =
+          await Promise.all([
+            cartResponse.json(),
+            wishlistResponse.json(),
+          ]);
 
 
         if (!ignore) {
 
           setCart(
-            Array.isArray(serverCart)
+            Array.isArray(
+              serverCart
+            )
               ? serverCart
               : []
           );
 
+
           setWishlist(
-            Array.isArray(serverWishlist)
+            Array.isArray(
+              serverWishlist
+            )
               ? serverWishlist
               : []
           );
 
-          setUserDataLoaded(true);
+
+          setUserDataLoaded(
+            true
+          );
 
         }
 
@@ -776,13 +830,12 @@ function App() {
 
 
         if (!ignore) {
-
-          setUserDataLoaded(false);
-
+          setUserDataLoaded(
+            false
+          );
         }
 
       }
-
     }
 
 
@@ -821,7 +874,7 @@ function App() {
     }
 
 
-    const saveCart = async () => {
+    async function saveCart() {
 
       try {
 
@@ -839,9 +892,10 @@ function App() {
                   `Bearer ${token}`,
               },
 
-              body: JSON.stringify({
-                cart,
-              }),
+              body:
+                JSON.stringify({
+                  cart,
+                }),
             }
           );
 
@@ -853,11 +907,11 @@ function App() {
               .json()
               .catch(() => ({}));
 
+
           throw new Error(
             data.message ||
-            "Failed to sync cart"
+              "Failed to sync cart"
           );
-
         }
 
       } catch (error) {
@@ -868,8 +922,7 @@ function App() {
         );
 
       }
-
-    };
+    }
 
 
     saveCart();
@@ -906,7 +959,7 @@ function App() {
     }
 
 
-    const saveWishlist = async () => {
+    async function saveWishlist() {
 
       try {
 
@@ -924,9 +977,10 @@ function App() {
                   `Bearer ${token}`,
               },
 
-              body: JSON.stringify({
-                wishlist,
-              }),
+              body:
+                JSON.stringify({
+                  wishlist,
+                }),
             }
           );
 
@@ -938,11 +992,11 @@ function App() {
               .json()
               .catch(() => ({}));
 
+
           throw new Error(
             data.message ||
-            "Failed to sync wishlist"
+              "Failed to sync wishlist"
           );
-
         }
 
       } catch (error) {
@@ -953,8 +1007,7 @@ function App() {
         );
 
       }
-
-    };
+    }
 
 
     saveWishlist();
@@ -994,7 +1047,9 @@ function App() {
     );
 
 
-    setUserDataLoaded(false);
+    setUserDataLoaded(
+      false
+    );
 
     setCart([]);
 
@@ -1003,24 +1058,39 @@ function App() {
     setUser(
       loggedInUser
     );
-
   }
 
-  function handleUserUpdate(updatedUserData) {
-  setUser((currentUser) => {
-    const updatedUser = {
-      ...currentUser,
-      ...updatedUserData,
-    };
 
-    localStorage.setItem(
-      "novaUser",
-      JSON.stringify(updatedUser)
+  /* =======================================================
+     UPDATE USER
+  ======================================================= */
+
+  function handleUserUpdate(
+    updatedUserData
+  ) {
+
+    setUser(
+      (currentUser) => {
+
+        const updatedUser = {
+          ...currentUser,
+          ...updatedUserData,
+        };
+
+
+        localStorage.setItem(
+          "novaUser",
+          JSON.stringify(
+            updatedUser
+          )
+        );
+
+
+        return updatedUser;
+      }
     );
+  }
 
-    return updatedUser;
-  });
-}
 
   /* =======================================================
      LOGOUT
@@ -1028,7 +1098,10 @@ function App() {
 
   function handleLogout() {
 
-    setUserDataLoaded(false);
+    setUserDataLoaded(
+      false
+    );
+
 
     localStorage.removeItem(
       "novaUser"
@@ -1044,7 +1117,6 @@ function App() {
     setWishlist([]);
 
     setCart([]);
-
   }
 
 
@@ -1063,61 +1135,60 @@ function App() {
       );
 
       return;
-
     }
 
 
-    setCart((current) => {
+    setCart(
+      (current) => {
 
-      const productId =
-        String(
-          product._id ||
-          product.id
-        );
-
-
-      const existing =
-        current.find(
-          (item) =>
-            String(
-              item._id ||
-              item.id
-            ) === productId
-        );
+        const productId =
+          String(
+            product._id ||
+              product.id
+          );
 
 
-      if (existing) {
+        const existing =
+          current.find(
+            (item) =>
+              String(
+                item._id ||
+                  item.id
+              ) === productId
+          );
 
-        return current.map(
-          (item) =>
-            String(
-              item._id ||
-              item.id
-            ) === productId
-              ? {
-                  ...item,
-                  quantity:
-                    Number(
-                      item.quantity ||
-                      0
-                    ) + 1,
-                }
-              : item
-        );
 
+        if (existing) {
+
+          return current.map(
+            (item) =>
+              String(
+                item._id ||
+                  item.id
+              ) === productId
+                ? {
+                    ...item,
+
+                    quantity:
+                      Number(
+                        item.quantity ||
+                          0
+                      ) + 1,
+                  }
+                : item
+          );
+        }
+
+
+        return [
+          ...current,
+          {
+            ...product,
+            quantity: 1,
+          },
+        ];
       }
-
-
-      return [
-        ...current,
-        {
-          ...product,
-          quantity: 1,
-        },
-      ];
-
-    });
-
+    );
   }
 
 
@@ -1126,9 +1197,7 @@ function App() {
   ======================================================= */
 
   function clearCart() {
-
     setCart([]);
-
   }
 
 
@@ -1147,11 +1216,12 @@ function App() {
       );
 
       return null;
-
     }
 
 
-    if (cart.length === 0) {
+    if (
+      cart.length === 0
+    ) {
       return null;
     }
 
@@ -1166,9 +1236,9 @@ function App() {
           Number(
             item.price
           ) *
-          Number(
-            item.quantity
-          ),
+            Number(
+              item.quantity
+            ),
         0
       );
 
@@ -1222,7 +1292,6 @@ function App() {
         );
 
         return null;
-
       }
 
 
@@ -1252,10 +1321,11 @@ function App() {
                 items:
                   newOrder.items.map(
                     (item) => ({
-                      id: String(
-                        item._id ||
-                        item.id
-                      ),
+                      id:
+                        String(
+                          item._id ||
+                            item.id
+                        ),
 
                       name:
                         item.name,
@@ -1306,12 +1376,10 @@ function App() {
 
 
       if (!response.ok) {
-
         throw new Error(
           data.message ||
-          "Failed to save order"
+            "Failed to save order"
         );
-
       }
 
 
@@ -1329,15 +1397,15 @@ function App() {
         error
       );
 
+
       alert(
         error.message ||
-        "Failed to place order"
+          "Failed to place order"
       );
 
+
       return null;
-
     }
-
   }
 
 
@@ -1350,9 +1418,7 @@ function App() {
   ) {
 
     if (!user) {
-
       return;
-
     }
 
 
@@ -1362,12 +1428,13 @@ function App() {
           (item) =>
             String(
               item._id ||
-              item.id
+                item.id
             ) !==
-            String(productId)
+            String(
+              productId
+            )
         )
     );
-
   }
 
 
@@ -1386,14 +1453,13 @@ function App() {
       );
 
       return;
-
     }
 
 
     const productId =
       String(
         product._id ||
-        product.id
+          product.id
       );
 
 
@@ -1405,8 +1471,9 @@ function App() {
             (item) =>
               String(
                 item._id ||
-                item.id
-              ) === productId
+                  item.id
+              ) ===
+              productId
           );
 
 
@@ -1416,10 +1483,10 @@ function App() {
             (item) =>
               String(
                 item._id ||
-                item.id
-              ) !== productId
+                  item.id
+              ) !==
+              productId
           );
-
         }
 
 
@@ -1427,10 +1494,8 @@ function App() {
           ...current,
           product,
         ];
-
       }
     );
-
   }
 
 
@@ -1439,84 +1504,94 @@ function App() {
   ======================================================= */
 
   return (
-
     <BrowserRouter>
 
       <Routes>
-
-
-        {/* HOME */}
 
         <Route
           path="/"
           element={
             <Home
               cart={cart}
-              addToCart={addToCart}
+              addToCart={
+                addToCart
+              }
               user={user}
-              wishlist={wishlist}
-              toggleWishlist={toggleWishlist}
+              wishlist={
+                wishlist
+              }
+              toggleWishlist={
+                toggleWishlist
+              }
             />
           }
         />
 
-
-        {/* SHOP */}
 
         <Route
           path="/shop"
           element={
             <Shop
-              addToCart={addToCart}
-              wishlist={wishlist}
-              toggleWishlist={toggleWishlist}
+              addToCart={
+                addToCart
+              }
+              wishlist={
+                wishlist
+              }
+              toggleWishlist={
+                toggleWishlist
+              }
             />
           }
         />
 
-
-        {/* PRODUCT */}
 
         <Route
           path="/product/:id"
           element={
             <Product
-              addToCart={addToCart}
-              wishlist={wishlist}
-              toggleWishlist={toggleWishlist}
+              addToCart={
+                addToCart
+              }
+              wishlist={
+                wishlist
+              }
+              toggleWishlist={
+                toggleWishlist
+              }
             />
           }
         />
 
-
-        {/* CART */}
 
         <Route
           path="/cart"
           element={
             <Cart
               cart={cart}
-              setCart={setCart}
+              setCart={
+                setCart
+              }
             />
           }
         />
 
-
-        {/* CHECKOUT */}
 
         <Route
           path="/checkout"
           element={
             <Checkout
               cart={cart}
-              clearCart={clearCart}
-              createOrder={createOrder}
+              clearCart={
+                clearCart
+              }
+              createOrder={
+                createOrder
+              }
             />
           }
         />
 
-
-        {/* ORDERS */}
 
         <Route
           path="/orders"
@@ -1526,19 +1601,17 @@ function App() {
         />
 
 
-        {/* LOGIN */}
-
         <Route
           path="/login"
           element={
             <Login
-              onLogin={handleLogin}
+              onLogin={
+                handleLogin
+              }
             />
           }
         />
 
-
-        {/* REGISTER */}
 
         <Route
           path="/register"
@@ -1548,20 +1621,18 @@ function App() {
         />
 
 
-        {/* ACCOUNT */}
-
         <Route
           path="/account"
           element={
             <Account
               user={user}
-              onLogout={handleLogout}
+              onLogout={
+                handleLogout
+              }
             />
           }
         />
 
-
-        {/* SAVED ADDRESSES */}
 
         <Route
           path="/account/addresses"
@@ -1571,22 +1642,36 @@ function App() {
         />
 
 
-        {/* ACCOUNT DETAILS */}
+        <Route
+          path="/account/details"
+          element={
+            <AccountDetails
+              user={user}
+              onUserUpdate={
+                handleUserUpdate
+              }
+            />
+          }
+        />
+
 
         <Route
-  path="/account/details"
-  element={
-    <AccountDetails
-      user={user}
-      onUserUpdate={
-        handleUserUpdate
-      }
-    />
-  }
-/>
+          path="/wishlist"
+          element={
+            <Wishlist
+              wishlist={
+                wishlist
+              }
+              removeFromWishlist={
+                removeFromWishlist
+              }
+              addToCart={
+                addToCart
+              }
+            />
+          }
+        />
 
-
-        {/* ADMIN DASHBOARD */}
 
         <Route
           path="/admin"
@@ -1600,8 +1685,6 @@ function App() {
         />
 
 
-        {/* ADMIN PRODUCTS */}
-
         <Route
           path="/admin/products"
           element={
@@ -1613,8 +1696,6 @@ function App() {
           }
         />
 
-
-        {/* ADMIN USERS */}
 
         <Route
           path="/admin/users"
@@ -1628,8 +1709,6 @@ function App() {
         />
 
 
-        {/* ADMIN ORDERS */}
-
         <Route
           path="/admin/orders"
           element={
@@ -1642,27 +1721,17 @@ function App() {
         />
 
 
-        {/* WISHLIST */}
-
         <Route
-          path="/wishlist"
+          path="*"
           element={
-            <Wishlist
-              wishlist={wishlist}
-              removeFromWishlist={
-                removeFromWishlist
-              }
-              addToCart={addToCart}
-            />
+            <NotFound />
           }
         />
-        <Route
-  path="*"
-  element={<NotFound />}
-/>
-
 
       </Routes>
+
+
+      <SiteFooter />
 
 
       <MobileBottomNav
@@ -1670,11 +1739,8 @@ function App() {
         wishlist={wishlist}
       />
 
-
     </BrowserRouter>
-
   );
-
 }
 
 
