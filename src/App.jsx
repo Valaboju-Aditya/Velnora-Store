@@ -34,6 +34,7 @@ import AdminOrders from "./pages/AdminOrders";
 import AdminRoute from "./components/AdminRoute";
 import Addresses from "./pages/Addresses";
 import AccountDetails from "./pages/AccountDetails";
+import NotFound from "./pages/NotFound";
 
 import "./index.css";
 
@@ -1655,6 +1656,10 @@ function App() {
             />
           }
         />
+        <Route
+  path="*"
+  element={<NotFound />}
+/>
 
 
       </Routes>
