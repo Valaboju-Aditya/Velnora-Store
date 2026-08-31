@@ -13,6 +13,69 @@ import {
 
 function Account({ user, onLogout }) {
   const navigate = useNavigate();
+  if (!user) {
+  return (
+    <div className="account-page">
+      <div className="account-container">
+        <div className="account-profile-card">
+          <div className="account-avatar">
+            <User size={26} />
+          </div>
+
+          <div className="account-profile-details">
+            <span>Welcome</span>
+            <h2>Guest User</h2>
+            <p>Login to access your account</p>
+          </div>
+        </div>
+
+        <div className="account-section">
+          <h3 className="account-section-title">
+            Your Account
+          </h3>
+
+          <div className="account-menu">
+            <Link
+              to="/login"
+              className="account-menu-item"
+            >
+              <div className="account-menu-icon">
+                <User size={19} />
+              </div>
+
+              <div className="account-menu-text">
+                <strong>Login</strong>
+                <span>
+                  Login to your existing account
+                </span>
+              </div>
+
+              <ChevronRight size={17} />
+            </Link>
+
+            <Link
+              to="/register"
+              className="account-menu-item"
+            >
+              <div className="account-menu-icon">
+                <ShieldCheck size={19} />
+              </div>
+
+              <div className="account-menu-text">
+                <strong>Create Account</strong>
+                <span>
+                  Register a new account
+                </span>
+              </div>
+
+              <ChevronRight size={17} />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
   function handleLogout() {
     onLogout();
