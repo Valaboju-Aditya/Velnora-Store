@@ -1,5 +1,24 @@
 const mongoose = require("mongoose");
 
+const cartItemSchema = new mongoose.Schema(
+  {
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+
+    quantity: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -27,6 +46,18 @@ const userSchema = new mongoose.Schema(
       enum: ["customer", "admin"],
       default: "customer",
     },
+
+    cart: {
+      type: [cartItemSchema],
+      default: [],
+    },
+
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
   },
   {
     timestamps: true,

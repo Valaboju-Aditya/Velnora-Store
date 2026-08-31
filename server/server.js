@@ -17,6 +17,9 @@ const adminRoutes =
 const orderRoutes =
   require("./routes/orderRoutes");
 
+const userDataRoutes =
+  require("./routes/userDataRoutes");
+
 const {
   router: paymentRoutes,
   webhookHandler,
@@ -98,6 +101,11 @@ app.use(
 app.use(
   "/api/payments",
   paymentRoutes
+);
+
+app.use(
+  "/api/user-data",
+  userDataRoutes
 );
 
 

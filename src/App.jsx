@@ -106,7 +106,8 @@ function Home({
   const cartCount =
     cart.reduce(
       (total, item) =>
-        total + item.quantity,
+        total +
+        Number(item.quantity || 0),
       0
     );
 
@@ -160,8 +161,6 @@ function Home({
 
         <div className="nav-actions">
 
-          {/* SEARCH */}
-
           <Link
             to="/shop"
             className="nav-button"
@@ -171,8 +170,6 @@ function Home({
           </Link>
 
 
-          {/* ACCOUNT */}
-
           <Link
             to="/account"
             className="nav-button"
@@ -181,8 +178,6 @@ function Home({
             <User size={20} />
           </Link>
 
-
-          {/* WISHLIST */}
 
           <Link
             to="/wishlist"
@@ -198,8 +193,6 @@ function Home({
             )}
           </Link>
 
-
-          {/* USER */}
 
           {user && (
             <span className="user-name">
@@ -217,8 +210,6 @@ function Home({
           )}
 
 
-          {/* CART */}
-
           <Link
             to="/cart"
             className="nav-button cart-button"
@@ -234,8 +225,6 @@ function Home({
           </Link>
 
 
-          {/* MOBILE MENU */}
-
           <button
             className="nav-button mobile-menu"
             type="button"
@@ -247,20 +236,17 @@ function Home({
         </div>
 
       </header>
+
+
       <div className="mobile-search-bar">
-  <Search size={18} />
 
-  <Link to="/shop">
-    Search for products, brands and more
-  </Link>
-</div>
+        <Search size={18} />
 
+        <Link to="/shop">
+          Search for products, brands and more
+        </Link>
 
-      {/* =====================================================
-          MOBILE BOTTOM NAVIGATION
-      ===================================================== */}
-
-      
+      </div>
 
 
       {/* =====================================================
@@ -371,9 +357,9 @@ function Home({
           >
 
             <img
-  src="https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=900&q=85"
-  alt="Men fashion"
-/>
+              src="https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=900&q=85"
+              alt="Men fashion"
+            />
 
             <div className="category-overlay">
 
@@ -498,11 +484,10 @@ function Home({
                         <img
                           src={product.image}
                           alt={product.name}
+                          loading="lazy"
                         />
                       </Link>
 
-
-                      {/* WISHLIST */}
 
                       <button
                         className="wishlist-button"
@@ -530,8 +515,6 @@ function Home({
 
                       </button>
 
-
-                      {/* ADD TO CART */}
 
                       <button
                         className="add-cart-button"
@@ -600,62 +583,6 @@ function Home({
 function App() {
 
   /* =======================================================
-     CART
-     SAVED SEPARATELY FOR EACH USER
-  ======================================================= */
-
-  const [cart, setCart] =
-    useState(() => {
-
-      try {
-
-        const savedUser =
-          localStorage.getItem(
-            "novaUser"
-          );
-
-        if (!savedUser) {
-          return [];
-        }
-
-        const currentUser =
-          JSON.parse(
-            savedUser
-          );
-
-        if (!currentUser?.email) {
-          return [];
-        }
-
-        const email =
-          currentUser.email
-            .toLowerCase()
-            .trim();
-
-        const cartKey =
-          `novaCart_${email}`;
-
-        const savedCart =
-          localStorage.getItem(
-            cartKey
-          );
-
-        return savedCart
-          ? JSON.parse(
-              savedCart
-            )
-          : [];
-
-      } catch {
-
-        return [];
-
-      }
-
-    });
-
-
-  /* =======================================================
      USER
   ======================================================= */
 
@@ -670,9 +597,7 @@ function App() {
           );
 
         return savedUser
-          ? JSON.parse(
-              savedUser
-            )
+          ? JSON.parse(savedUser)
           : null;
 
       } catch {
@@ -685,31 +610,11 @@ function App() {
 
 
   /* =======================================================
-     SAVE CART AUTOMATICALLY
+     CART
   ======================================================= */
 
-  useEffect(() => {
-
-    if (!user?.email) {
-      return;
-    }
-
-    const email =
-      user.email
-        .toLowerCase()
-        .trim();
-
-    const cartKey =
-      `novaCart_${email}`;
-
-    localStorage.setItem(
-      cartKey,
-      JSON.stringify(
-        cart
-      )
-    );
-
-  }, [cart, user]);
+  const [cart, setCart] =
+    useState([]);
 
 
   /* =======================================================
@@ -719,54 +624,345 @@ function App() {
   const [
     wishlist,
     setWishlist,
-  ] = useState(() => {
+  ] = useState([]);
 
-    try {
 
-      const savedUser =
-        localStorage.getItem(
-          "novaUser"
-        );
+  /* =======================================================
+     SERVER DATA READY
+  ======================================================= */
 
-      if (!savedUser) {
-        return [];
+  const [
+    userDataLoaded,
+    setUserDataLoaded,
+  ] = useState(false);
+
+
+  /* =======================================================
+     LOAD CART + WISHLIST FROM MONGODB
+  ======================================================= */
+
+  useEffect(() => {
+
+    let ignore = false;
+
+    async function loadUserData() {
+
+      if (!user) {
+
+        setCart([]);
+        setWishlist([]);
+        setUserDataLoaded(false);
+
+        return;
       }
 
-      const currentUser =
-        JSON.parse(
-          savedUser
+
+      const token =
+        localStorage.getItem(
+          "novaToken"
         );
 
-      if (!currentUser?.email) {
-        return [];
+
+      if (!token) {
+
+        setCart([]);
+        setWishlist([]);
+        setUserDataLoaded(false);
+
+        return;
       }
 
-      const email =
-        currentUser.email
-          .toLowerCase()
-          .trim();
 
-      const wishlistKey =
-        `novaWishlist_${email}`;
+      setUserDataLoaded(false);
 
-      const savedWishlist =
-        localStorage.getItem(
-          wishlistKey
+
+      try {
+
+        const [
+          cartResponse,
+          wishlistResponse,
+        ] = await Promise.all([
+
+          fetch(
+            `${API_URL}/api/user-data/cart`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          ),
+
+          fetch(
+            `${API_URL}/api/user-data/wishlist`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          ),
+
+        ]);
+
+
+        if (!cartResponse.ok) {
+
+          const data =
+            await cartResponse
+              .json()
+              .catch(() => ({}));
+
+          throw new Error(
+            data.message ||
+            "Failed to load cart"
+          );
+
+        }
+
+
+        if (!wishlistResponse.ok) {
+
+          const data =
+            await wishlistResponse
+              .json()
+              .catch(() => ({}));
+
+          throw new Error(
+            data.message ||
+            "Failed to load wishlist"
+          );
+
+        }
+
+
+        const [
+          serverCart,
+          serverWishlist,
+        ] = await Promise.all([
+
+          cartResponse.json(),
+
+          wishlistResponse.json(),
+
+        ]);
+
+
+        if (!ignore) {
+
+          setCart(
+            Array.isArray(serverCart)
+              ? serverCart
+              : []
+          );
+
+          setWishlist(
+            Array.isArray(serverWishlist)
+              ? serverWishlist
+              : []
+          );
+
+          setUserDataLoaded(true);
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          "Load account data failed:",
+          error
         );
 
-      return savedWishlist
-        ? JSON.parse(
-            savedWishlist
-          )
-        : [];
 
-    } catch {
+        if (!ignore) {
 
-      return [];
+          setUserDataLoaded(false);
+
+        }
+
+      }
 
     }
 
-  });
+
+    loadUserData();
+
+
+    return () => {
+      ignore = true;
+    };
+
+  }, [user]);
+
+
+  /* =======================================================
+     SAVE CART TO MONGODB
+  ======================================================= */
+
+  useEffect(() => {
+
+    if (
+      !user ||
+      !userDataLoaded
+    ) {
+      return;
+    }
+
+
+    const token =
+      localStorage.getItem(
+        "novaToken"
+      );
+
+
+    if (!token) {
+      return;
+    }
+
+
+    const saveCart = async () => {
+
+      try {
+
+        const response =
+          await fetch(
+            `${API_URL}/api/user-data/cart`,
+            {
+              method: "PUT",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${token}`,
+              },
+
+              body: JSON.stringify({
+                cart,
+              }),
+            }
+          );
+
+
+        if (!response.ok) {
+
+          const data =
+            await response
+              .json()
+              .catch(() => ({}));
+
+          throw new Error(
+            data.message ||
+            "Failed to sync cart"
+          );
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          "Cart sync failed:",
+          error
+        );
+
+      }
+
+    };
+
+
+    saveCart();
+
+  }, [
+    cart,
+    user,
+    userDataLoaded,
+  ]);
+
+
+  /* =======================================================
+     SAVE WISHLIST TO MONGODB
+  ======================================================= */
+
+  useEffect(() => {
+
+    if (
+      !user ||
+      !userDataLoaded
+    ) {
+      return;
+    }
+
+
+    const token =
+      localStorage.getItem(
+        "novaToken"
+      );
+
+
+    if (!token) {
+      return;
+    }
+
+
+    const saveWishlist = async () => {
+
+      try {
+
+        const response =
+          await fetch(
+            `${API_URL}/api/user-data/wishlist`,
+            {
+              method: "PUT",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${token}`,
+              },
+
+              body: JSON.stringify({
+                wishlist,
+              }),
+            }
+          );
+
+
+        if (!response.ok) {
+
+          const data =
+            await response
+              .json()
+              .catch(() => ({}));
+
+          throw new Error(
+            data.message ||
+            "Failed to sync wishlist"
+          );
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          "Wishlist sync failed:",
+          error
+        );
+
+      }
+
+    };
+
+
+    saveWishlist();
+
+  }, [
+    wishlist,
+    user,
+    userDataLoaded,
+  ]);
 
 
   /* =======================================================
@@ -782,6 +978,7 @@ function App() {
         ?.toLowerCase()
         .trim();
 
+
     const loggedInUser = {
       ...userData,
       email,
@@ -796,59 +993,15 @@ function App() {
     );
 
 
+    setUserDataLoaded(false);
+
+    setCart([]);
+
+    setWishlist([]);
+
     setUser(
       loggedInUser
     );
-
-
-    const wishlistKey =
-      `novaWishlist_${email}`;
-
-    try {
-
-      const savedWishlist =
-        localStorage.getItem(
-          wishlistKey
-        );
-
-      setWishlist(
-        savedWishlist
-          ? JSON.parse(
-              savedWishlist
-            )
-          : []
-      );
-
-    } catch {
-
-      setWishlist([]);
-
-    }
-
-
-    const cartKey =
-      `novaCart_${email}`;
-
-    try {
-
-      const savedCart =
-        localStorage.getItem(
-          cartKey
-        );
-
-      setCart(
-        savedCart
-          ? JSON.parse(
-              savedCart
-            )
-          : []
-      );
-
-    } catch {
-
-      setCart([]);
-
-    }
 
   }
 
@@ -859,6 +1012,8 @@ function App() {
 
   function handleLogout() {
 
+    setUserDataLoaded(false);
+
     localStorage.removeItem(
       "novaUser"
     );
@@ -866,6 +1021,7 @@ function App() {
     localStorage.removeItem(
       "novaToken"
     );
+
 
     setUser(null);
 
@@ -884,38 +1040,57 @@ function App() {
     product
   ) {
 
+    if (!user) {
+
+      alert(
+        "Please login to add products to your cart."
+      );
+
+      return;
+
+    }
+
+
     setCart((current) => {
 
       const productId =
-        product._id ||
-        product.id;
+        String(
+          product._id ||
+          product.id
+        );
+
 
       const existing =
         current.find(
           (item) =>
-            (
+            String(
               item._id ||
               item.id
             ) === productId
         );
 
+
       if (existing) {
 
         return current.map(
           (item) =>
-            (
+            String(
               item._id ||
               item.id
             ) === productId
               ? {
                   ...item,
                   quantity:
-                    item.quantity + 1,
+                    Number(
+                      item.quantity ||
+                      0
+                    ) + 1,
                 }
               : item
         );
 
       }
+
 
       return [
         ...current,
@@ -935,7 +1110,9 @@ function App() {
   ======================================================= */
 
   function clearCart() {
+
     setCart([]);
+
   }
 
 
@@ -1037,8 +1214,7 @@ function App() {
         await fetch(
           `${API_URL}/api/orders`,
           {
-            method:
-              "POST",
+            method: "POST",
 
             headers: {
               "Content-Type":
@@ -1157,41 +1333,23 @@ function App() {
     productId
   ) {
 
-    if (!user?.email) {
+    if (!user) {
+
       return;
+
     }
-
-    const email =
-      user.email
-        .toLowerCase()
-        .trim();
-
-    const wishlistKey =
-      `novaWishlist_${email}`;
 
 
     setWishlist(
-      (current) => {
-
-        const updatedWishlist =
-          current.filter(
-            (item) =>
-              (
-                item._id ||
-                item.id
-              ) !== productId
-          );
-
-        localStorage.setItem(
-          wishlistKey,
-          JSON.stringify(
-            updatedWishlist
-          )
-        );
-
-        return updatedWishlist;
-
-      }
+      (current) =>
+        current.filter(
+          (item) =>
+            String(
+              item._id ||
+              item.id
+            ) !==
+            String(productId)
+        )
     );
 
   }
@@ -1205,7 +1363,7 @@ function App() {
     product
   ) {
 
-    if (!user?.email) {
+    if (!user) {
 
       alert(
         "Please login to add products to your wishlist."
@@ -1216,17 +1374,11 @@ function App() {
     }
 
 
-    const email =
-      user.email
-        .toLowerCase()
-        .trim();
-
-    const wishlistKey =
-      `novaWishlist_${email}`;
-
     const productId =
-      product._id ||
-      product.id;
+      String(
+        product._id ||
+        product.id
+      );
 
 
     setWishlist(
@@ -1235,37 +1387,30 @@ function App() {
         const exists =
           current.some(
             (item) =>
-              (
+              String(
                 item._id ||
                 item.id
               ) === productId
           );
 
 
-        const updatedWishlist =
-          exists
-            ? current.filter(
-                (item) =>
-                  (
-                    item._id ||
-                    item.id
-                  ) !== productId
-              )
-            : [
-                ...current,
-                product,
-              ];
+        if (exists) {
+
+          return current.filter(
+            (item) =>
+              String(
+                item._id ||
+                item.id
+              ) !== productId
+          );
+
+        }
 
 
-        localStorage.setItem(
-          wishlistKey,
-          JSON.stringify(
-            updatedWishlist
-          )
-        );
-
-
-        return updatedWishlist;
+        return [
+          ...current,
+          product,
+        ];
 
       }
     );
@@ -1400,6 +1545,28 @@ function App() {
         />
 
 
+        {/* SAVED ADDRESSES */}
+
+        <Route
+          path="/account/addresses"
+          element={
+            <Addresses />
+          }
+        />
+
+
+        {/* ACCOUNT DETAILS */}
+
+        <Route
+          path="/account/details"
+          element={
+            <AccountDetails
+              user={user}
+            />
+          }
+        />
+
+
         {/* ADMIN DASHBOARD */}
 
         <Route
@@ -1454,15 +1621,6 @@ function App() {
             </AdminRoute>
           }
         />
-        <Route
-  path="/account/addresses"
-  element={<Addresses />}
-/>
-<Route
-  path="/account/details"
-  element={<AccountDetails user={user} />}
-/>
-        
 
 
         {/* WISHLIST */}
@@ -1479,13 +1637,16 @@ function App() {
             />
           }
         />
-        
+
 
       </Routes>
+
+
       <MobileBottomNav
-  cart={cart}
-  wishlist={wishlist}
-/>
+        cart={cart}
+        wishlist={wishlist}
+      />
+
 
     </BrowserRouter>
 
