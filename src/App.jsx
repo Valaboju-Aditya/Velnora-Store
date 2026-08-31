@@ -43,6 +43,12 @@ import AdminProducts from "./pages/AdminProducts";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminOrders from "./pages/AdminOrders";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Shipping from "./pages/Shipping";
+import Returns from "./pages/Returns";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 
 import "./index.css";
 
@@ -1719,7 +1725,30 @@ function App() {
             </AdminRoute>
           }
         />
-
+        <Route
+  path="/about"
+  element={<About />}
+/>
+<Route
+  path="/contact"
+  element={<Contact />}
+/>
+<Route
+  path="/shipping"
+  element={<Shipping />}
+/>
+<Route
+  path="/returns"
+  element={<Returns />}
+/>
+<Route
+  path="/privacy"
+  element={<Privacy />}
+/>
+<Route
+  path="/terms"
+  element={<Terms />}
+/>
 
         <Route
           path="*"
@@ -1729,6 +1758,7 @@ function App() {
         />
 
       </Routes>
+      
 
 
       <SiteFooter />

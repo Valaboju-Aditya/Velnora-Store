@@ -9538,3 +9538,153 @@ button:last-child {
     gap: 9px;
   }
 }
+/* =========================================================
+   INFORMATION PAGES
+========================================================= */
+
+.info-page {
+  min-height: 100vh;
+  padding: 50px 20px 90px;
+  background: #fafafa;
+}
+
+.info-page-container {
+  width: 100%;
+  max-width: 1050px;
+  margin: 0 auto;
+}
+
+.info-page-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 28px;
+  color: var(--nova-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.info-page-back:hover {
+  color: var(--nova-primary);
+}
+
+.info-page-header {
+  margin-bottom: 35px;
+}
+
+.info-page-header > p {
+  margin: 0 0 8px;
+  color: var(--nova-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.info-page-header h1 {
+  margin: 0 0 12px;
+  font-size: 42px;
+  line-height: 1.1;
+  color: var(--nova-primary);
+}
+
+.info-page-header span {
+  display: block;
+  max-width: 650px;
+  color: var(--nova-muted);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.info-page-card {
+  margin-bottom: 28px;
+  padding: 32px;
+  background: #ffffff;
+  border: 1px solid var(--nova-border);
+  border-radius: 16px;
+}
+
+.info-page-card h2 {
+  margin: 0 0 15px;
+  font-size: 23px;
+  color: var(--nova-primary);
+}
+
+.info-page-card p {
+  margin: 0 0 14px;
+  color: var(--nova-muted);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.info-page-card p:last-child {
+  margin-bottom: 0;
+}
+
+.info-feature-grid {
+  margin-bottom: 28px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.info-feature-card {
+  padding: 28px;
+  background: #ffffff;
+  border: 1px solid var(--nova-border);
+  border-radius: 16px;
+}
+
+.info-feature-card svg {
+  margin-bottom: 17px;
+  color: var(--nova-primary);
+}
+
+.info-feature-card h3 {
+  margin: 0 0 10px;
+  font-size: 17px;
+  color: var(--nova-primary);
+}
+
+.info-feature-card p {
+  margin: 0;
+  color: var(--nova-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+@media (max-width: 750px) {
+  .info-page {
+    padding: 28px 15px 100px;
+  }
+
+  .info-page-header h1 {
+    font-size: 30px;
+  }
+
+  .info-page-header span {
+    font-size: 13px;
+  }
+
+  .info-page-card {
+    padding: 22px 18px;
+    border-radius: 12px;
+  }
+
+  .info-page-card h2 {
+    font-size: 20px;
+  }
+
+  .info-page-card p {
+    font-size: 13px;
+  }
+
+  .info-feature-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .info-feature-card {
+    padding: 22px 18px;
+    border-radius: 12px;
+  }
+}
