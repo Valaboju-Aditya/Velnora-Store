@@ -9688,3 +9688,15 @@ button:last-child {
     border-radius: 12px;
   }
 }
+.navbar-logo {
+  width: 110px;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+@media (max-width: 768px) {
+  .navbar-logo {
+    width: 80px;
+  }
+}

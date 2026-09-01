@@ -148,12 +148,13 @@ function Home({
 
       <header className="navbar">
 
-        <Link
-          to="/"
-          className="logo"
-        >
-          VELNORA
-        </Link>
+        <Link to="/" className="logo">
+  <img
+    src="/velnora-logo.png"
+    alt="VELNORA"
+    className="navbar-logo"
+  />
+</Link>
 
 
         <nav className="nav-links">
