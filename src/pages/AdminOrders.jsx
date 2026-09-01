@@ -118,7 +118,7 @@ function AdminOrders() {
       <div className="admin-orders-header">
 
         <div>
-          <p>NOVA ADMIN</p>
+          <p>velnora ADMIN</p>
 
           <h1>Manage Orders</h1>
 

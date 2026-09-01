@@ -27,7 +27,7 @@ function Terms() {
 
           <span>
             These terms explain the conditions that
-            apply when using the NOVA website and
+            apply when using the VELNORA website and
             placing orders through our store.
           </span>
         </section>
@@ -40,7 +40,7 @@ function Terms() {
             <h3>Website Use</h3>
 
             <p>
-              By using NOVA, customers agree to
+              By using VELNORA, customers agree to
               follow the applicable store terms.
             </p>
           </div>
@@ -74,7 +74,7 @@ function Terms() {
           <h2>Use of the Website</h2>
 
           <p>
-            Customers may use the NOVA website
+            Customers may use the VELNORA website
             for lawful personal shopping purposes.
           </p>
 
@@ -96,7 +96,7 @@ function Terms() {
           </p>
 
           <p>
-            NOVA may take reasonable action if
+            VELNORA may take reasonable action if
             fraudulent or unauthorized account
             activity is detected.
           </p>
@@ -134,7 +134,7 @@ function Terms() {
           </p>
 
           <p>
-            NOVA may cancel or reject an order
+            VELNORA may cancel or reject an order
             where necessary due to unavailable
             stock, incorrect information, payment
             issues or suspected fraudulent activity.
@@ -161,7 +161,7 @@ function Terms() {
 
           <p>
             Shipping, return and refund conditions
-            are explained separately in NOVA's
+            are explained separately in VELNORA's
             Shipping Policy and Returns & Refunds
             Policy.
           </p>
@@ -171,7 +171,7 @@ function Terms() {
           <h2>Changes to These Terms</h2>
 
           <p>
-            NOVA may update these Terms & Conditions
+            VELNORA may update these Terms & Conditions
             as the store, services or applicable
             requirements change.
           </p>

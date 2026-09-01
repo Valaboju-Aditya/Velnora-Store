@@ -5,7 +5,7 @@ function Admin() {
     <div className="admin-page">
       <div className="admin-header">
         <div>
-          <p className="admin-label">NOVA ADMIN</p>
+          <p className="admin-label">velnora ADMIN</p>
           <h1>Dashboard</h1>
           <p>Manage your fashion store from one place.</p>
         </div>

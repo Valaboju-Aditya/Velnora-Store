@@ -228,7 +228,7 @@ function Product({
 
           <p className="product-category">
             {product.category ||
-              "NOVA Collection"}
+              "velnora Collection"}
           </p>
 
           <h1>
@@ -276,7 +276,7 @@ function Product({
 
           <p className="product-description">
             {product.description ||
-              "Premium NOVA fashion designed for comfort, quality and modern everyday style."}
+              "Premium velnora fashion designed for comfort, quality and modern everyday style."}
           </p>
 
 

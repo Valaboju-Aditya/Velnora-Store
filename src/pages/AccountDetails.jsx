@@ -330,7 +330,7 @@ function AccountDetails({
 
               <h2>
                 {formData.name ||
-                  "NOVA Customer"}
+                  "velnora Customer"}
               </h2>
 
               <p>

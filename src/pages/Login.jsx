@@ -70,12 +70,12 @@ function Login({ onLogin }) {
       <div className="auth-card">
 
         <div className="auth-header">
-          <p>NOVA ACCOUNT</p>
+          <p>velnora ACCOUNT</p>
 
           <h1>Welcome Back</h1>
 
           <span>
-            Login to continue shopping with NOVA.
+            Login to continue shopping with velnora.
           </span>
         </div>
 

@@ -96,12 +96,12 @@ function Register({ onRegister }) {
       <div className="auth-card">
 
         <div className="auth-header">
-          <p>NOVA ACCOUNT</p>
+          <p>velnora ACCOUNT</p>
 
           <h1>Create Account</h1>
 
           <span>
-            Join NOVA and discover your own style.
+            Join velnora and discover your own style.
           </span>
         </div>
 

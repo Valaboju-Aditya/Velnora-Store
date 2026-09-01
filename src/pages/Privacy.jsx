@@ -26,7 +26,7 @@ function Privacy() {
           <h1>Privacy Policy</h1>
 
           <span>
-            Learn how NOVA may collect, use and protect
+            Learn how VELNORA may collect, use and protect
             information when you use our store.
           </span>
         </section>
@@ -74,7 +74,7 @@ function Privacy() {
 
           <p>
             When you create an account, place an order
-            or contact NOVA, we may collect information
+            or contact VELNORA, we may collect information
             such as your name, email address, phone number,
             delivery address and order information.
           </p>
@@ -105,7 +105,7 @@ function Privacy() {
           </p>
 
           <p>
-            NOVA should not directly store sensitive
+            VELNORA should not directly store sensitive
             payment card information when payment details
             are handled by the payment provider.
           </p>
@@ -122,7 +122,7 @@ function Privacy() {
           </p>
 
           <p>
-            NOVA does not intend to sell customer personal
+            VELNORA does not intend to sell customer personal
             information to unrelated third parties.
           </p>
         </section>
@@ -147,7 +147,7 @@ function Privacy() {
           <p>
             Customers are responsible for keeping their
             account credentials secure and should contact
-            NOVA if they suspect unauthorized access.
+            VELNORA if they suspect unauthorized access.
           </p>
         </section>
 
@@ -155,7 +155,7 @@ function Privacy() {
           <h2>Policy Updates</h2>
 
           <p>
-            This Privacy Policy may be updated as NOVA's
+            This Privacy Policy may be updated as VELNORA's
             services, legal requirements or business
             practices change.
           </p>

@@ -11,7 +11,7 @@ function Footer() {
             to="/"
             className="footer-logo"
           >
-            NOVA
+            VELNORA
           </Link>
 
           <p>
@@ -68,7 +68,7 @@ function Footer() {
           <h3>Company</h3>
 
           <Link to="/about">
-            About NOVA
+            About VELNORA
           </Link>
 
           <Link to="/privacy">
@@ -85,13 +85,13 @@ function Footer() {
       <div className="footer-bottom">
 
         <p>
-          © {new Date().getFullYear()} NOVA.
+          © {new Date().getFullYear()} VELNORA.
           All rights reserved.
         </p>
 
         <span>
           <Mail size={15} />
-          support@nova.com
+          support@velnora.com
         </span>
 
       </div>

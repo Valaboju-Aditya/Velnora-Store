@@ -26,7 +26,7 @@ function Returns() {
           <h1>Returns & Refunds</h1>
 
           <span>
-            Learn about NOVA's return eligibility,
+            Learn about VELNORA's return eligibility,
             return process and refund handling.
           </span>
         </section>
@@ -104,7 +104,7 @@ function Returns() {
           <h2>How to Request a Return</h2>
 
           <p>
-            Contact NOVA customer support with your
+            Contact VELNORA customer support with your
             order number and details about the item
             you would like to return.
           </p>
@@ -143,7 +143,7 @@ function Returns() {
 
           <p>
             If you receive a damaged, defective
-            or incorrect product, contact NOVA
+            or incorrect product, contact VELNORA
             customer support as soon as possible
             with your order details.
           </p>

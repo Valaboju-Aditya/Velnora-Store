@@ -100,7 +100,7 @@ function AdminUsers() {
       <div className="admin-users-header">
 
         <div>
-          <p>NOVA ADMIN</p>
+          <p>velnora ADMIN</p>
 
           <h1>Manage Users</h1>
 

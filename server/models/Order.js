@@ -48,7 +48,7 @@ const orderSchema =
   new mongoose.Schema(
     {
       // =========================
-      // NOVA ORDER ID
+      // velnora ORDER ID
       // =========================
 
       orderId: {

@@ -93,11 +93,11 @@ function Wishlist({
                       <img
                         src={
                           product.image ||
-                          "https://via.placeholder.com/400x500?text=NOVA"
+                          "https://via.placeholder.com/400x500?text=VELNORA"
                         }
                         alt={
                           product.name ||
-                          "NOVA Product"
+                          "velnora Product"
                         }
                       />
                     </Link>
@@ -130,7 +130,7 @@ function Wishlist({
                     >
                       <h3>
                         {product.name ||
-                          "NOVA Product"}
+                          "velnora Product"}
                       </h3>
                     </Link>
 

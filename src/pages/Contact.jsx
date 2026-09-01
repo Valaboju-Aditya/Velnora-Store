@@ -41,7 +41,7 @@ function Contact() {
             <h3>Email Support</h3>
 
             <p>
-              support@nova.com
+              support@VELNORA.com
             </p>
           </div>
 
@@ -80,7 +80,7 @@ function Contact() {
 
           <p>
             When contacting us about an order,
-            please include your NOVA order number
+            please include your VELNORA order number
             so we can assist you faster.
           </p>
         </section>
@@ -97,7 +97,7 @@ function Contact() {
               }}
             />
 
-            NOVA Online Fashion Store
+            VELNORA Online Fashion Store
           </p>
 
           <p>

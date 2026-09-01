@@ -280,7 +280,7 @@ function Shop({
           </h2>
 
           <p>
-            Please wait while NOVA
+            Please wait while velnora
             loads the collection.
           </p>
 

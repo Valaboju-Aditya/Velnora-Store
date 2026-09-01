@@ -26,7 +26,7 @@ function Shipping() {
           <h1>Shipping Policy</h1>
 
           <span>
-            Learn how NOVA processes, ships
+            Learn how VELNORA processes, ships
             and delivers your orders.
           </span>
         </section>
@@ -73,7 +73,7 @@ function Shipping() {
 
           <p>
             Once an order is placed successfully,
-            NOVA will begin processing it for
+            VELNORA will begin processing it for
             shipment.
           </p>
 
@@ -112,7 +112,7 @@ function Shipping() {
           </p>
 
           <p>
-            NOVA may not be able to change the
+            VELNORA may not be able to change the
             delivery address once an order has been
             dispatched.
           </p>

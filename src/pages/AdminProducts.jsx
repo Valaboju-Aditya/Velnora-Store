@@ -296,7 +296,7 @@ function AdminProducts() {
 
         <div>
           <p>
-            NOVA ADMIN
+            velnora ADMIN
           </p>
 
           <h1>

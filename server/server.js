@@ -117,9 +117,8 @@ app.get(
   "/",
   (req, res) => {
     res.json({
-      message:
-        "NOVA Fashion Store API is running",
-    });
+  message: "VELNORA Fashion Store API is running",
+});
   }
 );
 

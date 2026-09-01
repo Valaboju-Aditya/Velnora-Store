@@ -51,7 +51,7 @@ function AdminDashboard() {
     <div className="admin-dashboard">
       <div className="admin-dashboard-header">
         <div>
-          <p>NOVA ADMIN</p>
+          <p>velnora ADMIN</p>
           <h1>Dashboard</h1>
           <span>
             Welcome to your store management panel
@@ -103,7 +103,7 @@ function AdminDashboard() {
 
           <p>
             Add, edit and delete products from your
-            NOVA Fashion Store.
+            velnora Fashion Store.
           </p>
 
           <Link

@@ -24,7 +24,7 @@ function About() {
           <p>ABOUT US</p>
 
           <h1>
-            About NOVA
+            About VELNORA
           </h1>
 
           <span>
@@ -39,7 +39,7 @@ function About() {
           </h2>
 
           <p>
-            NOVA is a modern fashion store focused on
+            VELNORA is a modern fashion store focused on
             providing stylish, comfortable and
             affordable clothing for everyday life.
           </p>

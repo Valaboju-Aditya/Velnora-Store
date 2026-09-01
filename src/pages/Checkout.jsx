@@ -574,10 +574,10 @@ function Checkout({
             .currency,
 
         name:
-          "NOVA",
+          "velnora",
 
         description:
-          "NOVA Fashion Store Order",
+          "velnora Store Order",
 
         order_id:
           paymentData.order
@@ -596,7 +596,7 @@ function Checkout({
 
         notes: {
           store:
-            "NOVA Fashion Store",
+            "velnora Fashion Store",
         },
 
         theme: {
@@ -642,7 +642,7 @@ function Checkout({
                 !createdOrder
               ) {
                 alert(
-                  "Payment completed, but the NOVA order could not be created."
+                  "Payment completed, but the velnora order could not be created."
                 );
 
                 return;
@@ -837,7 +837,7 @@ function Checkout({
           </h1>
 
           <p>
-            Your NOVA order has
+            Your velnora order has
             been successfully placed.
           </p>
 
@@ -1303,7 +1303,7 @@ function Checkout({
 
               Your information is
               securely handled by
-              NOVA.
+              velnora.
             </p>
           </form>
 

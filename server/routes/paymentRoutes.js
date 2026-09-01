@@ -106,7 +106,7 @@ router.post(
             "INR",
 
           receipt:
-            `nova_${Date.now()}`,
+            `velnora_${Date.now()}`,
 
           notes: {
             userId:

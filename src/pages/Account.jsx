@@ -97,11 +97,11 @@ function Account({ user, onLogout }) {
             <span>Welcome</span>
 
             <h2>
-              {user?.name || "NOVA Customer"}
+              {user?.name || "velnora Customer"}
             </h2>
 
             <p>
-              {user?.email || "NOVA Customer"}
+              {user?.email || "velnora Customer"}
             </p>
           </div>
         </div>

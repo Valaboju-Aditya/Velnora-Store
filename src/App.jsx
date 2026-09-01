@@ -152,7 +152,7 @@ function Home({
           to="/"
           className="logo"
         >
-          NOVA
+          VELNORA
         </Link>
 
 
@@ -1252,7 +1252,7 @@ function App() {
     const newOrder = {
 
       id:
-        `NOVA-${Date.now()}`,
+        `velnora-${Date.now()}`,
 
       date:
         new Date()
