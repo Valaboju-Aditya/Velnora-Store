@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://velnora-store.onrender.com/sitemap.xml
