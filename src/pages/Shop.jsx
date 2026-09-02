@@ -262,6 +262,192 @@ function Shop({
       ? category
       : "Shop All";
 
+      /* =========================================================
+   SHOP SEO
+========================================================= */
+
+useEffect(() => {
+  let seoTitle =
+    "Shop Fashion Online | VELNORA";
+
+  let seoDescription =
+    "Shop VELNORA's latest collection of men's fashion, women's fashion and accessories. Discover premium everyday styles online.";
+
+  if (saleOnly) {
+    seoTitle =
+      "Fashion Sale | VELNORA";
+
+    seoDescription =
+      "Shop VELNORA fashion sale and discover selected men's, women's and accessory styles at special prices.";
+  } else if (newOnly) {
+    seoTitle =
+      "New Arrivals | VELNORA";
+
+    seoDescription =
+      "Discover the latest VELNORA new arrivals including men's fashion, women's fashion and modern accessories.";
+  } else if (category !== "All") {
+    seoTitle =
+      `${category} Fashion | VELNORA`;
+
+    seoDescription =
+      `Shop VELNORA ${category.toLowerCase()} collection. Discover premium fashion, modern styles and everyday essentials online.`;
+  }
+
+  const canonicalUrl =
+    `${window.location.origin}/shop`;
+
+  const originalTitle =
+    document.title;
+
+  document.title =
+    seoTitle;
+
+  const descriptionTag =
+    document.querySelector(
+      'meta[name="description"]'
+    );
+
+  const originalDescription =
+    descriptionTag?.getAttribute(
+      "content"
+    );
+
+  if (descriptionTag) {
+    descriptionTag.setAttribute(
+      "content",
+      seoDescription
+    );
+  }
+
+  const canonicalTag =
+    document.querySelector(
+      'link[rel="canonical"]'
+    );
+
+  const originalCanonical =
+    canonicalTag?.getAttribute(
+      "href"
+    );
+
+  if (canonicalTag) {
+    canonicalTag.setAttribute(
+      "href",
+      canonicalUrl
+    );
+  }
+
+  const ogTags = {
+    "og:title": seoTitle,
+    "og:description":
+      seoDescription,
+    "og:url": canonicalUrl,
+    "og:type": "website",
+  };
+
+  const originalOgValues = {};
+
+  Object.entries(ogTags).forEach(
+    ([property, content]) => {
+      let tag =
+        document.querySelector(
+          `meta[property="${property}"]`
+        );
+
+      if (tag) {
+        originalOgValues[property] =
+          tag.getAttribute("content");
+
+        tag.setAttribute(
+          "content",
+          content
+        );
+      } else {
+        tag =
+          document.createElement(
+            "meta"
+          );
+
+        tag.setAttribute(
+          "property",
+          property
+        );
+
+        tag.setAttribute(
+          "content",
+          content
+        );
+
+        tag.setAttribute(
+          "data-velnora-shop-og",
+          "true"
+        );
+
+        document.head.appendChild(
+          tag
+        );
+      }
+    }
+  );
+
+  return () => {
+    document.title =
+      originalTitle;
+
+    if (
+      descriptionTag &&
+      originalDescription
+    ) {
+      descriptionTag.setAttribute(
+        "content",
+        originalDescription
+      );
+    }
+
+    if (
+      canonicalTag &&
+      originalCanonical
+    ) {
+      canonicalTag.setAttribute(
+        "href",
+        originalCanonical
+      );
+    }
+
+    Object.keys(ogTags).forEach(
+      (property) => {
+        const tag =
+          document.querySelector(
+            `meta[property="${property}"]`
+          );
+
+        if (!tag) {
+          return;
+        }
+
+        if (
+          tag.getAttribute(
+            "data-velnora-shop-og"
+          ) === "true"
+        ) {
+          tag.remove();
+        } else if (
+          originalOgValues[property]
+        ) {
+          tag.setAttribute(
+            "content",
+            originalOgValues[
+              property
+            ]
+          );
+        }
+      }
+    );
+  };
+}, [
+  category,
+  saleOnly,
+  newOnly,
+]);
 
   /* =========================================================
      LOADING
