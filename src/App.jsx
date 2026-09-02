@@ -43,6 +43,7 @@ import AdminProducts from "./pages/AdminProducts";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminOrders from "./pages/AdminOrders";
+
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Shipping from "./pages/Shipping";
@@ -75,49 +76,389 @@ function Home({
   ] = useState(true);
 
 
+  /* =======================================================
+     HOMEPAGE SEO + ONLINE STORE STRUCTURED DATA
+  ======================================================= */
+
+  useEffect(() => {
+    const seoTitle =
+      "VELNORA | Online Fashion Store";
+
+    const seoDescription =
+      "Shop VELNORA for modern men's fashion, women's fashion and accessories. Discover premium everyday styles, new arrivals and fashion essentials online.";
+
+    const canonicalUrl =
+      `${window.location.origin}/`;
+
+    const originalTitle =
+      document.title;
+
+    document.title =
+      seoTitle;
+
+
+    const descriptionTag =
+      document.querySelector(
+        'meta[name="description"]'
+      );
+
+    const originalDescription =
+      descriptionTag?.getAttribute(
+        "content"
+      );
+
+    if (descriptionTag) {
+      descriptionTag.setAttribute(
+        "content",
+        seoDescription
+      );
+    }
+
+
+    const canonicalTag =
+      document.querySelector(
+        'link[rel="canonical"]'
+      );
+
+    const originalCanonical =
+      canonicalTag?.getAttribute(
+        "href"
+      );
+
+    if (canonicalTag) {
+      canonicalTag.setAttribute(
+        "href",
+        canonicalUrl
+      );
+    }
+
+
+    const ogTags = {
+      "og:title":
+        seoTitle,
+
+      "og:description":
+        seoDescription,
+
+      "og:url":
+        canonicalUrl,
+
+      "og:type":
+        "website",
+    };
+
+
+    const originalOgValues = {};
+
+
+    Object.entries(
+      ogTags
+    ).forEach(
+      ([property, content]) => {
+
+        let tag =
+          document.querySelector(
+            `meta[property="${property}"]`
+          );
+
+
+        if (tag) {
+
+          originalOgValues[
+            property
+          ] =
+            tag.getAttribute(
+              "content"
+            );
+
+
+          tag.setAttribute(
+            "content",
+            content
+          );
+
+        } else {
+
+          tag =
+            document.createElement(
+              "meta"
+            );
+
+
+          tag.setAttribute(
+            "property",
+            property
+          );
+
+
+          tag.setAttribute(
+            "content",
+            content
+          );
+
+
+          tag.setAttribute(
+            "data-velnora-home-og",
+            "true"
+          );
+
+
+          document.head.appendChild(
+            tag
+          );
+
+        }
+
+      }
+    );
+
+
+    /* =====================================================
+       ONLINE STORE STRUCTURED DATA
+    ===================================================== */
+
+    const existingSchema =
+      document.getElementById(
+        "velnora-store-schema"
+      );
+
+
+    if (existingSchema) {
+      existingSchema.remove();
+    }
+
+
+    const structuredData = {
+      "@context":
+        "https://schema.org",
+
+      "@type":
+        "OnlineStore",
+
+      "@id":
+        `${window.location.origin}/#store`,
+
+      name:
+        "VELNORA",
+
+      url:
+        canonicalUrl,
+
+      logo:
+        `${window.location.origin}/velnora-logo.png`,
+
+      image:
+        `${window.location.origin}/velnora-logo.png`,
+
+      description:
+        "VELNORA is an online fashion store offering modern men's fashion, women's fashion and accessories.",
+
+      priceRange:
+        "₹₹",
+
+      currenciesAccepted:
+        "INR",
+
+      paymentAccepted: [
+        "Cash on Delivery",
+        "Online Payment",
+      ],
+
+      brand: {
+        "@type":
+          "Brand",
+
+        name:
+          "VELNORA",
+      },
+    };
+
+
+    const schemaScript =
+      document.createElement(
+        "script"
+      );
+
+
+    schemaScript.type =
+      "application/ld+json";
+
+
+    schemaScript.id =
+      "velnora-store-schema";
+
+
+    schemaScript.textContent =
+      JSON.stringify(
+        structuredData
+      );
+
+
+    document.head.appendChild(
+      schemaScript
+    );
+
+
+    return () => {
+
+      document.title =
+        originalTitle;
+
+
+      if (
+        descriptionTag &&
+        originalDescription
+      ) {
+
+        descriptionTag.setAttribute(
+          "content",
+          originalDescription
+        );
+
+      }
+
+
+      if (
+        canonicalTag &&
+        originalCanonical
+      ) {
+
+        canonicalTag.setAttribute(
+          "href",
+          originalCanonical
+        );
+
+      }
+
+
+      Object.keys(
+        ogTags
+      ).forEach(
+        (property) => {
+
+          const tag =
+            document.querySelector(
+              `meta[property="${property}"]`
+            );
+
+
+          if (!tag) {
+            return;
+          }
+
+
+          if (
+            tag.getAttribute(
+              "data-velnora-home-og"
+            ) === "true"
+          ) {
+
+            tag.remove();
+
+          } else if (
+            originalOgValues[
+              property
+            ]
+          ) {
+
+            tag.setAttribute(
+              "content",
+              originalOgValues[
+                property
+              ]
+            );
+
+          }
+
+        }
+      );
+
+
+      const schema =
+        document.getElementById(
+          "velnora-store-schema"
+        );
+
+
+      if (schema) {
+        schema.remove();
+      }
+
+    };
+
+  }, []);
+
+
+  /* =======================================================
+     LOAD PRODUCTS
+  ======================================================= */
+
   useEffect(() => {
     let ignore = false;
 
+
     async function loadProducts() {
+
       try {
+
         const response =
           await fetch(
             `${API_URL}/api/products`
           );
 
+
         if (!response.ok) {
+
           throw new Error(
             "Failed to fetch products"
           );
+
         }
+
 
         const data =
           await response.json();
 
+
         if (!ignore) {
+
           setProducts(
             Array.isArray(data)
               ? data
               : []
           );
+
         }
+
       } catch (error) {
+
         console.error(
           "Home products error:",
           error
         );
+
       } finally {
+
         if (!ignore) {
-          setLoadingProducts(false);
+
+          setLoadingProducts(
+            false
+          );
+
         }
+
       }
+
     }
 
+
     loadProducts();
+
 
     return () => {
       ignore = true;
     };
+
   }, []);
 
 
@@ -148,13 +489,16 @@ function Home({
 
       <header className="navbar">
 
-        <Link to="/" className="logo">
-  <img
-    src="/velnora-logo.png"
-    alt="VELNORA"
-    className="navbar-logo"
-  />
-</Link>
+        <Link
+          to="/"
+          className="logo"
+        >
+          <img
+            src="/velnora-logo.png"
+            alt="VELNORA"
+            className="navbar-logo"
+          />
+        </Link>
 
 
         <nav className="nav-links">
@@ -221,20 +565,25 @@ function Home({
                 {wishlist.length}
               </span>
             )}
+
           </Link>
 
 
           {user ? (
+
             <span className="user-name">
               👤 {user.name}
             </span>
+
           ) : (
+
             <Link
               to="/login"
               className="login-link"
             >
               Login
             </Link>
+
           )}
 
 
@@ -250,6 +599,7 @@ function Home({
                 {cartCount}
               </span>
             )}
+
           </Link>
 
 
@@ -356,18 +706,17 @@ function Home({
 
         <div className="category-grid">
 
-          {/* WOMEN */}
-
           <Link
             to="/shop?category=Women"
             className="category-card"
           >
             <img
               src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=85"
-              alt="Women fashion"
+              alt="Women's fashion collection at VELNORA"
             />
 
             <div className="category-overlay">
+
               <h3>
                 Women
               </h3>
@@ -375,11 +724,11 @@ function Home({
               <span>
                 Explore Collection →
               </span>
+
             </div>
+
           </Link>
 
-
-          {/* MEN */}
 
           <Link
             to="/shop?category=Men"
@@ -387,10 +736,11 @@ function Home({
           >
             <img
               src="https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=900&q=85"
-              alt="Men fashion"
+              alt="Men's fashion collection at VELNORA"
             />
 
             <div className="category-overlay">
+
               <h3>
                 Men
               </h3>
@@ -398,11 +748,11 @@ function Home({
               <span>
                 Explore Collection →
               </span>
+
             </div>
+
           </Link>
 
-
-          {/* ACCESSORIES */}
 
           <Link
             to="/shop?category=Accessories"
@@ -410,10 +760,11 @@ function Home({
           >
             <img
               src="https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?auto=format&fit=crop&w=900&q=85"
-              alt="Fashion accessories"
+              alt="Fashion accessories collection at VELNORA"
             />
 
             <div className="category-overlay">
+
               <h3>
                 Accessories
               </h3>
@@ -421,7 +772,9 @@ function Home({
               <span>
                 Explore Collection →
               </span>
+
             </div>
+
           </Link>
 
         </div>
@@ -490,11 +843,14 @@ function Home({
                         item._id ||
                         item.id
                       ) ===
-                      String(productId)
+                      String(
+                        productId
+                      )
                   );
 
 
                 return (
+
                   <div
                     className="product-card"
                     key={productId}
@@ -510,7 +866,7 @@ function Home({
                             product.image
                           }
                           alt={
-                            product.name
+                            `${product.name} - VELNORA`
                           }
                           loading="lazy"
                         />
@@ -585,7 +941,9 @@ function Home({
                     </div>
 
                   </div>
+
                 );
+
               }
             )
 
@@ -605,6 +963,7 @@ function Home({
 ========================================================= */
 
 function SiteFooter() {
+
   const location =
     useLocation();
 
@@ -646,10 +1005,12 @@ function App() {
   ] = useState(() => {
 
     try {
+
       const savedUser =
         localStorage.getItem(
           "novaUser"
         );
+
 
       return savedUser
         ? JSON.parse(
@@ -658,7 +1019,9 @@ function App() {
         : null;
 
     } catch {
+
       return null;
+
     }
 
   });
@@ -705,13 +1068,17 @@ function App() {
     async function loadUserData() {
 
       if (!user) {
+
         setCart([]);
+
         setWishlist([]);
+
         setUserDataLoaded(
           false
         );
 
         return;
+
       }
 
 
@@ -722,17 +1089,23 @@ function App() {
 
 
       if (!token) {
+
         setCart([]);
+
         setWishlist([]);
+
         setUserDataLoaded(
           false
         );
 
         return;
+
       }
 
 
-      setUserDataLoaded(false);
+      setUserDataLoaded(
+        false
+      );
 
 
       try {
@@ -767,28 +1140,34 @@ function App() {
 
 
         if (!cartResponse.ok) {
+
           const data =
             await cartResponse
               .json()
               .catch(() => ({}));
 
+
           throw new Error(
             data.message ||
               "Failed to load cart"
           );
+
         }
 
 
         if (!wishlistResponse.ok) {
+
           const data =
             await wishlistResponse
               .json()
               .catch(() => ({}));
 
+
           throw new Error(
             data.message ||
               "Failed to load wishlist"
           );
+
         }
 
 
@@ -837,12 +1216,15 @@ function App() {
 
 
         if (!ignore) {
+
           setUserDataLoaded(
             false
           );
+
         }
 
       }
+
     }
 
 
@@ -919,6 +1301,7 @@ function App() {
             data.message ||
               "Failed to sync cart"
           );
+
         }
 
       } catch (error) {
@@ -929,6 +1312,7 @@ function App() {
         );
 
       }
+
     }
 
 
@@ -1004,6 +1388,7 @@ function App() {
             data.message ||
               "Failed to sync wishlist"
           );
+
         }
 
       } catch (error) {
@@ -1014,6 +1399,7 @@ function App() {
         );
 
       }
+
     }
 
 
@@ -1096,6 +1482,7 @@ function App() {
         return updatedUser;
       }
     );
+
   }
 
 
@@ -1114,6 +1501,7 @@ function App() {
       "novaUser"
     );
 
+
     localStorage.removeItem(
       "novaToken"
     );
@@ -1124,6 +1512,7 @@ function App() {
     setWishlist([]);
 
     setCart([]);
+
   }
 
 
@@ -1142,6 +1531,7 @@ function App() {
       );
 
       return;
+
     }
 
 
@@ -1161,7 +1551,8 @@ function App() {
               String(
                 item._id ||
                   item.id
-              ) === productId
+              ) ===
+              productId
           );
 
 
@@ -1172,7 +1563,8 @@ function App() {
               String(
                 item._id ||
                   item.id
-              ) === productId
+              ) ===
+              productId
                 ? {
                     ...item,
 
@@ -1184,6 +1576,7 @@ function App() {
                   }
                 : item
           );
+
         }
 
 
@@ -1194,8 +1587,10 @@ function App() {
             quantity: 1,
           },
         ];
+
       }
     );
+
   }
 
 
@@ -1204,7 +1599,9 @@ function App() {
   ======================================================= */
 
   function clearCart() {
+
     setCart([]);
+
   }
 
 
@@ -1223,13 +1620,16 @@ function App() {
       );
 
       return null;
+
     }
 
 
     if (
       cart.length === 0
     ) {
+
       return null;
+
     }
 
 
@@ -1299,6 +1699,7 @@ function App() {
         );
 
         return null;
+
       }
 
 
@@ -1383,10 +1784,12 @@ function App() {
 
 
       if (!response.ok) {
+
         throw new Error(
           data.message ||
             "Failed to save order"
         );
+
       }
 
 
@@ -1412,7 +1815,9 @@ function App() {
 
 
       return null;
+
     }
+
   }
 
 
@@ -1442,6 +1847,7 @@ function App() {
             )
         )
     );
+
   }
 
 
@@ -1460,6 +1866,7 @@ function App() {
       );
 
       return;
+
     }
 
 
@@ -1494,6 +1901,7 @@ function App() {
               ) !==
               productId
           );
+
         }
 
 
@@ -1501,8 +1909,10 @@ function App() {
           ...current,
           product,
         ];
+
       }
     );
+
   }
 
 
@@ -1726,30 +2136,55 @@ function App() {
             </AdminRoute>
           }
         />
+
+
         <Route
-  path="/about"
-  element={<About />}
-/>
-<Route
-  path="/contact"
-  element={<Contact />}
-/>
-<Route
-  path="/shipping"
-  element={<Shipping />}
-/>
-<Route
-  path="/returns"
-  element={<Returns />}
-/>
-<Route
-  path="/privacy"
-  element={<Privacy />}
-/>
-<Route
-  path="/terms"
-  element={<Terms />}
-/>
+          path="/about"
+          element={
+            <About />
+          }
+        />
+
+
+        <Route
+          path="/contact"
+          element={
+            <Contact />
+          }
+        />
+
+
+        <Route
+          path="/shipping"
+          element={
+            <Shipping />
+          }
+        />
+
+
+        <Route
+          path="/returns"
+          element={
+            <Returns />
+          }
+        />
+
+
+        <Route
+          path="/privacy"
+          element={
+            <Privacy />
+          }
+        />
+
+
+        <Route
+          path="/terms"
+          element={
+            <Terms />
+          }
+        />
+
 
         <Route
           path="*"
@@ -1759,7 +2194,6 @@ function App() {
         />
 
       </Routes>
-      
 
 
       <SiteFooter />
