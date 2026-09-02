@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import {
   ArrowLeft,
   RotateCcw,
@@ -8,6 +10,167 @@ import {
 import { Link } from "react-router-dom";
 
 function Returns() {
+  useEffect(() => {
+    const seoTitle =
+      "Returns & Refunds Policy | VELNORA";
+
+    const seoDescription =
+      "Read VELNORA's returns and refunds policy, including return eligibility, the 7-day return window, refund processing and damaged product support.";
+
+    const canonicalUrl =
+      `${window.location.origin}/returns`;
+
+    const originalTitle =
+      document.title;
+
+    document.title = seoTitle;
+
+    const descriptionTag =
+      document.querySelector(
+        'meta[name="description"]'
+      );
+
+    const originalDescription =
+      descriptionTag?.getAttribute(
+        "content"
+      );
+
+    if (descriptionTag) {
+      descriptionTag.setAttribute(
+        "content",
+        seoDescription
+      );
+    }
+
+    const canonicalTag =
+      document.querySelector(
+        'link[rel="canonical"]'
+      );
+
+    const originalCanonical =
+      canonicalTag?.getAttribute(
+        "href"
+      );
+
+    if (canonicalTag) {
+      canonicalTag.setAttribute(
+        "href",
+        canonicalUrl
+      );
+    }
+
+    const ogTags = {
+      "og:title": seoTitle,
+      "og:description": seoDescription,
+      "og:url": canonicalUrl,
+      "og:type": "website",
+    };
+
+    const originalOgValues = {};
+
+    Object.entries(ogTags).forEach(
+      ([property, content]) => {
+        let tag =
+          document.querySelector(
+            `meta[property="${property}"]`
+          );
+
+        if (tag) {
+          originalOgValues[property] =
+            tag.getAttribute("content");
+
+          tag.setAttribute(
+            "content",
+            content
+          );
+        } else {
+          tag =
+            document.createElement(
+              "meta"
+            );
+
+          tag.setAttribute(
+            "property",
+            property
+          );
+
+          tag.setAttribute(
+            "content",
+            content
+          );
+
+          tag.setAttribute(
+            "data-velnora-returns-og",
+            "true"
+          );
+
+          document.head.appendChild(
+            tag
+          );
+        }
+      }
+    );
+
+    return () => {
+      document.title =
+        originalTitle;
+
+      if (
+        descriptionTag &&
+        originalDescription
+      ) {
+        descriptionTag.setAttribute(
+          "content",
+          originalDescription
+        );
+      }
+
+      if (
+        canonicalTag &&
+        originalCanonical
+      ) {
+        canonicalTag.setAttribute(
+          "href",
+          originalCanonical
+        );
+      }
+
+      Object.keys(
+        ogTags
+      ).forEach(
+        (property) => {
+          const tag =
+            document.querySelector(
+              `meta[property="${property}"]`
+            );
+
+          if (!tag) {
+            return;
+          }
+
+          if (
+            tag.getAttribute(
+              "data-velnora-returns-og"
+            ) === "true"
+          ) {
+            tag.remove();
+          } else if (
+            originalOgValues[
+              property
+            ]
+          ) {
+            tag.setAttribute(
+              "content",
+              originalOgValues[
+                property
+              ]
+            );
+          }
+        }
+      );
+    };
+  }, []);
+
   return (
     <main className="info-page">
       <div className="info-page-container">
@@ -21,9 +184,13 @@ function Returns() {
         </Link>
 
         <section className="info-page-header">
-          <p>RETURN INFORMATION</p>
+          <p>
+            RETURN INFORMATION
+          </p>
 
-          <h1>Returns & Refunds</h1>
+          <h1>
+            Returns & Refunds
+          </h1>
 
           <span>
             Learn about VELNORA's return eligibility,
@@ -36,7 +203,9 @@ function Returns() {
           <div className="info-feature-card">
             <RotateCcw size={24} />
 
-            <h3>Easy Returns</h3>
+            <h3>
+              Easy Returns
+            </h3>
 
             <p>
               Eligible products can be returned
@@ -47,7 +216,9 @@ function Returns() {
           <div className="info-feature-card">
             <BadgeCheck size={24} />
 
-            <h3>Product Condition</h3>
+            <h3>
+              Product Condition
+            </h3>
 
             <p>
               Returned items should be unused,
@@ -58,7 +229,9 @@ function Returns() {
           <div className="info-feature-card">
             <WalletCards size={24} />
 
-            <h3>Refund Processing</h3>
+            <h3>
+              Refund Processing
+            </h3>
 
             <p>
               Approved refunds are processed
@@ -69,7 +242,9 @@ function Returns() {
         </section>
 
         <section className="info-page-card">
-          <h2>Return Eligibility</h2>
+          <h2>
+            Return Eligibility
+          </h2>
 
           <p>
             Products may be eligible for return
@@ -87,7 +262,9 @@ function Returns() {
         </section>
 
         <section className="info-page-card">
-          <h2>Return Window</h2>
+          <h2>
+            Return Window
+          </h2>
 
           <p>
             Eligible products should generally be
@@ -101,7 +278,9 @@ function Returns() {
         </section>
 
         <section className="info-page-card">
-          <h2>How to Request a Return</h2>
+          <h2>
+            How to Request a Return
+          </h2>
 
           <p>
             Contact VELNORA customer support with your
@@ -117,7 +296,9 @@ function Returns() {
         </section>
 
         <section className="info-page-card">
-          <h2>Refunds</h2>
+          <h2>
+            Refunds
+          </h2>
 
           <p>
             Once a returned product is received
@@ -139,7 +320,9 @@ function Returns() {
         </section>
 
         <section className="info-page-card">
-          <h2>Damaged or Incorrect Products</h2>
+          <h2>
+            Damaged or Incorrect Products
+          </h2>
 
           <p>
             If you receive a damaged, defective
