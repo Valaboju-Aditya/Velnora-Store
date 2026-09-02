@@ -191,28 +191,68 @@ function Product({
         "Fashion",
 
       offers: {
-        "@type":
-          "Offer",
+  "@type": "Offer",
 
-        url:
-          productUrl,
+  url: productUrl,
 
-        priceCurrency:
-          "INR",
+  priceCurrency: "INR",
 
-        price:
-          Number(
-            product.price || 0
-          ),
+  price: Number(
+    product.price || 0
+  ),
 
-        availability:
-          stock > 0
-            ? "https://schema.org/InStock"
-            : "https://schema.org/OutOfStock",
+  availability:
+    stock > 0
+      ? "https://schema.org/InStock"
+      : "https://schema.org/OutOfStock",
 
-        itemCondition:
-          "https://schema.org/NewCondition",
-      },
+  itemCondition:
+    "https://schema.org/NewCondition",
+
+  shippingDetails: {
+    "@type":
+      "OfferShippingDetails",
+
+    shippingDestination: {
+      "@type":
+        "DefinedRegion",
+
+      addressCountry:
+        "IN",
+    },
+
+    shippingRate: {
+      "@type":
+        "MonetaryAmount",
+
+      value:
+        99,
+
+      currency:
+        "INR",
+    },
+  },
+
+  hasMerchantReturnPolicy: {
+    "@type":
+      "MerchantReturnPolicy",
+
+    applicableCountry:
+      "IN",
+
+    returnPolicyCategory:
+      "https://schema.org/MerchantReturnFiniteReturnWindow",
+
+    merchantReturnDays:
+      7,
+
+    returnMethod:
+      "https://schema.org/ReturnByMail",
+
+    returnFees:
+      "https://schema.org/FreeReturn",
+  },
+},
     };
 
     const realRating =
