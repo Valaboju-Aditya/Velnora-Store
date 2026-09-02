@@ -711,9 +711,11 @@ function Home({
             className="category-card"
           >
             <img
-              src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=85"
-              alt="Women's fashion collection at VELNORA"
-            />
+  src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=75"
+  alt="Women's fashion collection at VELNORA"
+  loading="lazy"
+  decoding="async"
+/>
 
             <div className="category-overlay">
 
@@ -735,9 +737,11 @@ function Home({
             className="category-card"
           >
             <img
-              src="https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=900&q=85"
-              alt="Men's fashion collection at VELNORA"
-            />
+  src="https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=900&q=75"
+  alt="Men's fashion collection at VELNORA"
+  loading="lazy"
+  decoding="async"
+/>
 
             <div className="category-overlay">
 
@@ -759,9 +763,11 @@ function Home({
             className="category-card"
           >
             <img
-              src="https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?auto=format&fit=crop&w=900&q=85"
-              alt="Fashion accessories collection at VELNORA"
-            />
+  src="https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=900&q=75"
+  alt="Men's fashion collection at VELNORA"
+  loading="lazy"
+  decoding="async"
+/>
 
             <div className="category-overlay">
 
@@ -862,14 +868,11 @@ function Home({
                         to={`/product/${productId}`}
                       >
                         <img
-                          src={
-                            product.image
-                          }
-                          alt={
-                            `${product.name} - VELNORA`
-                          }
-                          loading="lazy"
-                        />
+  src={product.image}
+  alt={`${product.name} - VELNORA`}
+  loading="lazy"
+  decoding="async"
+/>
                       </Link>
 
 
