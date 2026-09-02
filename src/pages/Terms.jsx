@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import {
   ArrowLeft,
   FileText,
@@ -8,6 +10,174 @@ import {
 import { Link } from "react-router-dom";
 
 function Terms() {
+  useEffect(() => {
+    const seoTitle =
+      "Terms & Conditions | VELNORA";
+
+    const seoDescription =
+      "Read VELNORA's Terms & Conditions covering website use, customer accounts, products, pricing, orders, payments, shipping, returns and refunds.";
+
+    const canonicalUrl =
+      `${window.location.origin}/terms`;
+
+    const originalTitle =
+      document.title;
+
+    document.title = seoTitle;
+
+    const descriptionTag =
+      document.querySelector(
+        'meta[name="description"]'
+      );
+
+    const originalDescription =
+      descriptionTag?.getAttribute(
+        "content"
+      );
+
+    if (descriptionTag) {
+      descriptionTag.setAttribute(
+        "content",
+        seoDescription
+      );
+    }
+
+    const canonicalTag =
+      document.querySelector(
+        'link[rel="canonical"]'
+      );
+
+    const originalCanonical =
+      canonicalTag?.getAttribute(
+        "href"
+      );
+
+    if (canonicalTag) {
+      canonicalTag.setAttribute(
+        "href",
+        canonicalUrl
+      );
+    }
+
+    const ogTags = {
+      "og:title": seoTitle,
+      "og:description":
+        seoDescription,
+      "og:url": canonicalUrl,
+      "og:type": "website",
+    };
+
+    const originalOgValues = {};
+
+    Object.entries(
+      ogTags
+    ).forEach(
+      ([property, content]) => {
+        let tag =
+          document.querySelector(
+            `meta[property="${property}"]`
+          );
+
+        if (tag) {
+          originalOgValues[
+            property
+          ] =
+            tag.getAttribute(
+              "content"
+            );
+
+          tag.setAttribute(
+            "content",
+            content
+          );
+        } else {
+          tag =
+            document.createElement(
+              "meta"
+            );
+
+          tag.setAttribute(
+            "property",
+            property
+          );
+
+          tag.setAttribute(
+            "content",
+            content
+          );
+
+          tag.setAttribute(
+            "data-velnora-terms-og",
+            "true"
+          );
+
+          document.head.appendChild(
+            tag
+          );
+        }
+      }
+    );
+
+    return () => {
+      document.title =
+        originalTitle;
+
+      if (
+        descriptionTag &&
+        originalDescription
+      ) {
+        descriptionTag.setAttribute(
+          "content",
+          originalDescription
+        );
+      }
+
+      if (
+        canonicalTag &&
+        originalCanonical
+      ) {
+        canonicalTag.setAttribute(
+          "href",
+          originalCanonical
+        );
+      }
+
+      Object.keys(
+        ogTags
+      ).forEach(
+        (property) => {
+          const tag =
+            document.querySelector(
+              `meta[property="${property}"]`
+            );
+
+          if (!tag) {
+            return;
+          }
+
+          if (
+            tag.getAttribute(
+              "data-velnora-terms-og"
+            ) === "true"
+          ) {
+            tag.remove();
+          } else if (
+            originalOgValues[
+              property
+            ]
+          ) {
+            tag.setAttribute(
+              "content",
+              originalOgValues[
+                property
+              ]
+            );
+          }
+        }
+      );
+    };
+  }, []);
+
   return (
     <main className="info-page">
       <div className="info-page-container">
@@ -21,9 +191,13 @@ function Terms() {
         </Link>
 
         <section className="info-page-header">
-          <p>STORE TERMS</p>
+          <p>
+            STORE TERMS
+          </p>
 
-          <h1>Terms & Conditions</h1>
+          <h1>
+            Terms & Conditions
+          </h1>
 
           <span>
             These terms explain the conditions that
@@ -37,7 +211,9 @@ function Terms() {
           <div className="info-feature-card">
             <FileText size={24} />
 
-            <h3>Website Use</h3>
+            <h3>
+              Website Use
+            </h3>
 
             <p>
               By using VELNORA, customers agree to
@@ -48,7 +224,9 @@ function Terms() {
           <div className="info-feature-card">
             <ShoppingBag size={24} />
 
-            <h3>Orders</h3>
+            <h3>
+              Orders
+            </h3>
 
             <p>
               Orders are subject to product
@@ -60,7 +238,9 @@ function Terms() {
           <div className="info-feature-card">
             <CreditCard size={24} />
 
-            <h3>Payments</h3>
+            <h3>
+              Payments
+            </h3>
 
             <p>
               Available payment methods are shown
@@ -71,7 +251,9 @@ function Terms() {
         </section>
 
         <section className="info-page-card">
-          <h2>Use of the Website</h2>
+          <h2>
+            Use of the Website
+          </h2>
 
           <p>
             Customers may use the VELNORA website
@@ -87,7 +269,9 @@ function Terms() {
         </section>
 
         <section className="info-page-card">
-          <h2>Accounts</h2>
+          <h2>
+            Accounts
+          </h2>
 
           <p>
             Customers are responsible for providing
@@ -103,7 +287,9 @@ function Terms() {
         </section>
 
         <section className="info-page-card">
-          <h2>Products and Pricing</h2>
+          <h2>
+            Products and Pricing
+          </h2>
 
           <p>
             We aim to display product information,
@@ -125,7 +311,9 @@ function Terms() {
         </section>
 
         <section className="info-page-card">
-          <h2>Orders</h2>
+          <h2>
+            Orders
+          </h2>
 
           <p>
             Placing an order does not guarantee
@@ -142,7 +330,9 @@ function Terms() {
         </section>
 
         <section className="info-page-card">
-          <h2>Payments</h2>
+          <h2>
+            Payments
+          </h2>
 
           <p>
             Customers must use a valid payment
@@ -157,7 +347,9 @@ function Terms() {
         </section>
 
         <section className="info-page-card">
-          <h2>Shipping, Returns and Refunds</h2>
+          <h2>
+            Shipping, Returns and Refunds
+          </h2>
 
           <p>
             Shipping, return and refund conditions
@@ -168,7 +360,9 @@ function Terms() {
         </section>
 
         <section className="info-page-card">
-          <h2>Changes to These Terms</h2>
+          <h2>
+            Changes to These Terms
+          </h2>
 
           <p>
             VELNORA may update these Terms & Conditions
