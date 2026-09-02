@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import {
   ArrowLeft,
   ShieldCheck,
@@ -8,6 +10,174 @@ import {
 import { Link } from "react-router-dom";
 
 function Privacy() {
+  useEffect(() => {
+    const seoTitle =
+      "Privacy Policy | VELNORA";
+
+    const seoDescription =
+      "Read VELNORA's Privacy Policy to understand how we may collect, use, protect and share customer information when you use our online fashion store.";
+
+    const canonicalUrl =
+      `${window.location.origin}/privacy`;
+
+    const originalTitle =
+      document.title;
+
+    document.title = seoTitle;
+
+    const descriptionTag =
+      document.querySelector(
+        'meta[name="description"]'
+      );
+
+    const originalDescription =
+      descriptionTag?.getAttribute(
+        "content"
+      );
+
+    if (descriptionTag) {
+      descriptionTag.setAttribute(
+        "content",
+        seoDescription
+      );
+    }
+
+    const canonicalTag =
+      document.querySelector(
+        'link[rel="canonical"]'
+      );
+
+    const originalCanonical =
+      canonicalTag?.getAttribute(
+        "href"
+      );
+
+    if (canonicalTag) {
+      canonicalTag.setAttribute(
+        "href",
+        canonicalUrl
+      );
+    }
+
+    const ogTags = {
+      "og:title": seoTitle,
+      "og:description":
+        seoDescription,
+      "og:url": canonicalUrl,
+      "og:type": "website",
+    };
+
+    const originalOgValues = {};
+
+    Object.entries(
+      ogTags
+    ).forEach(
+      ([property, content]) => {
+        let tag =
+          document.querySelector(
+            `meta[property="${property}"]`
+          );
+
+        if (tag) {
+          originalOgValues[
+            property
+          ] =
+            tag.getAttribute(
+              "content"
+            );
+
+          tag.setAttribute(
+            "content",
+            content
+          );
+        } else {
+          tag =
+            document.createElement(
+              "meta"
+            );
+
+          tag.setAttribute(
+            "property",
+            property
+          );
+
+          tag.setAttribute(
+            "content",
+            content
+          );
+
+          tag.setAttribute(
+            "data-velnora-privacy-og",
+            "true"
+          );
+
+          document.head.appendChild(
+            tag
+          );
+        }
+      }
+    );
+
+    return () => {
+      document.title =
+        originalTitle;
+
+      if (
+        descriptionTag &&
+        originalDescription
+      ) {
+        descriptionTag.setAttribute(
+          "content",
+          originalDescription
+        );
+      }
+
+      if (
+        canonicalTag &&
+        originalCanonical
+      ) {
+        canonicalTag.setAttribute(
+          "href",
+          originalCanonical
+        );
+      }
+
+      Object.keys(
+        ogTags
+      ).forEach(
+        (property) => {
+          const tag =
+            document.querySelector(
+              `meta[property="${property}"]`
+            );
+
+          if (!tag) {
+            return;
+          }
+
+          if (
+            tag.getAttribute(
+              "data-velnora-privacy-og"
+            ) === "true"
+          ) {
+            tag.remove();
+          } else if (
+            originalOgValues[
+              property
+            ]
+          ) {
+            tag.setAttribute(
+              "content",
+              originalOgValues[
+                property
+              ]
+            );
+          }
+        }
+      );
+    };
+  }, []);
+
   return (
     <main className="info-page">
       <div className="info-page-container">
@@ -21,9 +191,13 @@ function Privacy() {
         </Link>
 
         <section className="info-page-header">
-          <p>YOUR PRIVACY</p>
+          <p>
+            YOUR PRIVACY
+          </p>
 
-          <h1>Privacy Policy</h1>
+          <h1>
+            Privacy Policy
+          </h1>
 
           <span>
             Learn how VELNORA may collect, use and protect
@@ -36,7 +210,9 @@ function Privacy() {
           <div className="info-feature-card">
             <Database size={24} />
 
-            <h3>Information We Collect</h3>
+            <h3>
+              Information We Collect
+            </h3>
 
             <p>
               We may collect account, order,
@@ -48,7 +224,9 @@ function Privacy() {
           <div className="info-feature-card">
             <ShieldCheck size={24} />
 
-            <h3>Responsible Use</h3>
+            <h3>
+              Responsible Use
+            </h3>
 
             <p>
               Information is used for account management,
@@ -59,7 +237,9 @@ function Privacy() {
           <div className="info-feature-card">
             <Lock size={24} />
 
-            <h3>Security</h3>
+            <h3>
+              Security
+            </h3>
 
             <p>
               We use reasonable measures to protect
@@ -70,7 +250,9 @@ function Privacy() {
         </section>
 
         <section className="info-page-card">
-          <h2>Information We May Collect</h2>
+          <h2>
+            Information We May Collect
+          </h2>
 
           <p>
             When you create an account, place an order
@@ -86,7 +268,9 @@ function Privacy() {
         </section>
 
         <section className="info-page-card">
-          <h2>How We Use Information</h2>
+          <h2>
+            How We Use Information
+          </h2>
 
           <p>
             Customer information may be used to process
@@ -97,7 +281,9 @@ function Privacy() {
         </section>
 
         <section className="info-page-card">
-          <h2>Payments</h2>
+          <h2>
+            Payments
+          </h2>
 
           <p>
             Online payments may be processed through
@@ -112,7 +298,9 @@ function Privacy() {
         </section>
 
         <section className="info-page-card">
-          <h2>Data Sharing</h2>
+          <h2>
+            Data Sharing
+          </h2>
 
           <p>
             Information may be shared with service
@@ -128,7 +316,9 @@ function Privacy() {
         </section>
 
         <section className="info-page-card">
-          <h2>Data Security</h2>
+          <h2>
+            Data Security
+          </h2>
 
           <p>
             We use reasonable technical and organizational
@@ -142,7 +332,9 @@ function Privacy() {
         </section>
 
         <section className="info-page-card">
-          <h2>Your Account</h2>
+          <h2>
+            Your Account
+          </h2>
 
           <p>
             Customers are responsible for keeping their
@@ -152,7 +344,9 @@ function Privacy() {
         </section>
 
         <section className="info-page-card">
-          <h2>Policy Updates</h2>
+          <h2>
+            Policy Updates
+          </h2>
 
           <p>
             This Privacy Policy may be updated as VELNORA's
