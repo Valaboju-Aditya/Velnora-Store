@@ -106,6 +106,23 @@ function Product({
         "content"
       );
 
+    const canonicalLink =
+      document.querySelector(
+        'link[rel="canonical"]'
+      );
+
+    const originalCanonical =
+      canonicalLink?.getAttribute(
+        "href"
+      );
+
+    const productId =
+      product._id ||
+      product.id;
+
+    const productUrl =
+      `${window.location.origin}/product/${productId}`;
+
     const description =
       product.description ||
       `Shop ${product.name} at VELNORA. Discover premium fashion designed for comfort, quality and modern everyday style.`;
@@ -117,6 +134,31 @@ function Product({
       metaDescription.setAttribute(
         "content",
         description
+      );
+    }
+
+    if (canonicalLink) {
+      canonicalLink.setAttribute(
+        "href",
+        productUrl
+      );
+    } else {
+      const newCanonical =
+        document.createElement(
+          "link"
+        );
+
+      newCanonical.rel =
+        "canonical";
+
+      newCanonical.href =
+        productUrl;
+
+      newCanonical.id =
+        "dynamic-product-canonical";
+
+      document.head.appendChild(
+        newCanonical
       );
     }
 
@@ -132,6 +174,25 @@ function Product({
           "content",
           originalDescription
         );
+      }
+
+      if (
+        canonicalLink &&
+        originalCanonical
+      ) {
+        canonicalLink.setAttribute(
+          "href",
+          originalCanonical
+        );
+      }
+
+      const dynamicCanonical =
+        document.getElementById(
+          "dynamic-product-canonical"
+        );
+
+      if (dynamicCanonical) {
+        dynamicCanonical.remove();
       }
     };
   }, [product]);
@@ -191,77 +252,105 @@ function Product({
         "Fashion",
 
       offers: {
-  "@type": "Offer",
+        "@type":
+          "Offer",
 
-  url: productUrl,
+        url:
+          productUrl,
 
-  priceCurrency: "INR",
+        priceCurrency:
+          "INR",
 
-  price: Number(
-    product.price || 0
-  ),
+        price:
+          Number(
+            product.price || 0
+          ),
 
-  availability:
-    stock > 0
-      ? "https://schema.org/InStock"
-      : "https://schema.org/OutOfStock",
+        availability:
+          stock > 0
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
 
-  itemCondition:
-    "https://schema.org/NewCondition",
+        itemCondition:
+          "https://schema.org/NewCondition",
 
-  shippingDetails: {
-  "@type": "OfferShippingDetails",
+        shippingDetails: {
+          "@type":
+            "OfferShippingDetails",
 
-  shippingDestination: {
-    "@type": "DefinedRegion",
-    addressCountry: "IN",
-  },
+          shippingDestination: {
+            "@type":
+              "DefinedRegion",
 
-  shippingRate: {
-    "@type": "MonetaryAmount",
-    value: 99,
-    currency: "INR",
-  },
+            addressCountry:
+              "IN",
+          },
 
-  deliveryTime: {
-    "@type": "ShippingDeliveryTime",
+          shippingRate: {
+            "@type":
+              "MonetaryAmount",
 
-    handlingTime: {
-      "@type": "QuantitativeValue",
-      minValue: 0,
-      maxValue: 1,
-      unitCode: "DAY",
-    },
+            value:
+              99,
 
-    transitTime: {
-      "@type": "QuantitativeValue",
-      minValue: 3,
-      maxValue: 7,
-      unitCode: "DAY",
-    },
-  },
-},
+            currency:
+              "INR",
+          },
 
-  hasMerchantReturnPolicy: {
-    "@type":
-      "MerchantReturnPolicy",
+          deliveryTime: {
+            "@type":
+              "ShippingDeliveryTime",
 
-    applicableCountry:
-      "IN",
+            handlingTime: {
+              "@type":
+                "QuantitativeValue",
 
-    returnPolicyCategory:
-      "https://schema.org/MerchantReturnFiniteReturnWindow",
+              minValue:
+                0,
 
-    merchantReturnDays:
-      7,
+              maxValue:
+                1,
 
-    returnMethod:
-      "https://schema.org/ReturnByMail",
+              unitCode:
+                "DAY",
+            },
 
-    returnFees:
-      "https://schema.org/FreeReturn",
-  },
-},
+            transitTime: {
+              "@type":
+                "QuantitativeValue",
+
+              minValue:
+                3,
+
+              maxValue:
+                7,
+
+              unitCode:
+                "DAY",
+            },
+          },
+        },
+
+        hasMerchantReturnPolicy: {
+          "@type":
+            "MerchantReturnPolicy",
+
+          applicableCountry:
+            "IN",
+
+          returnPolicyCategory:
+            "https://schema.org/MerchantReturnFiniteReturnWindow",
+
+          merchantReturnDays:
+            7,
+
+          returnMethod:
+            "https://schema.org/ReturnByMail",
+
+          returnFees:
+            "https://schema.org/FreeReturn",
+        },
+      },
     };
 
     const realRating =
@@ -348,7 +437,6 @@ function Product({
   ) {
     return (
       <div className="product-not-found">
-
         <h1>
           Product Not Found
         </h1>
@@ -364,7 +452,6 @@ function Product({
 
           Back to Shop
         </Link>
-
       </div>
     );
   }
