@@ -202,6 +202,121 @@ function Product({
       return;
     }
 
+    const productId =
+      product._id ||
+      product.id;
+
+    const productUrl =
+      `${window.location.origin}/product/${productId}`;
+
+    const description =
+      product.description ||
+      `Shop ${product.name} at VELNORA. Premium fashion designed for comfort, quality and modern everyday style.`;
+
+    const metaTags = {
+      "og:title":
+        `${product.name} | VELNORA`,
+
+      "og:description":
+        description,
+
+      "og:image":
+        product.image || "",
+
+      "og:url":
+        productUrl,
+
+      "og:type":
+        "product",
+    };
+
+    const originalValues = {};
+
+    Object.entries(
+      metaTags
+    ).forEach(
+      ([property, content]) => {
+        let tag =
+          document.querySelector(
+            `meta[property="${property}"]`
+          );
+
+        if (tag) {
+          originalValues[property] =
+            tag.getAttribute(
+              "content"
+            );
+
+          tag.setAttribute(
+            "content",
+            content
+          );
+        } else {
+          tag =
+            document.createElement(
+              "meta"
+            );
+
+          tag.setAttribute(
+            "property",
+            property
+          );
+
+          tag.setAttribute(
+            "content",
+            content
+          );
+
+          tag.setAttribute(
+            "data-velnora-product-og",
+            "true"
+          );
+
+          document.head.appendChild(
+            tag
+          );
+        }
+      }
+    );
+
+    return () => {
+      Object.keys(
+        metaTags
+      ).forEach(
+        (property) => {
+          const tag =
+            document.querySelector(
+              `meta[property="${property}"]`
+            );
+
+          if (!tag) {
+            return;
+          }
+
+          if (
+            tag.getAttribute(
+              "data-velnora-product-og"
+            ) === "true"
+          ) {
+            tag.remove();
+          } else if (
+            originalValues[property]
+          ) {
+            tag.setAttribute(
+              "content",
+              originalValues[property]
+            );
+          }
+        }
+      );
+    };
+  }, [product]);
+
+  useEffect(() => {
+    if (!product) {
+      return;
+    }
+
     const stock =
       Number(
         product.stock ?? 0
