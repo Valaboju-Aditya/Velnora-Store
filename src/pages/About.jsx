@@ -5,9 +5,124 @@ import {
   Truck,
 } from "lucide-react";
 
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
-
 function About() {
+  useEffect(() => {
+  const seoTitle =
+    "About VELNORA | Our Fashion Story";
+
+  const seoDescription =
+    "Learn about VELNORA, our mission and our approach to modern, comfortable and affordable fashion for everyday style.";
+
+  const canonicalUrl =
+    `${window.location.origin}/about`;
+
+  const originalTitle =
+    document.title;
+
+  document.title = seoTitle;
+
+  const descriptionTag =
+    document.querySelector(
+      'meta[name="description"]'
+    );
+
+  const originalDescription =
+    descriptionTag?.getAttribute("content");
+
+  if (descriptionTag) {
+    descriptionTag.setAttribute(
+      "content",
+      seoDescription
+    );
+  }
+
+  const canonicalTag =
+    document.querySelector(
+      'link[rel="canonical"]'
+    );
+
+  const originalCanonical =
+    canonicalTag?.getAttribute("href");
+
+  if (canonicalTag) {
+    canonicalTag.setAttribute(
+      "href",
+      canonicalUrl
+    );
+  }
+
+  const ogTags = {
+    "og:title": seoTitle,
+    "og:description": seoDescription,
+    "og:url": canonicalUrl,
+    "og:type": "website",
+  };
+
+  const originalOgValues = {};
+
+  Object.entries(ogTags).forEach(
+    ([property, content]) => {
+      const tag =
+        document.querySelector(
+          `meta[property="${property}"]`
+        );
+
+      if (tag) {
+        originalOgValues[property] =
+          tag.getAttribute("content");
+
+        tag.setAttribute(
+          "content",
+          content
+        );
+      }
+    }
+  );
+
+  return () => {
+    document.title = originalTitle;
+
+    if (
+      descriptionTag &&
+      originalDescription
+    ) {
+      descriptionTag.setAttribute(
+        "content",
+        originalDescription
+      );
+    }
+
+    if (
+      canonicalTag &&
+      originalCanonical
+    ) {
+      canonicalTag.setAttribute(
+        "href",
+        originalCanonical
+      );
+    }
+
+    Object.entries(
+      originalOgValues
+    ).forEach(
+      ([property, content]) => {
+        const tag =
+          document.querySelector(
+            `meta[property="${property}"]`
+          );
+
+        if (tag && content) {
+          tag.setAttribute(
+            "content",
+            content
+          );
+        }
+      }
+    );
+  };
+}, []);
   return (
     <main className="info-page">
       <div className="info-page-container">
