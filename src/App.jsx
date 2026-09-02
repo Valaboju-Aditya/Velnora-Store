@@ -494,10 +494,12 @@ function Home({
           className="logo"
         >
           <img
-            src="/velnora-logo.png"
-            alt="VELNORA"
-            className="navbar-logo"
-          />
+  src="/velnora-logo.png"
+  alt="VELNORA"
+  className="navbar-logo"
+  width="280"
+  height="187"
+/>
         </Link>
 
 
