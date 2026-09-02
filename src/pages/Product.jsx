@@ -22,20 +22,33 @@ function Product({
 }) {
   const { id } = useParams();
 
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [product, setProduct] =
+    useState(null);
 
-  const [size, setSize] = useState("M");
-  const [quantity, setQuantity] = useState(1);
-  const [added, setAdded] = useState(false);
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  const [size, setSize] =
+    useState("M");
+
+  const [quantity, setQuantity] =
+    useState(1);
+
+  const [added, setAdded] =
+    useState(false);
 
   useEffect(() => {
     let ignore = false;
 
     const loadProduct = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/products/${id}`);
+        const response =
+          await fetch(
+            `${API_URL}/api/products/${id}`
+          );
 
         if (!response.ok) {
           throw new Error(
@@ -75,6 +88,201 @@ function Product({
     };
   }, [id]);
 
+  useEffect(() => {
+    if (!product) {
+      return;
+    }
+
+    const originalTitle =
+      document.title;
+
+    const metaDescription =
+      document.querySelector(
+        'meta[name="description"]'
+      );
+
+    const originalDescription =
+      metaDescription?.getAttribute(
+        "content"
+      );
+
+    const description =
+      product.description ||
+      `Shop ${product.name} at VELNORA. Discover premium fashion designed for comfort, quality and modern everyday style.`;
+
+    document.title =
+      `${product.name} | VELNORA`;
+
+    if (metaDescription) {
+      metaDescription.setAttribute(
+        "content",
+        description
+      );
+    }
+
+    return () => {
+      document.title =
+        originalTitle;
+
+      if (
+        metaDescription &&
+        originalDescription
+      ) {
+        metaDescription.setAttribute(
+          "content",
+          originalDescription
+        );
+      }
+    };
+  }, [product]);
+
+  useEffect(() => {
+    if (!product) {
+      return;
+    }
+
+    const stock =
+      Number(
+        product.stock ?? 0
+      );
+
+    const productUrl =
+      `${window.location.origin}/product/${
+        product._id ||
+        product.id
+      }`;
+
+    const structuredData = {
+      "@context":
+        "https://schema.org",
+
+      "@type":
+        "Product",
+
+      name:
+        product.name,
+
+      image:
+        product.image
+          ? [product.image]
+          : [],
+
+      description:
+        product.description ||
+        `Premium VELNORA fashion designed for comfort, quality and modern everyday style.`,
+
+      sku:
+        String(
+          product._id ||
+            product.id ||
+            ""
+        ),
+
+      brand: {
+        "@type":
+          "Brand",
+
+        name:
+          "VELNORA",
+      },
+
+      category:
+        product.category ||
+        "Fashion",
+
+      offers: {
+        "@type":
+          "Offer",
+
+        url:
+          productUrl,
+
+        priceCurrency:
+          "INR",
+
+        price:
+          Number(
+            product.price || 0
+          ),
+
+        availability:
+          stock > 0
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
+
+        itemCondition:
+          "https://schema.org/NewCondition",
+      },
+    };
+
+    const realRating =
+      Number(
+        product.rating
+      );
+
+    const realReviews =
+      Number(
+        product.reviews
+      );
+
+    if (
+      realRating > 0 &&
+      realReviews > 0
+    ) {
+      structuredData.aggregateRating =
+        {
+          "@type":
+            "AggregateRating",
+
+          ratingValue:
+            realRating,
+
+          reviewCount:
+            realReviews,
+        };
+    }
+
+    const existingScript =
+      document.getElementById(
+        "product-structured-data"
+      );
+
+    if (existingScript) {
+      existingScript.remove();
+    }
+
+    const script =
+      document.createElement(
+        "script"
+      );
+
+    script.type =
+      "application/ld+json";
+
+    script.id =
+      "product-structured-data";
+
+    script.textContent =
+      JSON.stringify(
+        structuredData
+      );
+
+    document.head.appendChild(
+      script
+    );
+
+    return () => {
+      const currentScript =
+        document.getElementById(
+          "product-structured-data"
+        );
+
+      if (currentScript) {
+        currentScript.remove();
+      }
+    };
+  }, [product]);
+
   if (loading) {
     return (
       <div className="product-not-found">
@@ -85,7 +293,10 @@ function Product({
     );
   }
 
-  if (error || !product) {
+  if (
+    error ||
+    !product
+  ) {
     return (
       <div className="product-not-found">
 
@@ -98,7 +309,10 @@ function Product({
         </p>
 
         <Link to="/shop">
-          <ArrowLeft size={17} />
+          <ArrowLeft
+            size={17}
+          />
+
           Back to Shop
         </Link>
 
@@ -107,17 +321,21 @@ function Product({
   }
 
   const productId =
-    product._id || product.id;
+    product._id ||
+    product.id;
 
   const liked =
     wishlist.some(
       (item) =>
-        (item._id || item.id) ===
+        (item._id ||
+          item.id) ===
         productId
     );
 
   const stock =
-    Number(product.stock ?? 0);
+    Number(
+      product.stock ?? 0
+    );
 
   const outOfStock =
     stock <= 0;
@@ -147,10 +365,13 @@ function Product({
 
     for (
       let i = 0;
-      i < safeQuantity;
+      i <
+      safeQuantity;
       i++
     ) {
-      addToCart(product);
+      addToCart(
+        product
+      );
     }
 
     setAdded(true);
@@ -163,7 +384,8 @@ function Product({
   function increaseQuantity() {
     if (
       !outOfStock &&
-      quantity < stock
+      quantity <
+        stock
     ) {
       setQuantity(
         quantity + 1
@@ -183,28 +405,26 @@ function Product({
   return (
     <div className="product-page">
 
-      {/* BACK */}
-
       <Link
         to="/shop"
         className="back-to-shop"
       >
-        <ArrowLeft size={17} />
+        <ArrowLeft
+          size={17}
+        />
+
         Back to Shop
       </Link>
 
-
-      {/* PRODUCT */}
-
       <div className="product-details">
-
-        {/* IMAGE */}
 
         <div className="product-details-image">
 
           <img
-            src={product.image}
-            alt={product.name}
+            src={
+              product.image
+            }
+            alt={`${product.name} - VELNORA`}
           />
 
           {outOfStock && (
@@ -221,22 +441,16 @@ function Product({
 
         </div>
 
-
-        {/* INFORMATION */}
-
         <div className="product-details-info">
 
           <p className="product-category">
             {product.category ||
-              "velnora Collection"}
+              "VELNORA Collection"}
           </p>
 
           <h1>
             {product.name}
           </h1>
-
-
-          {/* RATING */}
 
           <div className="product-rating">
 
@@ -245,42 +459,36 @@ function Product({
             </span>
 
             <span>
-              {product.rating || "4.8"}
+              {product.rating ||
+                "4.8"}
             </span>
 
             <span>
               (
-              {product.reviews || 0}
+              {product.reviews ||
+                0}
               {" "}
               reviews)
             </span>
 
           </div>
 
-
-          {/* PRICE */}
-
           <h2 className="product-price">
 
             ₹
             {Number(
-              product.price || 0
+              product.price ||
+                0
             ).toLocaleString(
               "en-IN"
             )}
 
           </h2>
 
-
-          {/* DESCRIPTION */}
-
           <p className="product-description">
             {product.description ||
-              "Premium velnora fashion designed for comfort, quality and modern everyday style."}
+              "Premium VELNORA fashion designed for comfort, quality and modern everyday style."}
           </p>
-
-
-          {/* STOCK */}
 
           <div
             className={`product-stock ${
@@ -301,21 +509,21 @@ function Product({
             ) : lowStock ? (
 
               <span>
-                Hurry! Only {stock} left in stock
+                Hurry! Only{" "}
+                {stock} left
+                in stock
               </span>
 
             ) : (
 
               <span>
-                In Stock · {stock} available
+                In Stock ·{" "}
+                {stock} available
               </span>
 
             )}
 
           </div>
-
-
-          {/* SIZE */}
 
           <div className="size-section">
 
@@ -345,12 +553,15 @@ function Product({
                     type="button"
                     key={item}
                     className={
-                      size === item
+                      size ===
+                      item
                         ? "selected"
                         : ""
                     }
                     onClick={() =>
-                      setSize(item)
+                      setSize(
+                        item
+                      )
                     }
                     disabled={
                       outOfStock
@@ -366,9 +577,6 @@ function Product({
 
           </div>
 
-
-          {/* QUANTITY */}
-
           <div className="quantity-section">
 
             <strong>
@@ -383,7 +591,8 @@ function Product({
                   decreaseQuantity
                 }
                 disabled={
-                  quantity <= 1 ||
+                  quantity <=
+                    1 ||
                   outOfStock
                 }
               >
@@ -418,9 +627,6 @@ function Product({
 
           </div>
 
-
-          {/* ACTIONS */}
-
           <div className="product-actions">
 
             <button
@@ -445,7 +651,6 @@ function Product({
                 : "Add to Cart"}
 
             </button>
-
 
             <button
               type="button"
@@ -475,14 +680,13 @@ function Product({
 
           </div>
 
-
-          {/* BENEFITS */}
-
           <div className="product-benefits">
 
             <div className="benefit">
 
-              <Truck size={22} />
+              <Truck
+                size={22}
+              />
 
               <div>
 
@@ -491,13 +695,13 @@ function Product({
                 </strong>
 
                 <span>
-                  On orders above ₹999
+                  On orders above
+                  ₹999
                 </span>
 
               </div>
 
             </div>
-
 
             <div className="benefit">
 
@@ -512,13 +716,13 @@ function Product({
                 </strong>
 
                 <span>
-                  7-day return policy
+                  7-day return
+                  policy
                 </span>
 
               </div>
 
             </div>
-
 
             <div className="benefit">
 
@@ -533,7 +737,8 @@ function Product({
                 </strong>
 
                 <span>
-                  100% secure checkout
+                  100% secure
+                  checkout
                 </span>
 
               </div>
