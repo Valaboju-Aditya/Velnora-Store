@@ -231,6 +231,12 @@ function Product({
       currency:
         "INR",
     },
+    transitTime: {
+      "@type": "QuantitativeValue",
+      minValue: 3,
+      maxValue: 7,
+      unitCode: "DAY",
+    },
   },
 
   hasMerchantReturnPolicy: {
