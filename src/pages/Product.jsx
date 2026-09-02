@@ -210,27 +210,29 @@ function Product({
     "https://schema.org/NewCondition",
 
   shippingDetails: {
-    "@type":
-      "OfferShippingDetails",
+  "@type": "OfferShippingDetails",
 
-    shippingDestination: {
-      "@type":
-        "DefinedRegion",
+  shippingDestination: {
+    "@type": "DefinedRegion",
+    addressCountry: "IN",
+  },
 
-      addressCountry:
-        "IN",
+  shippingRate: {
+    "@type": "MonetaryAmount",
+    value: 99,
+    currency: "INR",
+  },
+
+  deliveryTime: {
+    "@type": "ShippingDeliveryTime",
+
+    handlingTime: {
+      "@type": "QuantitativeValue",
+      minValue: 0,
+      maxValue: 1,
+      unitCode: "DAY",
     },
 
-    shippingRate: {
-      "@type":
-        "MonetaryAmount",
-
-      value:
-        99,
-
-      currency:
-        "INR",
-    },
     transitTime: {
       "@type": "QuantitativeValue",
       minValue: 3,
@@ -238,6 +240,7 @@ function Product({
       unitCode: "DAY",
     },
   },
+},
 
   hasMerchantReturnPolicy: {
     "@type":
