@@ -5232,8 +5232,7 @@ button:last-child {
   .mobile-search-bar a {
     flex: 1;
 
-    color: #777;
-
+color: #444;
     text-decoration: none;
   }
 }
