@@ -871,6 +871,16 @@ function Home({
                       >
                         <img
   src={product.image}
+  srcSet={
+    product.image?.includes("images.unsplash.com") && product.image.includes("w=")
+      ? `
+          ${product.image.replace(/w=\d+/, "w=350")} 350w,
+          ${product.image.replace(/w=\d+/, "w=500")} 500w,
+          ${product.image.replace(/w=\d+/, "w=700")} 700w
+        `
+      : undefined
+  }
+  sizes="(max-width: 600px) 50vw, (max-width: 1024px) 33vw, 25vw"
   alt={`${product.name} - VELNORA`}
   loading="lazy"
   decoding="async"
