@@ -43,6 +43,7 @@ import AdminProducts from "./pages/AdminProducts";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminOrders from "./pages/AdminOrders";
+import AdminReviews from "./pages/AdminReviews";
 
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -50,6 +51,7 @@ import Shipping from "./pages/Shipping";
 import Returns from "./pages/Returns";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+
 
 import "./index.css";
 
@@ -2159,6 +2161,17 @@ function App() {
             </AdminRoute>
           }
         />
+
+        <Route
+  path="/admin/reviews"
+  element={
+    <AdminRoute
+      user={user}
+    >
+      <AdminReviews />
+    </AdminRoute>
+  }
+/>
 
 
         <Route

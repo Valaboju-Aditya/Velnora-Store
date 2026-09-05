@@ -51,7 +51,7 @@ function AdminDashboard() {
     <div className="admin-dashboard">
       <div className="admin-dashboard-header">
         <div>
-          <p>velnora ADMIN</p>
+          <p>VELNORA ADMIN</p>
           <h1>Dashboard</h1>
           <span>
             Welcome to your store management panel
@@ -103,7 +103,7 @@ function AdminDashboard() {
 
           <p>
             Add, edit and delete products from your
-            velnora Fashion Store.
+            VELNORA Fashion Store.
           </p>
 
           <Link
@@ -143,6 +143,22 @@ function AdminDashboard() {
             className="admin-dashboard-button"
           >
             Manage Orders →
+          </Link>
+        </div>
+
+        <div className="admin-dashboard-card">
+          <h2>Customer Reviews</h2>
+
+          <p>
+            View product ratings, verify customer
+            feedback and moderate reviews.
+          </p>
+
+          <Link
+            to="/admin/reviews"
+            className="admin-dashboard-button"
+          >
+            Manage Reviews →
           </Link>
         </div>
       </div>
