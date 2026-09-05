@@ -720,7 +720,7 @@ function Home({
     https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=500&q=75 500w,
     https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=700&q=75 700w
   "
-sizes="(max-width: 600px) 70vw, (max-width: 1024px) 50vw, 33vw"
+sizes="(max-width: 600px) 45vw, (max-width: 1024px) 50vw, 33vw"
   alt="Women's fashion collection at VELNORA"
   loading="lazy"
   decoding="async"
@@ -752,7 +752,7 @@ sizes="(max-width: 600px) 70vw, (max-width: 1024px) 50vw, 33vw"
     https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=500&q=75 500w,
     https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=700&q=75 700w
   "
-sizes="(max-width: 600px) 70vw, (max-width: 1024px) 50vw, 33vw"
+sizes="(max-width: 600px) 45vw, (max-width: 1024px) 50vw, 33vw"
   alt="Men's fashion collection at VELNORA"
   loading="lazy"
   decoding="async"
@@ -784,7 +784,7 @@ sizes="(max-width: 600px) 70vw, (max-width: 1024px) 50vw, 33vw"
     https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?auto=format&fit=crop&w=500&q=75 500w,
     https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?auto=format&fit=crop&w=700&q=75 700w
   "
-sizes="(max-width: 600px) 70vw, (max-width: 1024px) 50vw, 33vw"
+sizes="(max-width: 600px) 45vw, (max-width: 1024px) 50vw, 33vw"
   alt="Fashion accessories collection at VELNORA"
   loading="lazy"
   decoding="async"
