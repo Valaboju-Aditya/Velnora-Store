@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
+const helmet = require("helmet");
 
 dotenv.config();
 
@@ -26,6 +27,11 @@ const {
 } = require("./routes/paymentRoutes");
 
 const app = express();
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
 
 const PORT =
   process.env.PORT || 5000;
