@@ -417,18 +417,18 @@ function Product({
               "ShippingDeliveryTime",
 
             handlingTime: {
-              "@type":
-                "QuantitativeValue",
+  "@type":
+    "QuantitativeValue",
 
-              minValue:
-                0,
+  minValue:
+    1,
 
-              maxValue:
-                1,
+  maxValue:
+    2,
 
-              unitCode:
-                "DAY",
-            },
+  unitCode:
+    "DAY",
+},
 
             transitTime: {
               "@type":
@@ -447,24 +447,18 @@ function Product({
         },
 
         hasMerchantReturnPolicy: {
-          "@type":
-            "MerchantReturnPolicy",
+  "@type":
+    "MerchantReturnPolicy",
 
-          applicableCountry:
-            "IN",
+  applicableCountry:
+    "IN",
 
-          returnPolicyCategory:
-            "https://schema.org/MerchantReturnFiniteReturnWindow",
+  returnPolicyCategory:
+    "https://schema.org/MerchantReturnFiniteReturnWindow",
 
-          merchantReturnDays:
-            7,
-
-          returnMethod:
-            "https://schema.org/ReturnByMail",
-
-          returnFees:
-            "https://schema.org/FreeReturn",
-        },
+  merchantReturnDays:
+    7,
+},
       },
     };
 

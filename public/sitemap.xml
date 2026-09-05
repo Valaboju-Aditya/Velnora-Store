@@ -175,42 +175,4 @@
     <priority>0.8</priority>
   </url>
 
-  <!-- Older live products -->
-
-  <url>
-    <loc>https://velnora-store.onrender.com/product/6a8343ea490417ecd17dfbe1</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://velnora-store.onrender.com/product/6a8097a76351e36101d0763e</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://velnora-store.onrender.com/product/6a80493cb802df8cac9752e0</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://velnora-store.onrender.com/product/6a80493cb802df8cac9752df</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://velnora-store.onrender.com/product/6a80493cb802df8cac9752de</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://velnora-store.onrender.com/product/6a80493cb802df8cac9752dd</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
 </urlset>
