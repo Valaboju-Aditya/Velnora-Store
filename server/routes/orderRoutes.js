@@ -5,7 +5,6 @@ const Razorpay = require("razorpay");
 
 const Order = require("../models/Order");
 const Product = require("../models/Product");
-
 const protect = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -15,10 +14,170 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+async function createRazorpayRefund({
+  paymentId,
+  amount,
+  orderId,
+  userId,
+}) {
+  const idempotencyKey =
+    `velnora_refund_${orderId}`;
 
-// =========================
-// VERIFY RAZORPAY SIGNATURE
-// =========================
+  const credentials =
+    Buffer.from(
+      `${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`
+    ).toString("base64");
+
+  const response =
+    await fetch(
+      `https://api.razorpay.com/v1/payments/${encodeURIComponent(
+        paymentId
+      )}/refund`,
+      {
+        method: "POST",
+
+        headers: {
+          Authorization:
+            `Basic ${credentials}`,
+
+          "Content-Type":
+            "application/json",
+
+          "X-Refund-Idempotency":
+            idempotencyKey,
+        },
+
+        body: JSON.stringify({
+          amount,
+
+          speed: "normal",
+
+          notes: {
+            orderId:
+              String(orderId),
+
+            userId:
+              String(userId),
+          },
+        }),
+      }
+    );
+
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    const error =
+      new Error(
+        data?.error?.description ||
+          "Razorpay refund request failed"
+      );
+
+    error.status =
+      response.status;
+
+    error.razorpayData =
+      data;
+
+    throw error;
+  }
+
+  return data;
+}
+
+async function finalizeRefundedOrder(
+  mongoOrderId,
+  refund
+) {
+  const session =
+    await mongoose.startSession();
+
+  try {
+    await session.withTransaction(
+      async () => {
+        const order =
+          await Order.findById(
+            mongoOrderId
+          ).session(session);
+
+        if (!order) {
+          throw new Error(
+            "Order not found while finalizing refund"
+          );
+        }
+
+        if (!order.stockRestored) {
+          for (
+            const item of
+            order.items
+          ) {
+            if (
+              !mongoose.Types.ObjectId.isValid(
+                item.id
+              )
+            ) {
+              throw new Error(
+                "Invalid product ID in refunded order"
+              );
+            }
+
+            const product =
+              await Product.findById(
+                item.id
+              ).session(session);
+
+            if (!product) {
+              throw new Error(
+                `Product not found: ${item.name}`
+              );
+            }
+
+            product.stock =
+              Number(
+                product.stock || 0
+              ) +
+              Number(
+                item.quantity || 0
+              );
+
+            await product.save({
+              session,
+            });
+          }
+
+          order.stockRestored =
+            true;
+        }
+
+        order.refundStatus =
+          "Processed";
+
+        order.paymentStatus =
+          "Refunded";
+
+        order.status =
+          "Cancelled";
+
+        order.razorpayRefundId =
+          refund.id;
+
+        order.refundAmount =
+          Number(
+            refund.amount || 0
+          ) / 100;
+
+        order.refundedAt =
+          new Date();
+
+        await order.save({
+          session,
+        });
+      }
+    );
+  } finally {
+    await session.endSession();
+  }
+}
 
 function verifyRazorpayPayment({
   razorpay_order_id,
@@ -26,9 +185,12 @@ function verifyRazorpayPayment({
   razorpay_signature,
 }) {
   if (
-    typeof razorpay_order_id !== "string" ||
-    typeof razorpay_payment_id !== "string" ||
-    typeof razorpay_signature !== "string"
+    typeof razorpay_order_id !==
+      "string" ||
+    typeof razorpay_payment_id !==
+      "string" ||
+    typeof razorpay_signature !==
+      "string"
   ) {
     return false;
   }
@@ -40,16 +202,21 @@ function verifyRazorpayPayment({
     crypto
       .createHmac(
         "sha256",
-        process.env.RAZORPAY_KEY_SECRET
+        process.env
+          .RAZORPAY_KEY_SECRET
       )
       .update(body)
       .digest("hex");
 
   const expectedBuffer =
-    Buffer.from(expectedSignature);
+    Buffer.from(
+      expectedSignature
+    );
 
   const receivedBuffer =
-    Buffer.from(razorpay_signature);
+    Buffer.from(
+      razorpay_signature
+    );
 
   if (
     expectedBuffer.length !==
@@ -64,15 +231,13 @@ function verifyRazorpayPayment({
   );
 }
 
-
-// =========================
-// CUSTOMER VALIDATION
-// =========================
-
-function validateCustomer(customer) {
+function validateCustomer(
+  customer
+) {
   if (
     !customer ||
-    typeof customer !== "object" ||
+    typeof customer !==
+      "object" ||
     Array.isArray(customer)
   ) {
     return {
@@ -83,39 +248,46 @@ function validateCustomer(customer) {
   }
 
   const name =
-    typeof customer.name === "string"
+    typeof customer.name ===
+    "string"
       ? customer.name.trim()
       : "";
 
   const phone =
-    typeof customer.phone === "string"
+    typeof customer.phone ===
+    "string"
       ? customer.phone.trim()
       : "";
 
   const email =
-    typeof customer.email === "string"
+    typeof customer.email ===
+    "string"
       ? customer.email
           .trim()
           .toLowerCase()
       : "";
 
   const address =
-    typeof customer.address === "string"
+    typeof customer.address ===
+    "string"
       ? customer.address.trim()
       : "";
 
   const city =
-    typeof customer.city === "string"
+    typeof customer.city ===
+    "string"
       ? customer.city.trim()
       : "";
 
   const state =
-    typeof customer.state === "string"
+    typeof customer.state ===
+    "string"
       ? customer.state.trim()
       : "";
 
   const pincode =
-    typeof customer.pincode === "string"
+    typeof customer.pincode ===
+    "string"
       ? customer.pincode.trim()
       : "";
 
@@ -217,11 +389,6 @@ function validateCustomer(customer) {
   };
 }
 
-
-// =========================
-// CREATE ORDER
-// =========================
-
 router.post(
   "/",
   protect,
@@ -240,21 +407,19 @@ router.post(
         razorpay_signature,
       } = req.body;
 
-
-      // =========================
-      // ORDER ID VALIDATION
-      // =========================
-
       if (
-        typeof orderId !== "string" ||
+        typeof orderId !==
+          "string" ||
         !/^[A-Za-z0-9_-]{3,80}$/.test(
           orderId.trim()
         )
       ) {
-        return res.status(400).json({
-          message:
-            "Invalid order ID",
-        });
+        return res
+          .status(400)
+          .json({
+            message:
+              "Invalid order ID",
+          });
       }
 
       const safeOrderId =
@@ -262,62 +427,60 @@ router.post(
 
       const duplicateOrder =
         await Order.exists({
-          orderId: safeOrderId,
+          orderId:
+            safeOrderId,
         });
 
       if (duplicateOrder) {
-        return res.status(409).json({
-          message:
-            "This order already exists",
-        });
+        return res
+          .status(409)
+          .json({
+            message:
+              "This order already exists",
+          });
       }
 
-
-      // =========================
-      // CUSTOMER VALIDATION
-      // =========================
-
       const customerValidation =
-        validateCustomer(customer);
+        validateCustomer(
+          customer
+        );
 
       if (
         !customerValidation.valid
       ) {
-        return res.status(400).json({
-          message:
-            customerValidation.message,
-        });
+        return res
+          .status(400)
+          .json({
+            message:
+              customerValidation.message,
+          });
       }
 
       const safeCustomer =
         customerValidation.customer;
 
-
-      // =========================
-      // ITEMS VALIDATION
-      // =========================
-
       if (
         !Array.isArray(items) ||
         items.length === 0
       ) {
-        return res.status(400).json({
-          message:
-            "Cart items are required",
-        });
+        return res
+          .status(400)
+          .json({
+            message:
+              "Cart items are required",
+          });
       }
 
-      if (items.length > 50) {
-        return res.status(400).json({
-          message:
-            "Too many products in one order",
-        });
+      if (
+        items.length > 50
+      ) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Too many products in one order",
+          });
       }
-
-
-      // =========================
-      // PAYMENT METHOD
-      // =========================
 
       const selectedPaymentMethod =
         paymentMethod || "cod";
@@ -330,16 +493,13 @@ router.post(
           selectedPaymentMethod
         )
       ) {
-        return res.status(400).json({
-          message:
-            "Invalid payment method",
-        });
+        return res
+          .status(400)
+          .json({
+            message:
+              "Invalid payment method",
+          });
       }
-
-
-      // =========================
-      // BASIC RAZORPAY CHECK
-      // =========================
 
       if (
         selectedPaymentMethod ===
@@ -352,11 +512,15 @@ router.post(
             razorpay_signature,
           });
 
-        if (!paymentVerified) {
-          return res.status(400).json({
-            message:
-              "Payment verification failed",
-          });
+        if (
+          !paymentVerified
+        ) {
+          return res
+            .status(400)
+            .json({
+              message:
+                "Payment verification failed",
+            });
         }
 
         const existingPayment =
@@ -373,18 +537,17 @@ router.post(
             ],
           });
 
-        if (existingPayment) {
-          return res.status(409).json({
-            message:
-              "This payment has already been used",
-          });
+        if (
+          existingPayment
+        ) {
+          return res
+            .status(409)
+            .json({
+              message:
+                "This payment has already been used",
+            });
         }
       }
-
-
-      // =========================
-      // START TRANSACTION
-      // =========================
 
       session.startTransaction();
 
@@ -395,38 +558,44 @@ router.post(
 
       let calculatedTotal = 0;
 
-
-      // =========================
-      // CHECK PRODUCTS
-      // =========================
-
-      for (const item of items) {
+      for (
+        const item of
+        items
+      ) {
         if (
           !item ||
-          typeof item !== "object"
+          typeof item !==
+            "object"
         ) {
           await session.abortTransaction();
 
-          return res.status(400).json({
-            message:
-              "Invalid cart item",
-          });
+          return res
+            .status(400)
+            .json({
+              message:
+                "Invalid cart item",
+            });
         }
 
         const productId =
-          item.id || item._id;
+          item.id ||
+          item._id;
 
         if (
           !mongoose.Types
             .ObjectId
-            .isValid(productId)
+            .isValid(
+              productId
+            )
         ) {
           await session.abortTransaction();
 
-          return res.status(400).json({
-            message:
-              "Invalid product ID",
-          });
+          return res
+            .status(400)
+            .json({
+              message:
+                "Invalid product ID",
+            });
         }
 
         const productIdString =
@@ -439,10 +608,12 @@ router.post(
         ) {
           await session.abortTransaction();
 
-          return res.status(400).json({
-            message:
-              "Duplicate products are not allowed in an order",
-          });
+          return res
+            .status(400)
+            .json({
+              message:
+                "Duplicate products are not allowed in an order",
+            });
         }
 
         seenProducts.add(
@@ -450,50 +621,54 @@ router.post(
         );
 
         const quantity =
-          Number(item.quantity);
+          Number(
+            item.quantity
+          );
 
         if (
-          !Number.isInteger(quantity) ||
+          !Number.isInteger(
+            quantity
+          ) ||
           quantity <= 0 ||
           quantity > 100
         ) {
           await session.abortTransaction();
 
-          return res.status(400).json({
-            message:
-              "Invalid product quantity",
-          });
+          return res
+            .status(400)
+            .json({
+              message:
+                "Invalid product quantity",
+            });
         }
-
-
-        // =========================
-        // FIND PRODUCT
-        // =========================
 
         const product =
           await Product.findById(
             productId
-          ).session(session);
+          ).session(
+            session
+          );
 
         if (!product) {
           await session.abortTransaction();
 
-          return res.status(404).json({
-            message:
-              "A product in your cart no longer exists",
-          });
+          return res
+            .status(404)
+            .json({
+              message:
+                "A product in your cart no longer exists",
+            });
         }
 
-
-        // =========================
-        // VALIDATE PRICE
-        // =========================
-
         const price =
-          Number(product.price);
+          Number(
+            product.price
+          );
 
         if (
-          !Number.isFinite(price) ||
+          !Number.isFinite(
+            price
+          ) ||
           price < 0
         ) {
           throw new Error(
@@ -501,13 +676,11 @@ router.post(
           );
         }
 
-
-        // =========================
-        // CHECK STOCK
-        // =========================
-
         const availableStock =
-          Number(product.stock || 0);
+          Number(
+            product.stock ||
+              0
+          );
 
         if (
           !Number.isFinite(
@@ -518,27 +691,20 @@ router.post(
         ) {
           await session.abortTransaction();
 
-          return res.status(400).json({
-            message:
-              `Only ${Math.max(
-                0,
-                availableStock
-              )} item(s) of ${product.name} are available`,
-          });
+          return res
+            .status(400)
+            .json({
+              message:
+                `Only ${Math.max(
+                  0,
+                  availableStock
+                )} item(s) of ${product.name} are available`,
+            });
         }
 
-
-        // =========================
-        // CALCULATE DATABASE TOTAL
-        // =========================
-
         calculatedTotal +=
-          price * quantity;
-
-
-        // =========================
-        // SAFE ORDER ITEM
-        // =========================
+          price *
+          quantity;
 
         orderItems.push({
           id:
@@ -552,18 +718,16 @@ router.post(
           quantity,
 
           image:
-            product.image || "",
+            product.image ||
+            "",
         });
       }
 
-
-      // =========================
-      // SHIPPING
-      // =========================
-
       const shipping =
-        calculatedTotal >= 999 ||
-        calculatedTotal === 0
+        calculatedTotal >=
+          999 ||
+        calculatedTotal ===
+          0
           ? 0
           : 99;
 
@@ -575,11 +739,6 @@ router.post(
         Math.round(
           finalTotal * 100
         );
-
-
-      // =========================
-      // VERIFY RAZORPAY DATA
-      // =========================
 
       if (
         selectedPaymentMethod ===
@@ -601,16 +760,13 @@ router.post(
         } catch {
           await session.abortTransaction();
 
-          return res.status(400).json({
-            message:
-              "Unable to verify payment with Razorpay",
-          });
+          return res
+            .status(400)
+            .json({
+              message:
+                "Unable to verify payment with Razorpay",
+            });
         }
-
-
-        // =========================
-        // RAZORPAY ORDER CHECK
-        // =========================
 
         if (
           razorpayOrder.id !==
@@ -624,36 +780,34 @@ router.post(
         ) {
           await session.abortTransaction();
 
-          return res.status(400).json({
-            message:
-              "Payment amount verification failed",
-          });
+          return res
+            .status(400)
+            .json({
+              message:
+                "Payment amount verification failed",
+            });
         }
-
-
-        // =========================
-        // VERIFY PAYMENT USER
-        // =========================
 
         if (
           String(
-            razorpayOrder.notes
-              ?.userId || ""
+            razorpayOrder
+              .notes
+              ?.userId ||
+              ""
           ) !==
-          String(req.user.id)
+          String(
+            req.user.id
+          )
         ) {
           await session.abortTransaction();
 
-          return res.status(403).json({
-            message:
-              "Payment does not belong to this user",
-          });
+          return res
+            .status(403)
+            .json({
+              message:
+                "Payment does not belong to this user",
+            });
         }
-
-
-        // =========================
-        // RAZORPAY PAYMENT CHECK
-        // =========================
 
         if (
           razorpayPayment.id !==
@@ -669,16 +823,13 @@ router.post(
         ) {
           await session.abortTransaction();
 
-          return res.status(400).json({
-            message:
-              "Payment details do not match the order",
-          });
+          return res
+            .status(400)
+            .json({
+              message:
+                "Payment details do not match the order",
+            });
         }
-
-
-        // =========================
-        // PAYMENT MUST BE CAPTURED
-        // =========================
 
         if (
           razorpayPayment.status !==
@@ -686,17 +837,14 @@ router.post(
         ) {
           await session.abortTransaction();
 
-          return res.status(400).json({
-            message:
-              "Payment has not been captured",
-          });
+          return res
+            .status(400)
+            .json({
+              message:
+                "Payment has not been captured",
+            });
         }
       }
-
-
-      // =========================
-      // REDUCE STOCK
-      // =========================
 
       for (
         const orderItem of
@@ -705,7 +853,9 @@ router.post(
         const product =
           await Product.findById(
             orderItem.id
-          ).session(session);
+          ).session(
+            session
+          );
 
         if (!product) {
           throw new Error(
@@ -714,7 +864,10 @@ router.post(
         }
 
         const availableStock =
-          Number(product.stock || 0);
+          Number(
+            product.stock ||
+              0
+          );
 
         if (
           availableStock <
@@ -722,10 +875,12 @@ router.post(
         ) {
           await session.abortTransaction();
 
-          return res.status(400).json({
-            message:
-              `Only ${availableStock} item(s) of ${product.name} are available`,
-          });
+          return res
+            .status(400)
+            .json({
+              message:
+                `Only ${availableStock} item(s) of ${product.name} are available`,
+            });
         }
 
         product.stock =
@@ -736,11 +891,6 @@ router.post(
           session,
         });
       }
-
-
-      // =========================
-      // CREATE ORDER
-      // =========================
 
       const createdOrders =
         await Order.create(
@@ -784,6 +934,15 @@ router.post(
                 "online"
                   ? razorpay_payment_id
                   : null,
+
+              refundStatus:
+                "None",
+
+              refundAmount:
+                0,
+
+              stockRestored:
+                false,
             },
           ],
           {
@@ -794,24 +953,16 @@ router.post(
       const order =
         createdOrders[0];
 
-
-      // =========================
-      // COMMIT TRANSACTION
-      // =========================
-
       await session.commitTransaction();
 
+      return res
+        .status(201)
+        .json({
+          message:
+            "Order created successfully",
 
-      // =========================
-      // RESPONSE
-      // =========================
-
-      res.status(201).json({
-        message:
-          "Order created successfully",
-
-        order,
-      });
+          order,
+        });
 
     } catch (error) {
       if (
@@ -826,29 +977,29 @@ router.post(
       );
 
       if (
-        error?.code === 11000
+        error?.code ===
+        11000
       ) {
-        return res.status(409).json({
-          message:
-            "Duplicate order detected",
-        });
+        return res
+          .status(409)
+          .json({
+            message:
+              "Duplicate order detected",
+          });
       }
 
-      res.status(500).json({
-        message:
-          "Failed to create order",
-      });
+      return res
+        .status(500)
+        .json({
+          message:
+            "Failed to create order",
+        });
 
     } finally {
       await session.endSession();
     }
   }
 );
-
-
-// =========================
-// GET CURRENT USER ORDERS
-// =========================
 
 router.get(
   "/my-orders",
@@ -863,7 +1014,9 @@ router.get(
           createdAt: -1,
         });
 
-      res.json(orders);
+      return res.json(
+        orders
+      );
 
     } catch (error) {
       console.error(
@@ -871,67 +1024,48 @@ router.get(
         error
       );
 
-      res.status(500).json({
-        message:
-          "Failed to fetch orders",
-      });
+      return res
+        .status(500)
+        .json({
+          message:
+            "Failed to fetch orders",
+        });
     }
   }
 );
-
-
-// =========================
-// CANCEL COD ORDER
-// =========================
 
 router.patch(
   "/:orderId/cancel",
   protect,
   async (req, res) => {
-    const session =
-      await mongoose.startSession();
-
     try {
-      session.startTransaction();
-
       const order =
         await Order.findOne({
           orderId:
             req.params.orderId,
+
           userId:
             req.user.id,
-        }).session(session);
+        });
 
       if (!order) {
-        await session.abortTransaction();
-
-        return res.status(404).json({
-          message:
-            "Order not found",
-        });
-      }
-
-      if (
-        order.paymentMethod !==
-        "cod"
-      ) {
-        await session.abortTransaction();
-
-        return res.status(400).json({
-          message:
-            "Online paid orders cannot be cancelled here",
-        });
+        return res
+          .status(404)
+          .json({
+            message:
+              "Order not found",
+          });
       }
 
       if (
         order.status ===
         "Cancelled"
       ) {
-        await session.abortTransaction();
-
-        return res.status(400).json({
+        return res.json({
           message:
             "Order is already cancelled",
+
+          order,
         });
       }
 
@@ -939,87 +1073,424 @@ router.patch(
         order.status !==
         "Order Confirmed"
       ) {
-        await session.abortTransaction();
-
-        return res.status(400).json({
-          message:
-            "This order can no longer be cancelled",
-        });
+        return res
+          .status(400)
+          .json({
+            message:
+              "This order can no longer be cancelled",
+          });
       }
 
-      for (
-        const item of
-        order.items
-      ) {
-        if (
-          !mongoose.Types.ObjectId.isValid(
-            item.id
-          )
-        ) {
-          throw new Error(
-            "Invalid product ID in order"
-          );
-        }
-
-        const product =
-          await Product.findById(
-            item.id
-          ).session(session);
-
-        if (!product) {
-          throw new Error(
-            `Product not found: ${item.name}`
-          );
-        }
-
-        product.stock =
-          Number(
-            product.stock || 0
-          ) +
-          Number(
-            item.quantity || 0
-          );
-
-        await product.save({
-          session,
-        });
-      }
-
-      order.status =
-        "Cancelled";
-
-      await order.save({
-        session,
-      });
-
-      await session.commitTransaction();
-
-      return res.json({
-        message:
-          "Order cancelled successfully",
-        order,
-      });
-    } catch (error) {
       if (
-        session.inTransaction()
+        order.paymentMethod ===
+        "cod"
       ) {
-        await session.abortTransaction();
+        const session =
+          await mongoose.startSession();
+
+        try {
+          await session.withTransaction(
+            async () => {
+              const currentOrder =
+                await Order.findById(
+                  order._id
+                ).session(
+                  session
+                );
+
+              if (
+                !currentOrder
+              ) {
+                throw new Error(
+                  "Order not found"
+                );
+              }
+
+              if (
+                currentOrder.status ===
+                "Cancelled"
+              ) {
+                return;
+              }
+
+              if (
+                currentOrder.status !==
+                "Order Confirmed"
+              ) {
+                throw new Error(
+                  "This order can no longer be cancelled"
+                );
+              }
+
+              if (
+                !currentOrder.stockRestored
+              ) {
+                for (
+                  const item of
+                  currentOrder.items
+                ) {
+                  if (
+                    !mongoose.Types.ObjectId.isValid(
+                      item.id
+                    )
+                  ) {
+                    throw new Error(
+                      "Invalid product ID in order"
+                    );
+                  }
+
+                  const product =
+                    await Product.findById(
+                      item.id
+                    ).session(
+                      session
+                    );
+
+                  if (
+                    !product
+                  ) {
+                    throw new Error(
+                      `Product not found: ${item.name}`
+                    );
+                  }
+
+                  product.stock =
+                    Number(
+                      product.stock ||
+                        0
+                    ) +
+                    Number(
+                      item.quantity ||
+                        0
+                    );
+
+                  await product.save({
+                    session,
+                  });
+                }
+
+                currentOrder.stockRestored =
+                  true;
+              }
+
+              currentOrder.status =
+                "Cancelled";
+
+              await currentOrder.save({
+                session,
+              });
+            }
+          );
+
+        } finally {
+          await session.endSession();
+        }
+
+        const cancelledOrder =
+          await Order.findById(
+            order._id
+          );
+
+        return res.json({
+          message:
+            "Order cancelled successfully",
+
+          order:
+            cancelledOrder,
+        });
       }
 
+      if (
+        order.paymentMethod !==
+        "online"
+      ) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Unsupported payment method",
+          });
+      }
+
+      if (
+        order.paymentStatus !==
+          "Paid" &&
+        order.paymentStatus !==
+          "Refunded"
+      ) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "This payment cannot be refunded",
+          });
+      }
+
+      if (
+        !order
+          .razorpayPaymentId
+      ) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Razorpay payment ID is missing",
+          });
+      }
+
+      if (
+        order.refundStatus ===
+          "Processed" &&
+        order.paymentStatus ===
+          "Refunded"
+      ) {
+        return res.json({
+          message:
+            "Refund already processed",
+
+          order,
+        });
+      }
+
+      if (
+        order.refundStatus ===
+        "Failed"
+      ) {
+        return res
+          .status(409)
+          .json({
+            message:
+              "Previous refund attempt failed. Please contact support.",
+          });
+      }
+
+      let payment;
+
+      try {
+        payment =
+          await razorpay.payments.fetch(
+            order
+              .razorpayPaymentId
+          );
+
+      } catch (error) {
+        console.error(
+          "Razorpay payment fetch error:",
+          error
+        );
+
+        return res
+          .status(502)
+          .json({
+            message:
+              "Unable to verify payment with Razorpay",
+          });
+      }
+
+      const refundAmountPaise =
+        Math.round(
+          Number(
+            order.total
+          ) * 100
+        );
+
+      if (
+        payment.id !==
+          order
+            .razorpayPaymentId ||
+        Number(
+          payment.amount
+        ) !==
+          refundAmountPaise ||
+        payment.currency !==
+          "INR"
+      ) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Payment details do not match this order",
+          });
+      }
+
+      if (
+        payment.status !==
+        "captured"
+      ) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Only captured payments can be refunded",
+          });
+      }
+
+      if (
+        order.refundStatus ===
+        "None"
+      ) {
+        order.refundStatus =
+          "Pending";
+
+        order.refundAmount =
+          Number(
+            order.total
+          );
+
+        await order.save();
+      }
+
+      let refund;
+
+      try {
+        refund =
+          await createRazorpayRefund({
+            paymentId:
+              order
+                .razorpayPaymentId,
+
+            amount:
+              refundAmountPaise,
+
+            orderId:
+              order.orderId,
+
+            userId:
+              req.user.id,
+          });
+
+      } catch (error) {
+        console.error(
+          "Razorpay refund error:",
+          error
+            .razorpayData ||
+            error
+        );
+
+        if (
+          error.status !==
+          409
+        ) {
+          order.refundStatus =
+            "Failed";
+
+          await order.save();
+        }
+
+        if (
+          error.status ===
+          409
+        ) {
+          return res
+            .status(409)
+            .json({
+              message:
+                "Refund is already being processed. Please try again shortly.",
+            });
+        }
+
+        return res
+          .status(502)
+          .json({
+            message:
+              "Unable to process refund",
+          });
+      }
+
+      if (
+        !refund?.id ||
+        refund.payment_id !==
+          order
+            .razorpayPaymentId ||
+        Number(
+          refund.amount
+        ) !==
+          refundAmountPaise
+      ) {
+        return res
+          .status(502)
+          .json({
+            message:
+              "Invalid refund response from Razorpay",
+          });
+      }
+
+      order.razorpayRefundId =
+        refund.id;
+
+      order.refundAmount =
+        Number(
+          refund.amount
+        ) / 100;
+
+      if (
+        refund.status ===
+        "processed"
+      ) {
+        await finalizeRefundedOrder(
+          order._id,
+          refund
+        );
+
+        const refundedOrder =
+          await Order.findById(
+            order._id
+          );
+
+        return res.json({
+          message:
+            "Order cancelled and refund processed successfully",
+
+          order:
+            refundedOrder,
+        });
+      }
+
+      if (
+        refund.status ===
+        "failed"
+      ) {
+        order.refundStatus =
+          "Failed";
+
+        await order.save();
+
+        return res
+          .status(502)
+          .json({
+            message:
+              "Refund failed. Please contact support.",
+          });
+      }
+
+      order.refundStatus =
+        "Pending";
+
+      await order.save();
+
+      return res
+        .status(202)
+        .json({
+          message:
+            "Refund initiated. Your cancellation is being processed.",
+
+          order,
+        });
+
+    } catch (error) {
       console.error(
         "Cancel order error:",
         error
       );
 
-      return res.status(500).json({
-        message:
-          "Failed to cancel order",
-      });
-    } finally {
-      await session.endSession();
+      return res
+        .status(500)
+        .json({
+          message:
+            "Failed to cancel order",
+        });
     }
   }
 );
-
 
 module.exports = router;

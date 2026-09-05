@@ -171,6 +171,7 @@ const orderSchema =
           "Pending",
           "Paid",
           "Failed",
+          "Refunded",
         ],
 
         default: "Pending",
@@ -199,6 +200,61 @@ const orderSchema =
         unique: true,
         sparse: true,
       },
+
+
+      // =========================
+      // REFUND STATUS
+      // =========================
+
+      refundStatus: {
+        type: String,
+
+        enum: [
+          "None",
+          "Pending",
+          "Processed",
+          "Failed",
+        ],
+
+        default: "None",
+      },
+
+
+      // =========================
+      // RAZORPAY REFUND ID
+      // =========================
+
+      razorpayRefundId: {
+        type: String,
+        default: undefined,
+        sparse: true,
+      },
+
+
+      // =========================
+      // REFUND AMOUNT
+      // =========================
+
+      refundAmount: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+
+
+      // =========================
+      // REFUNDED DATE
+      // =========================
+
+      refundedAt: {
+        type: Date,
+        default: null,
+      },
+
+      stockRestored: {
+  type: Boolean,
+  default: false,
+},
 
 
       // =========================
