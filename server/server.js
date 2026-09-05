@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const reviewRoutes = require("./routes/reviewRoutes");
 
 dotenv.config();
 
@@ -68,6 +69,7 @@ const apiLimiter = rateLimit({
 app.use("/api", apiLimiter);
 
 
+
 // =========================
 // RAZORPAY WEBHOOK
 // MUST BE BEFORE express.json()
@@ -126,6 +128,8 @@ app.use(
   "/api/user-data",
   userDataRoutes
 );
+
+app.use("/api/reviews", reviewRoutes);  
 
 
 // =========================
