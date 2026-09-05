@@ -134,8 +134,52 @@ const orderSchema =
 
 
       // =========================
-      // TOTAL
+      // PRICING
       // =========================
+
+      subtotal: {
+  type: Number,
+  default: 0,
+  min: 0,
+},
+
+      shipping: {
+        type: Number,
+        required: true,
+        min: 0,
+        default: 0,
+      },
+
+      couponCode: {
+        type: String,
+        default: "",
+        trim: true,
+        uppercase: true,
+      },
+
+      couponDiscountType: {
+        type: String,
+
+        enum: [
+          "percentage",
+          "fixed",
+          null,
+        ],
+
+        default: null,
+      },
+
+      couponDiscountValue: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+
+      discountAmount: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
 
       total: {
         type: Number,
@@ -251,10 +295,15 @@ const orderSchema =
         default: null,
       },
 
+
+      // =========================
+      // STOCK RESTORE TRACKING
+      // =========================
+
       stockRestored: {
-  type: Boolean,
-  default: false,
-},
+        type: Boolean,
+        default: false,
+      },
 
 
       // =========================

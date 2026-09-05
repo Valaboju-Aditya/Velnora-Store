@@ -90,53 +90,40 @@ function Product({
     return data;
   };
 
-  
-
   useEffect(() => {
     let ignore = false;
 
-    const fetchProduct = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const response =
-          await fetch(
-            `${API_URL}/api/products/${id}`
-          );
-
+    fetch(
+      `${API_URL}/api/products/${id}`
+    )
+      .then(async (response) => {
         if (!response.ok) {
           throw new Error(
             "Product not found"
           );
         }
 
-        const data =
-          await response.json();
-
+        return response.json();
+      })
+      .then((data) => {
         if (!ignore) {
           setProduct(data);
+          setError("");
         }
-      } catch (error) {
+      })
+      .catch((error) => {
         if (!ignore) {
-          console.error(
-            "Failed to load product:",
-            error
-          );
-
           setError(
             error.message ||
-              "Unable to load product"
+              "Product not found"
           );
         }
-      } finally {
+      })
+      .finally(() => {
         if (!ignore) {
           setLoading(false);
         }
-      }
-    };
-
-    fetchProduct();
+      });
 
     return () => {
       ignore = true;
@@ -144,51 +131,52 @@ function Product({
   }, [id]);
 
   useEffect(() => {
-  let ignore = false;
+    let ignore = false;
 
-  fetch(
-    `${API_URL}/api/reviews/product/${id}`
-  )
-    .then(async (response) => {
-      const data =
-        await response.json();
+    fetch(
+      `${API_URL}/api/reviews/product/${id}`
+    )
+      .then(async (response) => {
+        const data =
+          await response.json();
 
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Unable to load reviews"
-        );
-      }
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+              "Unable to load reviews"
+          );
+        }
 
-      return data;
-    })
-    .then((data) => {
-      if (!ignore) {
-        setReviews(
-          Array.isArray(data)
-            ? data
-            : []
-        );
-      }
-    })
-    .catch((error) => {
-      if (!ignore) {
-        console.error(
-          "Load reviews error:",
-          error
-        );
-      }
-    })
-    .finally(() => {
-      if (!ignore) {
-        setReviewsLoading(false);
-      }
-    });
+        return data;
+      })
+      .then((data) => {
+        if (!ignore) {
+          setReviews(
+            Array.isArray(data)
+              ? data
+              : []
+          );
+        }
+      })
+      .catch((error) => {
+        if (!ignore) {
+          console.error(
+            "Load reviews error:",
+            error
+          );
+        }
+      })
+      .finally(() => {
+        if (!ignore) {
+          setReviewsLoading(false);
+        }
+      });
 
-  return () => {
-    ignore = true;
-  };
-}, [id]);
+    return () => {
+      ignore = true;
+    };
+  }, [id]);
+
   useEffect(() => {
     if (!product) {
       return;
@@ -722,24 +710,24 @@ function Product({
         );
 
         const reviewsResponse =
-  await fetch(
-    `${API_URL}/api/reviews/product/${id}`
-  );
+          await fetch(
+            `${API_URL}/api/reviews/product/${id}`
+          );
 
-const updatedReviews =
-  await reviewsResponse.json();
+        const updatedReviews =
+          await reviewsResponse.json();
 
-if (reviewsResponse.ok) {
-  setReviews(
-    Array.isArray(
-      updatedReviews
-    )
-      ? updatedReviews
-      : []
-  );
-}
+        if (reviewsResponse.ok) {
+          setReviews(
+            Array.isArray(
+              updatedReviews
+            )
+              ? updatedReviews
+              : []
+          );
+        }
 
-await loadProduct();
+        await loadProduct();
       } catch (error) {
         console.error(
           "Submit review error:",
@@ -788,7 +776,6 @@ await loadProduct();
   ) {
     return (
       <div className="product-not-found">
-
         <h1>
           Product Not Found
         </h1>
@@ -804,7 +791,6 @@ await loadProduct();
 
           Back to Shop
         </Link>
-
       </div>
     );
   }
@@ -903,7 +889,6 @@ await loadProduct();
 
   return (
     <div className="product-page">
-
       <Link
         to="/shop"
         className="back-to-shop"
@@ -916,9 +901,7 @@ await loadProduct();
       </Link>
 
       <div className="product-details">
-
         <div className="product-details-image">
-
           <img
             src={
               product.image
@@ -937,11 +920,9 @@ await loadProduct();
               Only {stock} left
             </span>
           )}
-
         </div>
 
         <div className="product-details-info">
-
           <p className="product-category">
             {product.category ||
               "VELNORA Collection"}
@@ -952,7 +933,6 @@ await loadProduct();
           </h1>
 
           <div className="product-rating">
-
             <span>
               {ratingCount > 0
                 ? renderStars(
@@ -983,7 +963,6 @@ await loadProduct();
                 No reviews yet
               </span>
             )}
-
           </div>
 
           <h2 className="product-price">
@@ -1010,36 +989,26 @@ await loadProduct();
                 : "available"
             }`}
           >
-
             {outOfStock ? (
-
               <span>
                 Out of Stock
               </span>
-
             ) : lowStock ? (
-
               <span>
                 Hurry! Only{" "}
                 {stock} left
                 in stock
               </span>
-
             ) : (
-
               <span>
                 In Stock ·{" "}
                 {stock} available
               </span>
-
             )}
-
           </div>
 
           <div className="size-section">
-
             <div className="size-title">
-
               <strong>
                 Select Size
               </strong>
@@ -1047,11 +1016,9 @@ await loadProduct();
               <span>
                 Size Guide
               </span>
-
             </div>
 
             <div className="size-buttons">
-
               {[
                 "S",
                 "M",
@@ -1059,7 +1026,6 @@ await loadProduct();
                 "XL",
               ].map(
                 (item) => (
-
                   <button
                     type="button"
                     key={item}
@@ -1079,22 +1045,17 @@ await loadProduct();
                   >
                     {item}
                   </button>
-
                 )
               )}
-
             </div>
-
           </div>
 
           <div className="quantity-section">
-
             <strong>
               Quantity
             </strong>
 
             <div className="quantity-control">
-
               <button
                 type="button"
                 onClick={
@@ -1124,7 +1085,6 @@ await loadProduct();
               >
                 +
               </button>
-
             </div>
 
             {maxQuantityReached &&
@@ -1133,11 +1093,9 @@ await loadProduct();
                   Maximum available quantity reached
                 </span>
               )}
-
           </div>
 
           <div className="product-actions">
-
             <button
               type="button"
               className="product-add-cart"
@@ -1148,7 +1106,6 @@ await loadProduct();
                 outOfStock
               }
             >
-
               <ShoppingBag
                 size={19}
               />
@@ -1158,7 +1115,6 @@ await loadProduct();
                 : added
                 ? "Added to Cart ✓"
                 : "Add to Cart"}
-
             </button>
 
             <button
@@ -1175,7 +1131,6 @@ await loadProduct();
               }}
               aria-label="Toggle wishlist"
             >
-
               <Heart
                 size={21}
                 fill={
@@ -1184,21 +1139,16 @@ await loadProduct();
                     : "none"
                 }
               />
-
             </button>
-
           </div>
 
           <div className="product-benefits">
-
             <div className="benefit">
-
               <Truck
                 size={22}
               />
 
               <div>
-
                 <strong>
                   Free Shipping
                 </strong>
@@ -1207,19 +1157,15 @@ await loadProduct();
                   On orders above
                   ₹999
                 </span>
-
               </div>
-
             </div>
 
             <div className="benefit">
-
               <RotateCcw
                 size={22}
               />
 
               <div>
-
                 <strong>
                   Easy Returns
                 </strong>
@@ -1228,19 +1174,15 @@ await loadProduct();
                   7-day return
                   policy
                 </span>
-
               </div>
-
             </div>
 
             <div className="benefit">
-
               <ShieldCheck
                 size={22}
               />
 
               <div>
-
                 <strong>
                   Secure Payment
                 </strong>
@@ -1249,15 +1191,10 @@ await loadProduct();
                   100% secure
                   checkout
                 </span>
-
               </div>
-
             </div>
-
           </div>
-
         </div>
-
       </div>
 
       <section
@@ -1267,7 +1204,6 @@ await loadProduct();
           padding: "0 20px 70px",
         }}
       >
-
         <div
           style={{
             borderTop:
@@ -1276,14 +1212,12 @@ await loadProduct();
               "50px",
           }}
         >
-
           <div
             style={{
               marginBottom:
                 "35px",
             }}
           >
-
             <p
               style={{
                 fontSize:
@@ -1322,7 +1256,6 @@ await loadProduct();
                   "wrap",
               }}
             >
-
               <strong
                 style={{
                   fontSize:
@@ -1365,9 +1298,7 @@ await loadProduct();
                   ? "review"
                   : "reviews"}
               </span>
-
             </div>
-
           </div>
 
           <div
@@ -1382,9 +1313,7 @@ await loadProduct();
                 "start",
             }}
           >
-
             <div>
-
               <h3
                 style={{
                   marginTop:
@@ -1397,14 +1326,11 @@ await loadProduct();
               </h3>
 
               {reviewsLoading ? (
-
                 <p>
                   Loading reviews...
                 </p>
-
               ) : reviews.length ===
                 0 ? (
-
                 <div
                   style={{
                     padding:
@@ -1415,7 +1341,6 @@ await loadProduct();
                       "10px",
                   }}
                 >
-
                   <h4
                     style={{
                       marginTop:
@@ -1437,11 +1362,8 @@ await loadProduct();
                     customer to review this
                     product.
                   </p>
-
                 </div>
-
               ) : (
-
                 <div
                   style={{
                     display:
@@ -1450,10 +1372,8 @@ await loadProduct();
                       "16px",
                   }}
                 >
-
                   {reviews.map(
                     (review) => (
-
                       <div
                         key={
                           review._id
@@ -1469,7 +1389,6 @@ await loadProduct();
                             "20px",
                         }}
                       >
-
                         <div
                           style={{
                             display:
@@ -1488,9 +1407,7 @@ await loadProduct();
                               "10px",
                           }}
                         >
-
                           <div>
-
                             <strong>
                               {review.userName ||
                                 "VELNORA Customer"}
@@ -1518,7 +1435,6 @@ await loadProduct();
                                     "5px",
                                 }}
                               >
-
                                 <BadgeCheck
                                   size={
                                     15
@@ -1526,10 +1442,8 @@ await loadProduct();
                                 />
 
                                 Verified Purchase
-
                               </div>
                             )}
-
                           </div>
 
                           <span
@@ -1548,7 +1462,6 @@ await loadProduct();
                               review.rating
                             )}
                           </span>
-
                         </div>
 
                         <p
@@ -1580,16 +1493,11 @@ await loadProduct();
                               )
                             : ""}
                         </small>
-
                       </div>
-
                     )
                   )}
-
                 </div>
-
               )}
-
             </div>
 
             <div
@@ -1610,7 +1518,6 @@ await loadProduct();
                   "100px",
               }}
             >
-
               <h3
                 style={{
                   margin:
@@ -1647,7 +1554,6 @@ await loadProduct();
               {!localStorage.getItem(
                 "novaToken"
               ) && (
-
                 <div
                   style={{
                     padding:
@@ -1676,7 +1582,6 @@ await loadProduct();
                     Login to write a review
                   </Link>
                 </div>
-
               )}
 
               <form
@@ -1684,7 +1589,6 @@ await loadProduct();
                   handleReviewSubmit
                 }
               >
-
                 <label
                   style={{
                     display:
@@ -1712,10 +1616,8 @@ await loadProduct();
                       "22px",
                   }}
                 >
-
                   {[1, 2, 3, 4, 5].map(
                     (star) => (
-
                       <button
                         type="button"
                         key={
@@ -1759,10 +1661,8 @@ await loadProduct();
                           }
                         />
                       </button>
-
                     )
                   )}
-
                 </div>
 
                 <label
@@ -1945,17 +1845,11 @@ await loadProduct();
                     ? "Submitting..."
                     : "Submit Review"}
                 </button>
-
               </form>
-
             </div>
-
           </div>
-
         </div>
-
       </section>
-
     </div>
   );
 }

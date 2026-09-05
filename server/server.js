@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const reviewRoutes = require("./routes/reviewRoutes");
+const couponRoutes = require("./routes/couponRoutes");
 
 dotenv.config();
 
@@ -130,6 +131,7 @@ app.use(
 );
 
 app.use("/api/reviews", reviewRoutes);  
+app.use("/api/coupons", couponRoutes);
 
 
 // =========================

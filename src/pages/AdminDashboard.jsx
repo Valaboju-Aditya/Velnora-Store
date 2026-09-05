@@ -13,7 +13,8 @@ function AdminDashboard() {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const token = localStorage.getItem("novaToken");
+        const token =
+          localStorage.getItem("novaToken");
 
         const response = await fetch(
           `${API_URL}/api/admin/stats`,
@@ -25,7 +26,9 @@ function AdminDashboard() {
         );
 
         if (!response.ok) {
-          throw new Error("Failed to fetch admin statistics");
+          throw new Error(
+            "Failed to fetch admin statistics"
+          );
         }
 
         const data = await response.json();
@@ -52,7 +55,9 @@ function AdminDashboard() {
       <div className="admin-dashboard-header">
         <div>
           <p>VELNORA ADMIN</p>
+
           <h1>Dashboard</h1>
+
           <span>
             Welcome to your store management panel
           </span>
@@ -92,7 +97,12 @@ function AdminDashboard() {
 
           <div>
             <p>Total Sales</p>
-            <h2>₹{stats.sales}</h2>
+            <h2>
+              ₹
+              {Number(
+                stats.sales || 0
+              ).toLocaleString("en-IN")}
+            </h2>
           </div>
         </div>
       </div>
@@ -159,6 +169,23 @@ function AdminDashboard() {
             className="admin-dashboard-button"
           >
             Manage Reviews →
+          </Link>
+        </div>
+
+        <div className="admin-dashboard-card">
+          <h2>Coupons & Discounts</h2>
+
+          <p>
+            Create and manage promotional coupon
+            codes and discounts for VELNORA
+            customers.
+          </p>
+
+          <Link
+            to="/admin/coupons"
+            className="admin-dashboard-button"
+          >
+            Manage Coupons →
           </Link>
         </div>
       </div>

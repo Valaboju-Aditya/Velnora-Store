@@ -44,6 +44,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminOrders from "./pages/AdminOrders";
 import AdminReviews from "./pages/AdminReviews";
+import AdminCoupons from "./pages/AdminCoupons";
 
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -1646,217 +1647,242 @@ function App() {
      CREATE ORDER
   ======================================================= */
 
-  async function createOrder(
-    orderDetails = {}
-  ) {
+async function createOrder(
+  orderDetails = {}
+) {
+  if (!user?.email) {
+    alert(
+      "Please login before placing an order."
+    );
 
-    if (!user?.email) {
-
-      alert(
-        "Please login before placing an order."
-      );
-
-      return null;
-
-    }
-
-
-    if (
-      cart.length === 0
-    ) {
-
-      return null;
-
-    }
-
-
-    const total =
-      cart.reduce(
-        (
-          sum,
-          item
-        ) =>
-          sum +
-          Number(
-            item.price
-          ) *
-            Number(
-              item.quantity
-            ),
-        0
-      );
-
-
-    const newOrder = {
-
-      id:
-        `velnora-${Date.now()}`,
-
-      date:
-        new Date()
-          .toLocaleDateString(
-            "en-IN"
-          ),
-
-      status:
-        "Order Confirmed",
-
-      items:
-        cart.map(
-          (item) => ({
-            ...item,
-          })
-        ),
-
-      total,
-
-      customer:
-        orderDetails.customer ||
-        {},
-
-      paymentMethod:
-        orderDetails.paymentMethod ||
-        "cod",
-
-    };
-
-
-    try {
-
-      const token =
-        localStorage.getItem(
-          "novaToken"
-        );
-
-
-      if (!token) {
-
-        alert(
-          "Please login again before placing an order."
-        );
-
-        return null;
-
-      }
-
-
-      const response =
-        await fetch(
-          `${API_URL}/api/orders`,
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-
-              Authorization:
-                `Bearer ${token}`,
-            },
-
-            body:
-              JSON.stringify({
-
-                orderId:
-                  newOrder.id,
-
-                customer:
-                  newOrder.customer,
-
-                items:
-                  newOrder.items.map(
-                    (item) => ({
-                      id:
-                        String(
-                          item._id ||
-                            item.id
-                        ),
-
-                      name:
-                        item.name,
-
-                      price:
-                        Number(
-                          item.price
-                        ),
-
-                      quantity:
-                        Number(
-                          item.quantity
-                        ),
-
-                      image:
-                        item.image ||
-                        "",
-                    })
-                  ),
-
-                total:
-                  newOrder.total,
-
-                paymentMethod:
-                  newOrder.paymentMethod,
-
-                razorpay_order_id:
-                  orderDetails
-                    .razorpayPayment
-                    ?.razorpay_order_id,
-
-                razorpay_payment_id:
-                  orderDetails
-                    .razorpayPayment
-                    ?.razorpay_payment_id,
-
-                razorpay_signature:
-                  orderDetails
-                    .razorpayPayment
-                    ?.razorpay_signature,
-              }),
-          }
-        );
-
-
-      const data =
-        await response.json();
-
-
-      if (!response.ok) {
-
-        throw new Error(
-          data.message ||
-            "Failed to save order"
-        );
-
-      }
-
-
-      return {
-        ...newOrder,
-
-        mongoId:
-          data.order._id,
-      };
-
-    } catch (error) {
-
-      console.error(
-        "Create order failed:",
-        error
-      );
-
-
-      alert(
-        error.message ||
-          "Failed to place order"
-      );
-
-
-      return null;
-
-    }
-
+    return null;
   }
 
+
+  if (
+    cart.length === 0
+  ) {
+    return null;
+  }
+
+
+  const total =
+    cart.reduce(
+      (
+        sum,
+        item
+      ) =>
+        sum +
+        Number(
+          item.price
+        ) *
+          Number(
+            item.quantity
+          ),
+      0
+    );
+
+
+  const newOrder = {
+    id:
+      `velnora-${Date.now()}`,
+
+    date:
+      new Date()
+        .toLocaleDateString(
+          "en-IN"
+        ),
+
+    status:
+      "Order Confirmed",
+
+    items:
+      cart.map(
+        (item) => ({
+          ...item,
+        })
+      ),
+
+    total,
+
+    customer:
+      orderDetails.customer ||
+      {},
+
+    paymentMethod:
+      orderDetails.paymentMethod ||
+      "cod",
+
+    couponCode:
+      typeof orderDetails.couponCode ===
+        "string"
+        ? orderDetails.couponCode
+            .trim()
+            .toUpperCase()
+        : "",
+  };
+
+
+  try {
+    const token =
+      localStorage.getItem(
+        "novaToken"
+      );
+
+
+    if (!token) {
+      alert(
+        "Please login again before placing an order."
+      );
+
+      return null;
+    }
+
+
+    const response =
+      await fetch(
+        `${API_URL}/api/orders`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            Authorization:
+              `Bearer ${token}`,
+          },
+
+          body:
+            JSON.stringify({
+              orderId:
+                newOrder.id,
+
+              customer:
+                newOrder.customer,
+
+              items:
+                newOrder.items.map(
+                  (item) => ({
+                    id:
+                      String(
+                        item._id ||
+                          item.id
+                      ),
+
+                    name:
+                      item.name,
+
+                    price:
+                      Number(
+                        item.price
+                      ),
+
+                    quantity:
+                      Number(
+                        item.quantity
+                      ),
+
+                    image:
+                      item.image ||
+                      "",
+                  })
+                ),
+
+              paymentMethod:
+                newOrder.paymentMethod,
+
+              couponCode:
+                newOrder.couponCode,
+
+              razorpay_order_id:
+                orderDetails
+                  .razorpayPayment
+                  ?.razorpay_order_id,
+
+              razorpay_payment_id:
+                orderDetails
+                  .razorpayPayment
+                  ?.razorpay_payment_id,
+
+              razorpay_signature:
+                orderDetails
+                  .razorpayPayment
+                  ?.razorpay_signature,
+            }),
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok) {
+      throw new Error(
+        data.message ||
+          "Failed to save order"
+      );
+    }
+
+
+    return {
+      ...newOrder,
+
+      mongoId:
+        data.order._id,
+
+      subtotal:
+        Number(
+          data.order.subtotal ||
+            0
+        ),
+
+      shipping:
+        Number(
+          data.order.shipping ||
+            0
+        ),
+
+      couponCode:
+        data.order.couponCode ||
+        "",
+
+      discountAmount:
+        Number(
+          data.order.discountAmount ||
+            0
+        ),
+
+      total:
+        Number(
+          data.order.total ||
+            0
+        ),
+
+      paymentStatus:
+        data.order.paymentStatus,
+
+      status:
+        data.order.status,
+    };
+
+  } catch (error) {
+    console.error(
+      "Create order failed:",
+      error
+    );
+
+
+    alert(
+      error.message ||
+        "Failed to place order"
+    );
+
+
+    return null;
+  }
+}
 
   /* =======================================================
      REMOVE FROM WISHLIST
@@ -2161,6 +2187,15 @@ function App() {
             </AdminRoute>
           }
         />
+
+        <Route
+  path="/admin/coupons"
+  element={
+    <AdminRoute user={user}>
+      <AdminCoupons />
+    </AdminRoute>
+  }
+/>
 
         <Route
   path="/admin/reviews"

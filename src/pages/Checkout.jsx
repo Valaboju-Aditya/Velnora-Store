@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   MapPin,
   CreditCard,
+  Tag,
 } from "lucide-react";
 
 
@@ -101,6 +102,31 @@ function Checkout({
     payment,
     setPayment,
   ] = useState("cod");
+
+  const [
+    couponCode,
+    setCouponCode,
+  ] = useState("");
+
+  const [
+    appliedCoupon,
+    setAppliedCoupon,
+  ] = useState(null);
+
+  const [
+    couponLoading,
+    setCouponLoading,
+  ] = useState(false);
+
+  const [
+    couponError,
+    setCouponError,
+  ] = useState("");
+
+  const [
+    couponMessage,
+    setCouponMessage,
+  ] = useState("");
 
 
   // =========================
@@ -312,9 +338,19 @@ function Checkout({
       ? 0
       : 99;
 
+  const discountAmount =
+    Number(
+      appliedCoupon
+        ?.discountAmount || 0
+    );
+
   const total =
-    subtotal +
-    shipping;
+    Math.max(
+      0,
+      subtotal -
+        discountAmount +
+        shipping
+    );
 
   const totalItems =
     cart.reduce(
@@ -328,6 +364,101 @@ function Checkout({
         ),
       0
     );
+
+
+  // =========================
+  // COUPON
+  // =========================
+
+  async function applyCoupon() {
+    try {
+      const code =
+        couponCode
+          .trim()
+          .toUpperCase();
+
+      if (!code) {
+        setCouponError(
+          "Enter a coupon code"
+        );
+        setCouponMessage("");
+        return;
+      }
+
+      if (subtotal <= 0) {
+        setCouponError(
+          "Your cart is empty"
+        );
+        setCouponMessage("");
+        return;
+      }
+
+      setCouponLoading(true);
+      setCouponError("");
+      setCouponMessage("");
+
+      const response =
+        await fetch(
+          `${API_URL}/api/coupons/validate`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                code,
+                orderAmount:
+                  subtotal,
+              }),
+          }
+        );
+
+      const data =
+        await response
+          .json()
+          .catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Invalid coupon"
+        );
+      }
+
+      setAppliedCoupon(data);
+
+      setCouponCode(
+        data.coupon?.code ||
+          code
+      );
+
+      setCouponMessage(
+        `${data.coupon?.code || code} applied successfully`
+      );
+    } catch (error) {
+      setAppliedCoupon(null);
+
+      setCouponError(
+        error.message ||
+          "Unable to apply coupon"
+      );
+
+      setCouponMessage("");
+    } finally {
+      setCouponLoading(false);
+    }
+  }
+
+  function removeCoupon() {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError("");
+    setCouponMessage("");
+  }
 
 
   // =========================
@@ -459,6 +590,12 @@ function Checkout({
 
         paymentMethod:
           "cod",
+
+        couponCode:
+          appliedCoupon
+            ?.coupon
+            ?.code ||
+          "",
       });
 
     if (!createdOrder) {
@@ -535,6 +672,12 @@ function Checkout({
                         ),
                     })
                   ),
+
+                couponCode:
+                  appliedCoupon
+                    ?.coupon
+                    ?.code ||
+                  "",
               }),
           }
         );
@@ -574,10 +717,10 @@ function Checkout({
             .currency,
 
         name:
-          "velnora",
+          "VELNORA",
 
         description:
-          "velnora Store Order",
+          "VELNORA Store Order",
 
         order_id:
           paymentData.order
@@ -596,7 +739,7 @@ function Checkout({
 
         notes: {
           store:
-            "velnora Fashion Store",
+            "VELNORA Fashion Store",
         },
 
         theme: {
@@ -621,6 +764,12 @@ function Checkout({
                   paymentMethod:
                     "online",
 
+                  couponCode:
+                    appliedCoupon
+                      ?.coupon
+                      ?.code ||
+                    "",
+
                   razorpayPayment:
                     {
                       razorpay_order_id:
@@ -642,7 +791,7 @@ function Checkout({
                 !createdOrder
               ) {
                 alert(
-                  "Payment completed, but the velnora order could not be created."
+                  "Payment completed, but the VELNORA order could not be created."
                 );
 
                 return;
@@ -837,7 +986,7 @@ function Checkout({
           </h1>
 
           <p>
-            Your velnora order has
+            Your VELNORA order has
             been successfully placed.
           </p>
 
@@ -1289,10 +1438,18 @@ function Checkout({
                 : payment ===
                   "online"
                 ? `Pay ₹${total.toLocaleString(
-                    "en-IN"
+                    "en-IN",
+                    {
+                      maximumFractionDigits:
+                        2,
+                    }
                   )}`
                 : `Place Order · ₹${total.toLocaleString(
-                    "en-IN"
+                    "en-IN",
+                    {
+                      maximumFractionDigits:
+                        2,
+                    }
                   )}`}
             </button>
 
@@ -1303,7 +1460,7 @@ function Checkout({
 
               Your information is
               securely handled by
-              velnora.
+              VELNORA.
             </p>
           </form>
 
@@ -1380,6 +1537,198 @@ function Checkout({
               )}
             </div>
 
+
+            {/* COUPON */}
+
+            <div
+              style={{
+                marginTop: "22px",
+                marginBottom: "22px",
+                padding: "18px",
+                border:
+                  "1px solid #e5e5e5",
+                borderRadius: "12px",
+                background: "#fafafa",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: "12px",
+                  fontWeight: "700",
+                }}
+              >
+                <Tag size={18} />
+
+                <span>
+                  Coupon Code
+                </span>
+              </div>
+
+              {!appliedCoupon ? (
+                <>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                    }}
+                  >
+                    <input
+                      type="text"
+                      value={
+                        couponCode
+                      }
+                      onChange={(
+                        event
+                      ) => {
+                        setCouponCode(
+                          event.target.value
+                            .toUpperCase()
+                        );
+
+                        setCouponError(
+                          ""
+                        );
+
+                        setCouponMessage(
+                          ""
+                        );
+                      }}
+                      placeholder="Enter coupon"
+                      maxLength={40}
+                      disabled={
+                        couponLoading
+                      }
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        padding:
+                          "11px 12px",
+                        border:
+                          "1px solid #d8d8d8",
+                        borderRadius:
+                          "8px",
+                        outline: "none",
+                        fontSize: "14px",
+                        textTransform:
+                          "uppercase",
+                      }}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={
+                        applyCoupon
+                      }
+                      disabled={
+                        couponLoading ||
+                        !couponCode.trim()
+                      }
+                      style={{
+                        border: "none",
+                        borderRadius:
+                          "8px",
+                        padding:
+                          "0 18px",
+                        background:
+                          "#111",
+                        color: "#fff",
+                        fontWeight:
+                          "700",
+                        cursor:
+                          couponLoading
+                            ? "not-allowed"
+                            : "pointer",
+                      }}
+                    >
+                      {couponLoading
+                        ? "Applying..."
+                        : "Apply"}
+                    </button>
+                  </div>
+
+                  {couponError && (
+                    <p
+                      style={{
+                        margin:
+                          "10px 0 0",
+                        color:
+                          "#c62828",
+                        fontSize:
+                          "13px",
+                      }}
+                    >
+                      {
+                        couponError
+                      }
+                    </p>
+                  )}
+                </>
+              ) : (
+                <div>
+                  <div
+                    style={{
+                      display:
+                        "flex",
+                      alignItems:
+                        "center",
+                      justifyContent:
+                        "space-between",
+                      gap: "12px",
+                    }}
+                  >
+                    <div>
+                      <strong>
+                        {
+                          appliedCoupon
+                            .coupon
+                            ?.code
+                        }
+                      </strong>
+
+                      <p
+                        style={{
+                          margin:
+                            "4px 0 0",
+                          fontSize:
+                            "13px",
+                          color:
+                            "#198754",
+                        }}
+                      >
+                        {
+                          couponMessage
+                        }
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={
+                        removeCoupon
+                      }
+                      style={{
+                        border: "none",
+                        background:
+                          "transparent",
+                        color:
+                          "#c62828",
+                        cursor:
+                          "pointer",
+                        fontWeight:
+                          "700",
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+
             <div className="checkout-summary-line" />
 
             <div className="checkout-total-row">
@@ -1394,6 +1743,35 @@ function Checkout({
                 )}
               </strong>
             </div>
+
+            {discountAmount > 0 && (
+              <div className="checkout-total-row">
+                <span>
+                  Discount
+                  {appliedCoupon
+                    ?.coupon
+                    ?.code
+                    ? ` (${appliedCoupon.coupon.code})`
+                    : ""}
+                </span>
+
+                <strong
+                  style={{
+                    color:
+                      "#198754",
+                  }}
+                >
+                  -₹
+                  {discountAmount.toLocaleString(
+                    "en-IN",
+                    {
+                      maximumFractionDigits:
+                        2,
+                    }
+                  )}
+                </strong>
+              </div>
+            )}
 
             <div className="checkout-total-row">
               <span>
@@ -1417,7 +1795,11 @@ function Checkout({
               <strong>
                 ₹
                 {total.toLocaleString(
-                  "en-IN"
+                  "en-IN",
+                  {
+                    maximumFractionDigits:
+                      2,
+                  }
                 )}
               </strong>
             </div>

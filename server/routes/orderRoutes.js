@@ -5,14 +5,17 @@ const Razorpay = require("razorpay");
 
 const Order = require("../models/Order");
 const Product = require("../models/Product");
+const Coupon = require("../models/Coupon");
 const protect = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
+  key_secret:
+    process.env.RAZORPAY_KEY_SECRET,
 });
+
 
 async function createRazorpayRefund({
   paymentId,
@@ -84,6 +87,7 @@ async function createRazorpayRefund({
 
   return data;
 }
+
 
 async function finalizeRefundedOrder(
   mongoOrderId,
@@ -179,6 +183,7 @@ async function finalizeRefundedOrder(
   }
 }
 
+
 function verifyRazorpayPayment({
   razorpay_order_id,
   razorpay_payment_id,
@@ -231,6 +236,7 @@ function verifyRazorpayPayment({
   );
 }
 
+
 function validateCustomer(
   customer
 ) {
@@ -242,6 +248,7 @@ function validateCustomer(
   ) {
     return {
       valid: false,
+
       message:
         "Customer information is required",
     };
@@ -297,6 +304,7 @@ function validateCustomer(
   ) {
     return {
       valid: false,
+
       message:
         "Please enter a valid customer name",
     };
@@ -311,6 +319,7 @@ function validateCustomer(
   ) {
     return {
       valid: false,
+
       message:
         "Please enter a valid email address",
     };
@@ -325,6 +334,7 @@ function validateCustomer(
   ) {
     return {
       valid: false,
+
       message:
         "Please enter a valid phone number",
     };
@@ -336,6 +346,7 @@ function validateCustomer(
   ) {
     return {
       valid: false,
+
       message:
         "Please enter a valid address",
     };
@@ -347,6 +358,7 @@ function validateCustomer(
   ) {
     return {
       valid: false,
+
       message:
         "Please enter a valid city",
     };
@@ -358,6 +370,7 @@ function validateCustomer(
   ) {
     return {
       valid: false,
+
       message:
         "Please enter a valid state",
     };
@@ -369,6 +382,7 @@ function validateCustomer(
   ) {
     return {
       valid: false,
+
       message:
         "Please enter a valid pincode",
     };
@@ -389,6 +403,7 @@ function validateCustomer(
   };
 }
 
+
 router.post(
   "/",
   protect,
@@ -402,10 +417,12 @@ router.post(
         customer,
         items,
         paymentMethod,
+        couponCode,
         razorpay_order_id,
         razorpay_payment_id,
         razorpay_signature,
       } = req.body;
+
 
       if (
         typeof orderId !==
@@ -422,14 +439,17 @@ router.post(
           });
       }
 
+
       const safeOrderId =
         orderId.trim();
+
 
       const duplicateOrder =
         await Order.exists({
           orderId:
             safeOrderId,
         });
+
 
       if (duplicateOrder) {
         return res
@@ -440,10 +460,12 @@ router.post(
           });
       }
 
+
       const customerValidation =
         validateCustomer(
           customer
         );
+
 
       if (
         !customerValidation.valid
@@ -456,8 +478,10 @@ router.post(
           });
       }
 
+
       const safeCustomer =
         customerValidation.customer;
+
 
       if (
         !Array.isArray(items) ||
@@ -471,6 +495,7 @@ router.post(
           });
       }
 
+
       if (
         items.length > 50
       ) {
@@ -482,8 +507,10 @@ router.post(
           });
       }
 
+
       const selectedPaymentMethod =
         paymentMethod || "cod";
+
 
       if (
         ![
@@ -501,6 +528,7 @@ router.post(
           });
       }
 
+
       if (
         selectedPaymentMethod ===
         "online"
@@ -511,6 +539,7 @@ router.post(
             razorpay_payment_id,
             razorpay_signature,
           });
+
 
         if (
           !paymentVerified
@@ -523,6 +552,7 @@ router.post(
             });
         }
 
+
         const existingPayment =
           await Order.findOne({
             $or: [
@@ -530,12 +560,14 @@ router.post(
                 razorpayOrderId:
                   razorpay_order_id,
               },
+
               {
                 razorpayPaymentId:
                   razorpay_payment_id,
               },
             ],
           });
+
 
         if (
           existingPayment
@@ -549,7 +581,9 @@ router.post(
         }
       }
 
+
       session.startTransaction();
+
 
       const orderItems = [];
 
@@ -557,6 +591,7 @@ router.post(
         new Set();
 
       let calculatedTotal = 0;
+
 
       for (
         const item of
@@ -577,9 +612,11 @@ router.post(
             });
         }
 
+
         const productId =
           item.id ||
           item._id;
+
 
         if (
           !mongoose.Types
@@ -598,8 +635,10 @@ router.post(
             });
         }
 
+
         const productIdString =
           String(productId);
+
 
         if (
           seenProducts.has(
@@ -616,14 +655,17 @@ router.post(
             });
         }
 
+
         seenProducts.add(
           productIdString
         );
+
 
         const quantity =
           Number(
             item.quantity
           );
+
 
         if (
           !Number.isInteger(
@@ -642,12 +684,14 @@ router.post(
             });
         }
 
+
         const product =
           await Product.findById(
             productId
           ).session(
             session
           );
+
 
         if (!product) {
           await session.abortTransaction();
@@ -660,10 +704,12 @@ router.post(
             });
         }
 
+
         const price =
           Number(
             product.price
           );
+
 
         if (
           !Number.isFinite(
@@ -676,11 +722,12 @@ router.post(
           );
         }
 
+
         const availableStock =
           Number(
-            product.stock ||
-              0
+            product.stock || 0
           );
+
 
         if (
           !Number.isFinite(
@@ -702,9 +749,11 @@ router.post(
             });
         }
 
+
         calculatedTotal +=
           price *
           quantity;
+
 
         orderItems.push({
           id:
@@ -723,29 +772,284 @@ router.post(
         });
       }
 
+
+      calculatedTotal =
+        Math.round(
+          calculatedTotal *
+            100
+        ) / 100;
+
+
       const shipping =
-        calculatedTotal >=
-          999 ||
-        calculatedTotal ===
-          0
+        calculatedTotal >= 999 ||
+        calculatedTotal === 0
           ? 0
           : 99;
 
+
+      // =========================
+      // COUPON VALIDATION
+      // =========================
+
+      let appliedCoupon =
+        null;
+
+      let discountAmount =
+        0;
+
+      let safeCouponCode =
+        "";
+
+      let couponDiscountType =
+        null;
+
+      let couponDiscountValue =
+        0;
+
+
+      if (
+        typeof couponCode ===
+          "string" &&
+        couponCode.trim()
+      ) {
+        safeCouponCode =
+          couponCode
+            .trim()
+            .toUpperCase();
+
+
+        const coupon =
+          await Coupon.findOne({
+            code:
+              safeCouponCode,
+          }).session(
+            session
+          );
+
+
+        if (!coupon) {
+          await session.abortTransaction();
+
+          return res
+            .status(400)
+            .json({
+              message:
+                "Coupon code is invalid",
+            });
+        }
+
+
+        if (
+          !coupon.isActive
+        ) {
+          await session.abortTransaction();
+
+          return res
+            .status(400)
+            .json({
+              message:
+                "This coupon is not active",
+            });
+        }
+
+
+        if (
+          coupon.expiresAt &&
+          new Date(
+            coupon.expiresAt
+          ) <
+            new Date()
+        ) {
+          await session.abortTransaction();
+
+          return res
+            .status(400)
+            .json({
+              message:
+                "This coupon has expired",
+            });
+        }
+
+
+        if (
+          coupon.usageLimit !==
+            null &&
+          Number(
+            coupon.usedCount ||
+              0
+          ) >=
+            Number(
+              coupon.usageLimit
+            )
+        ) {
+          await session.abortTransaction();
+
+          return res
+            .status(400)
+            .json({
+              message:
+                "This coupon has reached its usage limit",
+            });
+        }
+
+
+        const minimumOrderAmount =
+          Number(
+            coupon.minimumOrderAmount ||
+              0
+          );
+
+
+        if (
+          calculatedTotal <
+          minimumOrderAmount
+        ) {
+          await session.abortTransaction();
+
+          return res
+            .status(400)
+            .json({
+              message:
+                `Minimum order amount for this coupon is ₹${minimumOrderAmount}`,
+            });
+        }
+
+
+        const discountValue =
+          Number(
+            coupon.discountValue
+          );
+
+
+        if (
+          !Number.isFinite(
+            discountValue
+          ) ||
+          discountValue <= 0
+        ) {
+          throw new Error(
+            "Invalid coupon discount value in database"
+          );
+        }
+
+
+        if (
+          coupon.discountType ===
+          "percentage"
+        ) {
+          if (
+            discountValue >
+            100
+          ) {
+            throw new Error(
+              "Invalid percentage coupon value"
+            );
+          }
+
+
+          discountAmount =
+            calculatedTotal *
+            (
+              discountValue /
+              100
+            );
+
+
+          if (
+            coupon.maximumDiscountAmount !==
+            null
+          ) {
+            const maximumDiscount =
+              Number(
+                coupon.maximumDiscountAmount
+              );
+
+
+            if (
+              Number.isFinite(
+                maximumDiscount
+              ) &&
+              maximumDiscount >=
+                0
+            ) {
+              discountAmount =
+                Math.min(
+                  discountAmount,
+                  maximumDiscount
+                );
+            }
+          }
+        } else if (
+          coupon.discountType ===
+          "fixed"
+        ) {
+          discountAmount =
+            discountValue;
+        } else {
+          throw new Error(
+            "Invalid coupon discount type in database"
+          );
+        }
+
+
+        discountAmount =
+          Math.min(
+            discountAmount,
+            calculatedTotal
+          );
+
+
+        discountAmount =
+          Math.round(
+            discountAmount *
+              100
+          ) / 100;
+
+
+        appliedCoupon =
+          coupon;
+
+        couponDiscountType =
+          coupon.discountType;
+
+        couponDiscountValue =
+          discountValue;
+      }
+
+
       const finalTotal =
-        calculatedTotal +
-        shipping;
+        Math.max(
+          0,
+          Math.round(
+            (
+              calculatedTotal -
+              discountAmount +
+              shipping
+            ) *
+              100
+          ) / 100
+        );
+
 
       const expectedAmountInPaise =
         Math.round(
-          finalTotal * 100
+          finalTotal *
+            100
         );
+
+
+      // =========================
+      // ONLINE PAYMENT VERIFY
+      // =========================
 
       if (
         selectedPaymentMethod ===
         "online"
       ) {
         let razorpayOrder;
+
         let razorpayPayment;
+
 
         try {
           razorpayOrder =
@@ -768,6 +1072,7 @@ router.post(
             });
         }
 
+
         if (
           razorpayOrder.id !==
             razorpay_order_id ||
@@ -788,6 +1093,7 @@ router.post(
             });
         }
 
+
         if (
           String(
             razorpayOrder
@@ -795,9 +1101,9 @@ router.post(
               ?.userId ||
               ""
           ) !==
-          String(
-            req.user.id
-          )
+            String(
+              req.user.id
+            )
         ) {
           await session.abortTransaction();
 
@@ -808,6 +1114,7 @@ router.post(
                 "Payment does not belong to this user",
             });
         }
+
 
         if (
           razorpayPayment.id !==
@@ -831,6 +1138,7 @@ router.post(
             });
         }
 
+
         if (
           razorpayPayment.status !==
           "captured"
@@ -846,6 +1154,11 @@ router.post(
         }
       }
 
+
+      // =========================
+      // REDUCE STOCK
+      // =========================
+
       for (
         const orderItem of
         orderItems
@@ -857,17 +1170,20 @@ router.post(
             session
           );
 
+
         if (!product) {
           throw new Error(
             "Product disappeared during order creation"
           );
         }
 
+
         const availableStock =
           Number(
             product.stock ||
               0
           );
+
 
         if (
           availableStock <
@@ -883,14 +1199,91 @@ router.post(
             });
         }
 
+
         product.stock =
           availableStock -
           orderItem.quantity;
+
 
         await product.save({
           session,
         });
       }
+
+
+      // =========================
+      // CONSUME COUPON
+      // =========================
+
+      if (
+        appliedCoupon
+      ) {
+        const couponFilter = {
+          _id:
+            appliedCoupon._id,
+
+          isActive:
+            true,
+        };
+
+
+        if (
+          appliedCoupon.expiresAt
+        ) {
+          couponFilter.expiresAt = {
+            $gte:
+              new Date(),
+          };
+        }
+
+
+        if (
+          appliedCoupon.usageLimit !==
+          null
+        ) {
+          couponFilter.usedCount = {
+            $lt:
+              Number(
+                appliedCoupon
+                  .usageLimit
+              ),
+          };
+        }
+
+
+        const couponUpdate =
+          await Coupon.updateOne(
+            couponFilter,
+            {
+              $inc: {
+                usedCount: 1,
+              },
+            },
+            {
+              session,
+            }
+          );
+
+
+        if (
+          couponUpdate.modifiedCount !==
+          1
+        ) {
+          await session.abortTransaction();
+
+          return res
+            .status(409)
+            .json({
+              message:
+                "Coupon is no longer available",
+            });
+        }
+      }
+
+
+      // =========================
+      // CREATE ORDER
+      // =========================
 
       const createdOrders =
         await Order.create(
@@ -907,6 +1300,20 @@ router.post(
 
               items:
                 orderItems,
+
+              subtotal:
+                calculatedTotal,
+
+              shipping,
+
+              couponCode:
+                safeCouponCode,
+
+              couponDiscountType,
+
+              couponDiscountValue,
+
+              discountAmount,
 
               total:
                 finalTotal,
@@ -927,13 +1334,13 @@ router.post(
                 selectedPaymentMethod ===
                 "online"
                   ? razorpay_order_id
-                  : null,
+                  : undefined,
 
               razorpayPaymentId:
                 selectedPaymentMethod ===
                 "online"
                   ? razorpay_payment_id
-                  : null,
+                  : undefined,
 
               refundStatus:
                 "None",
@@ -950,10 +1357,13 @@ router.post(
           }
         );
 
+
       const order =
         createdOrders[0];
 
+
       await session.commitTransaction();
+
 
       return res
         .status(201)
@@ -971,10 +1381,12 @@ router.post(
         await session.abortTransaction();
       }
 
+
       console.error(
         "Create order error:",
         error
       );
+
 
       if (
         error?.code ===
@@ -987,6 +1399,7 @@ router.post(
               "Duplicate order detected",
           });
       }
+
 
       return res
         .status(500)
@@ -1001,6 +1414,11 @@ router.post(
   }
 );
 
+
+// =========================
+// MY ORDERS
+// =========================
+
 router.get(
   "/my-orders",
   protect,
@@ -1014,6 +1432,7 @@ router.get(
           createdAt: -1,
         });
 
+
       return res.json(
         orders
       );
@@ -1024,6 +1443,7 @@ router.get(
         error
       );
 
+
       return res
         .status(500)
         .json({
@@ -1033,6 +1453,11 @@ router.get(
     }
   }
 );
+
+
+// =========================
+// CUSTOMER CANCEL ORDER
+// =========================
 
 router.patch(
   "/:orderId/cancel",
@@ -1048,6 +1473,7 @@ router.patch(
             req.user.id,
         });
 
+
       if (!order) {
         return res
           .status(404)
@@ -1056,6 +1482,7 @@ router.patch(
               "Order not found",
           });
       }
+
 
       if (
         order.status ===
@@ -1069,6 +1496,7 @@ router.patch(
         });
       }
 
+
       if (
         order.status !==
         "Order Confirmed"
@@ -1081,12 +1509,18 @@ router.patch(
           });
       }
 
+
+      // =========================
+      // COD CANCELLATION
+      // =========================
+
       if (
         order.paymentMethod ===
         "cod"
       ) {
         const session =
           await mongoose.startSession();
+
 
         try {
           await session.withTransaction(
@@ -1098,6 +1532,7 @@ router.patch(
                   session
                 );
 
+
               if (
                 !currentOrder
               ) {
@@ -1106,12 +1541,14 @@ router.patch(
                 );
               }
 
+
               if (
                 currentOrder.status ===
                 "Cancelled"
               ) {
                 return;
               }
+
 
               if (
                 currentOrder.status !==
@@ -1121,6 +1558,7 @@ router.patch(
                   "This order can no longer be cancelled"
                 );
               }
+
 
               if (
                 !currentOrder.stockRestored
@@ -1139,6 +1577,7 @@ router.patch(
                     );
                   }
 
+
                   const product =
                     await Product.findById(
                       item.id
@@ -1146,13 +1585,13 @@ router.patch(
                       session
                     );
 
-                  if (
-                    !product
-                  ) {
+
+                  if (!product) {
                     throw new Error(
                       `Product not found: ${item.name}`
                     );
                   }
+
 
                   product.stock =
                     Number(
@@ -1164,17 +1603,21 @@ router.patch(
                         0
                     );
 
+
                   await product.save({
                     session,
                   });
                 }
 
+
                 currentOrder.stockRestored =
                   true;
               }
 
+
               currentOrder.status =
                 "Cancelled";
+
 
               await currentOrder.save({
                 session,
@@ -1186,10 +1629,12 @@ router.patch(
           await session.endSession();
         }
 
+
         const cancelledOrder =
           await Order.findById(
             order._id
           );
+
 
         return res.json({
           message:
@@ -1199,6 +1644,11 @@ router.patch(
             cancelledOrder,
         });
       }
+
+
+      // =========================
+      // ONLINE CANCELLATION
+      // =========================
 
       if (
         order.paymentMethod !==
@@ -1211,6 +1661,7 @@ router.patch(
               "Unsupported payment method",
           });
       }
+
 
       if (
         order.paymentStatus !==
@@ -1226,9 +1677,9 @@ router.patch(
           });
       }
 
+
       if (
-        !order
-          .razorpayPaymentId
+        !order.razorpayPaymentId
       ) {
         return res
           .status(400)
@@ -1237,6 +1688,7 @@ router.patch(
               "Razorpay payment ID is missing",
           });
       }
+
 
       if (
         order.refundStatus ===
@@ -1252,6 +1704,7 @@ router.patch(
         });
       }
 
+
       if (
         order.refundStatus ===
         "Failed"
@@ -1264,7 +1717,9 @@ router.patch(
           });
       }
 
+
       let payment;
+
 
       try {
         payment =
@@ -1279,6 +1734,7 @@ router.patch(
           error
         );
 
+
         return res
           .status(502)
           .json({
@@ -1287,12 +1743,15 @@ router.patch(
           });
       }
 
+
       const refundAmountPaise =
         Math.round(
           Number(
             order.total
-          ) * 100
+          ) *
+            100
         );
+
 
       if (
         payment.id !==
@@ -1313,6 +1772,7 @@ router.patch(
           });
       }
 
+
       if (
         payment.status !==
         "captured"
@@ -1324,6 +1784,7 @@ router.patch(
               "Only captured payments can be refunded",
           });
       }
+
 
       if (
         order.refundStatus ===
@@ -1340,7 +1801,9 @@ router.patch(
         await order.save();
       }
 
+
       let refund;
+
 
       try {
         refund =
@@ -1367,6 +1830,7 @@ router.patch(
             error
         );
 
+
         if (
           error.status !==
           409
@@ -1376,6 +1840,7 @@ router.patch(
 
           await order.save();
         }
+
 
         if (
           error.status ===
@@ -1389,6 +1854,7 @@ router.patch(
             });
         }
 
+
         return res
           .status(502)
           .json({
@@ -1396,6 +1862,7 @@ router.patch(
               "Unable to process refund",
           });
       }
+
 
       if (
         !refund?.id ||
@@ -1415,6 +1882,7 @@ router.patch(
           });
       }
 
+
       order.razorpayRefundId =
         refund.id;
 
@@ -1422,6 +1890,7 @@ router.patch(
         Number(
           refund.amount
         ) / 100;
+
 
       if (
         refund.status ===
@@ -1432,10 +1901,12 @@ router.patch(
           refund
         );
 
+
         const refundedOrder =
           await Order.findById(
             order._id
           );
+
 
         return res.json({
           message:
@@ -1446,6 +1917,7 @@ router.patch(
         });
       }
 
+
       if (
         refund.status ===
         "failed"
@@ -1455,6 +1927,7 @@ router.patch(
 
         await order.save();
 
+
         return res
           .status(502)
           .json({
@@ -1463,10 +1936,12 @@ router.patch(
           });
       }
 
+
       order.refundStatus =
         "Pending";
 
       await order.save();
+
 
       return res
         .status(202)
@@ -1483,6 +1958,7 @@ router.patch(
         error
       );
 
+
       return res
         .status(500)
         .json({
@@ -1492,5 +1968,6 @@ router.patch(
     }
   }
 );
+
 
 module.exports = router;

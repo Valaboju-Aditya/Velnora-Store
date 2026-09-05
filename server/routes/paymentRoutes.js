@@ -5,6 +5,7 @@ const crypto = require("crypto");
 
 const Product = require("../models/Product");
 const Order = require("../models/Order");
+const Coupon = require("../models/Coupon");
 
 const protect = require("../middleware/authMiddleware");
 
@@ -28,8 +29,11 @@ router.post(
   protect,
   async (req, res) => {
     try {
-      const { items } =
-        req.body;
+      const {
+        items,
+        couponCode,
+      } = req.body;
+
 
       if (
         !Array.isArray(items) ||
@@ -43,20 +47,57 @@ router.post(
           });
       }
 
-      let total = 0;
+
+      if (
+        items.length > 50
+      ) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Too many products in one order",
+          });
+      }
+
+
+      let subtotal = 0;
+
+      const seenProducts =
+        new Set();
+
+
+      // =========================
+      // TRUSTED PRODUCT PRICING
+      // =========================
 
       for (
         const item of
         items
       ) {
+        if (
+          !item ||
+          typeof item !==
+            "object"
+        ) {
+          return res
+            .status(400)
+            .json({
+              message:
+                "Invalid cart item",
+            });
+        }
+
+
         const productId =
           item.id ||
           item._id;
+
 
         const quantity =
           Number(
             item.quantity
           );
+
 
         if (
           !productId ||
@@ -77,10 +118,35 @@ router.post(
             });
         }
 
+
+        const productIdString =
+          String(productId);
+
+
+        if (
+          seenProducts.has(
+            productIdString
+          )
+        ) {
+          return res
+            .status(400)
+            .json({
+              message:
+                "Duplicate products are not allowed in an order",
+            });
+        }
+
+
+        seenProducts.add(
+          productIdString
+        );
+
+
         const product =
           await Product.findById(
             productId
           );
+
 
         if (!product) {
           return res
@@ -91,42 +157,330 @@ router.post(
             });
         }
 
-        if (
+
+        const price =
           Number(
-            product.stock
-          ) <
-          quantity
+            product.price
+          );
+
+
+        if (
+          !Number.isFinite(
+            price
+          ) ||
+          price < 0
+        ) {
+          throw new Error(
+            "Invalid product price in database"
+          );
+        }
+
+
+        const availableStock =
+          Number(
+            product.stock ||
+              0
+          );
+
+
+        if (
+          !Number.isFinite(
+            availableStock
+          ) ||
+          availableStock <
+            quantity
         ) {
           return res
             .status(400)
             .json({
               message:
-                `Only ${product.stock} item(s) of ${product.name} are available`,
+                `Only ${Math.max(
+                  0,
+                  availableStock
+                )} item(s) of ${product.name} are available`,
             });
         }
 
-        total +=
-          Number(
-            product.price
-          ) *
+
+        subtotal +=
+          price *
           quantity;
       }
 
+
+      subtotal =
+        Math.round(
+          subtotal *
+            100
+        ) / 100;
+
+
+      // =========================
+      // SHIPPING
+      // =========================
+
       const shipping =
-        total >= 999 ||
-        total === 0
+        subtotal >= 999 ||
+        subtotal === 0
           ? 0
           : 99;
 
+
+      // =========================
+      // COUPON
+      // =========================
+
+      let safeCouponCode =
+        "";
+
+      let discountAmount =
+        0;
+
+      let couponDiscountType =
+        null;
+
+      let couponDiscountValue =
+        0;
+
+
+      if (
+        typeof couponCode ===
+          "string" &&
+        couponCode.trim()
+      ) {
+        safeCouponCode =
+          couponCode
+            .trim()
+            .toUpperCase();
+
+
+        const coupon =
+          await Coupon.findOne({
+            code:
+              safeCouponCode,
+          });
+
+
+        if (!coupon) {
+          return res
+            .status(400)
+            .json({
+              message:
+                "Coupon code is invalid",
+            });
+        }
+
+
+        if (
+          !coupon.isActive
+        ) {
+          return res
+            .status(400)
+            .json({
+              message:
+                "This coupon is not active",
+            });
+        }
+
+
+        if (
+          coupon.expiresAt &&
+          new Date(
+            coupon.expiresAt
+          ) <
+            new Date()
+        ) {
+          return res
+            .status(400)
+            .json({
+              message:
+                "This coupon has expired",
+            });
+        }
+
+
+        if (
+          coupon.usageLimit !==
+            null &&
+          Number(
+            coupon.usedCount ||
+              0
+          ) >=
+            Number(
+              coupon.usageLimit
+            )
+        ) {
+          return res
+            .status(400)
+            .json({
+              message:
+                "This coupon has reached its usage limit",
+            });
+        }
+
+
+        const minimumOrderAmount =
+          Number(
+            coupon.minimumOrderAmount ||
+              0
+          );
+
+
+        if (
+          subtotal <
+          minimumOrderAmount
+        ) {
+          return res
+            .status(400)
+            .json({
+              message:
+                `Minimum order amount for this coupon is ₹${minimumOrderAmount}`,
+            });
+        }
+
+
+        const discountValue =
+          Number(
+            coupon.discountValue
+          );
+
+
+        if (
+          !Number.isFinite(
+            discountValue
+          ) ||
+          discountValue <= 0
+        ) {
+          throw new Error(
+            "Invalid coupon discount value in database"
+          );
+        }
+
+
+        if (
+          coupon.discountType ===
+          "percentage"
+        ) {
+          if (
+            discountValue >
+            100
+          ) {
+            throw new Error(
+              "Invalid percentage coupon value"
+            );
+          }
+
+
+          discountAmount =
+            subtotal *
+            (
+              discountValue /
+              100
+            );
+
+
+          if (
+            coupon.maximumDiscountAmount !==
+            null
+          ) {
+            const maximumDiscount =
+              Number(
+                coupon.maximumDiscountAmount
+              );
+
+
+            if (
+              Number.isFinite(
+                maximumDiscount
+              ) &&
+              maximumDiscount >=
+                0
+            ) {
+              discountAmount =
+                Math.min(
+                  discountAmount,
+                  maximumDiscount
+                );
+            }
+          }
+        } else if (
+          coupon.discountType ===
+          "fixed"
+        ) {
+          discountAmount =
+            discountValue;
+        } else {
+          throw new Error(
+            "Invalid coupon discount type in database"
+          );
+        }
+
+
+        discountAmount =
+          Math.min(
+            discountAmount,
+            subtotal
+          );
+
+
+        discountAmount =
+          Math.round(
+            discountAmount *
+              100
+          ) / 100;
+
+
+        couponDiscountType =
+          coupon.discountType;
+
+        couponDiscountValue =
+          discountValue;
+      }
+
+
+      // =========================
+      // FINAL TOTAL
+      // =========================
+
       const finalTotal =
-        total +
-        shipping;
+        Math.max(
+          0,
+          Math.round(
+            (
+              subtotal -
+              discountAmount +
+              shipping
+            ) *
+              100
+          ) / 100
+        );
+
 
       const amountInPaise =
         Math.round(
           finalTotal *
             100
         );
+
+
+      if (
+        !Number.isInteger(
+          amountInPaise
+        ) ||
+        amountInPaise <= 0
+      ) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Invalid payment amount",
+          });
+      }
+
+
+      // =========================
+      // CREATE RAZORPAY ORDER
+      // =========================
 
       const razorpayOrder =
         await razorpay.orders.create({
@@ -144,8 +498,17 @@ router.post(
               String(
                 req.user.id
               ),
+
+            couponCode:
+              safeCouponCode,
+
+            discountAmount:
+              String(
+                discountAmount
+              ),
           },
         });
+
 
       return res
         .status(201)
@@ -160,6 +523,19 @@ router.post(
           order:
             razorpayOrder,
 
+          subtotal,
+
+          shipping,
+
+          couponCode:
+            safeCouponCode,
+
+          couponDiscountType,
+
+          couponDiscountValue,
+
+          discountAmount,
+
           amount:
             finalTotal,
         });
@@ -170,6 +546,7 @@ router.post(
         error
       );
 
+
       return res
         .status(500)
         .json({
@@ -179,6 +556,8 @@ router.post(
     }
   }
 );
+
+
 
 
 // =========================
