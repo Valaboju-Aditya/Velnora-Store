@@ -172,15 +172,15 @@ router.post(
       }
 
       const purchasedOrder =
-        await Order.findOne({
-          user: req.user.id,
-          status: "Delivered",
-          items: {
-            $elemMatch: {
-              id: productId,
-            },
-          },
-        });
+  await Order.findOne({
+    userId: req.user.id,
+    status: "Delivered",
+    items: {
+      $elemMatch: {
+        id: productId,
+      },
+    },
+  });
 
       if (!purchasedOrder) {
         return res.status(403).json({
