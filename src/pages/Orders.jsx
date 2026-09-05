@@ -9,44 +9,68 @@ import {
   CreditCard,
   ArrowRight,
   ShoppingBag,
+  XCircle,
 } from "lucide-react";
 
 function Orders() {
   const [orders, setOrders] = useState([]);
-  const [expandedOrder, setExpandedOrder] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [expandedOrder, setExpandedOrder] =
+    useState(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  const [cancellingOrder, setCancellingOrder] =
+    useState(null);
+
+  const [cancelError, setCancelError] =
+    useState("");
+
+  const [cancelSuccess, setCancelSuccess] =
+    useState("");
+
 
   useEffect(() => {
     let ignore = false;
 
     const loadOrders = async () => {
       try {
-        const token = localStorage.getItem("novaToken");
+        const token =
+          localStorage.getItem("novaToken");
 
         if (!token) {
           if (!ignore) {
-            setError("Please login to view your orders.");
+            setError(
+              "Please login to view your orders."
+            );
+
             setLoading(false);
           }
 
           return;
         }
 
-        const response = await fetch(
-          `${API_URL}/api/orders/my-orders`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response =
+          await fetch(
+            `${API_URL}/api/orders/my-orders`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
 
-        const data = await response.json();
+        const data =
+          await response.json();
 
         if (!response.ok) {
           throw new Error(
-            data.message || "Failed to load orders"
+            data.message ||
+              "Failed to load orders"
           );
         }
 
@@ -61,7 +85,8 @@ function Orders() {
           );
 
           setError(
-            error.message || "Unable to load orders."
+            error.message ||
+              "Unable to load orders."
           );
         }
       } finally {
@@ -78,36 +103,136 @@ function Orders() {
     };
   }, []);
 
+
   const toggleOrder = (orderId) => {
     setExpandedOrder((current) =>
-      current === orderId ? null : orderId
+      current === orderId
+        ? null
+        : orderId
     );
+
+    setCancelError("");
+    setCancelSuccess("");
   };
+
+
+  const cancelOrder = async (orderId) => {
+    const confirmed =
+      window.confirm(
+        "Are you sure you want to cancel this order?"
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setCancellingOrder(orderId);
+      setCancelError("");
+      setCancelSuccess("");
+
+      const token =
+        localStorage.getItem("novaToken");
+
+      if (!token) {
+        throw new Error(
+          "Please login again to cancel your order."
+        );
+      }
+
+      const response =
+        await fetch(
+          `${API_URL}/api/orders/${encodeURIComponent(
+            orderId
+          )}/cancel`,
+          {
+            method: "PATCH",
+
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to cancel order"
+        );
+      }
+
+      setOrders((currentOrders) =>
+        currentOrders.map((order) => {
+          const currentOrderId =
+            order.orderId ||
+            order.id;
+
+          if (
+            currentOrderId ===
+            orderId
+          ) {
+            return data.order;
+          }
+
+          return order;
+        })
+      );
+
+      setCancelSuccess(
+        "Order cancelled successfully."
+      );
+    } catch (error) {
+      console.error(
+        "Cancel order error:",
+        error
+      );
+
+      setCancelError(
+        error.message ||
+          "Unable to cancel order."
+      );
+    } finally {
+      setCancellingOrder(null);
+    }
+  };
+
 
   if (loading) {
     return (
       <div className="orders-page">
         <div className="orders-container">
           <div className="empty-orders">
-            <p>Loading your orders...</p>
+            <p>
+              Loading your orders...
+            </p>
           </div>
         </div>
       </div>
     );
   }
 
+
   if (error) {
     return (
       <div className="orders-page">
         <div className="orders-container">
           <div className="empty-orders">
+
             <div className="empty-orders-icon">
               <ShoppingBag size={38} />
             </div>
 
-            <h2>Unable to load orders</h2>
+            <h2>
+              Unable to load orders
+            </h2>
 
-            <p>{error}</p>
+            <p>
+              {error}
+            </p>
 
             <Link
               to="/login"
@@ -116,27 +241,38 @@ function Orders() {
               Login
               <ArrowRight size={17} />
             </Link>
+
           </div>
         </div>
       </div>
     );
   }
 
+
   return (
     <div className="orders-page">
+
       <div className="orders-container">
 
         {/* HEADER */}
 
         <div className="orders-header">
-          <div>
-            <p>YOUR ACCOUNT</p>
 
-            <h1>My Orders</h1>
+          <div>
+
+            <p>
+              YOUR ACCOUNT
+            </p>
+
+            <h1>
+              My Orders
+            </h1>
 
             <span>
-              View your previous orders and order details.
+              View your previous orders
+              and order details.
             </span>
+
           </div>
 
           <Link
@@ -146,11 +282,14 @@ function Orders() {
             Continue Shopping
             <ArrowRight size={17} />
           </Link>
+
         </div>
+
 
         {/* EMPTY ORDERS */}
 
         {orders.length === 0 ? (
+
           <div className="empty-orders">
 
             <div className="empty-orders-icon">
@@ -161,11 +300,14 @@ function Orders() {
               YOUR ORDER HISTORY
             </p>
 
-            <h2>No orders yet</h2>
+            <h2>
+              No orders yet
+            </h2>
 
             <p>
-              You haven't placed any orders yet.
-              Start shopping and your orders will
+              You haven't placed any
+              orders yet. Start shopping
+              and your orders will
               appear here.
             </p>
 
@@ -178,38 +320,62 @@ function Orders() {
             </Link>
 
           </div>
+
         ) : (
 
           <div className="orders-list">
 
             {orders.map((order) => {
+
               const displayOrderId =
-                order.orderId || order.id;
+                order.orderId ||
+                order.id;
 
               const isExpanded =
-                expandedOrder === displayOrderId;
+                expandedOrder ===
+                displayOrderId;
 
               const itemCount =
                 order.items?.reduce(
                   (total, item) =>
-                    total + item.quantity,
+                    total +
+                    item.quantity,
                   0
                 ) || 0;
 
-              const orderDate = order.createdAt
-                ? new Date(
-                    order.createdAt
-                  ).toLocaleDateString(
-                    "en-IN"
-                  )
-                : order.date || "N/A";
+              const orderDate =
+                order.createdAt
+                  ? new Date(
+                      order.createdAt
+                    ).toLocaleDateString(
+                      "en-IN"
+                    )
+                  : order.date ||
+                    "N/A";
+
+              const canCancel =
+                order.paymentMethod ===
+                  "cod" &&
+                order.status ===
+                  "Order Confirmed";
+
+              const isCancelling =
+                cancellingOrder ===
+                displayOrderId;
+
 
               return (
+
                 <div
                   className={`order-card ${
-                    isExpanded ? "expanded" : ""
+                    isExpanded
+                      ? "expanded"
+                      : ""
                   }`}
-                  key={order._id || displayOrderId}
+                  key={
+                    order._id ||
+                    displayOrderId
+                  }
                 >
 
                   {/* ORDER HEADER */}
@@ -229,11 +395,16 @@ function Orders() {
                     </div>
 
                     <div className="order-status">
-                      <span className="status-dot"></span>
+
+                      <span className="status-dot">
+                      </span>
+
                       {order.status}
+
                     </div>
 
                   </div>
+
 
                   {/* ORDER INFORMATION */}
 
@@ -251,6 +422,7 @@ function Orders() {
 
                     </div>
 
+
                     <div className="order-info-item">
 
                       <span>
@@ -263,6 +435,7 @@ function Orders() {
 
                     </div>
 
+
                     <div className="order-info-item order-total-item">
 
                       <span>
@@ -272,7 +445,8 @@ function Orders() {
                       <strong>
                         ₹
                         {Number(
-                          order.total || 0
+                          order.total ||
+                            0
                         ).toLocaleString(
                           "en-IN"
                         )}
@@ -280,11 +454,14 @@ function Orders() {
 
                     </div>
 
+
                     <button
                       className="order-details-button"
                       type="button"
                       onClick={() =>
-                        toggleOrder(displayOrderId)
+                        toggleOrder(
+                          displayOrderId
+                        )
                       }
                     >
 
@@ -295,20 +472,26 @@ function Orders() {
                       </span>
 
                       {isExpanded ? (
-                        <ChevronUp size={17} />
+                        <ChevronUp
+                          size={17}
+                        />
                       ) : (
-                        <ChevronDown size={17} />
+                        <ChevronDown
+                          size={17}
+                        />
                       )}
 
                     </button>
 
                   </div>
 
+
                   {/* EXPANDED DETAILS */}
 
                   {isExpanded && (
 
                     <div className="order-expanded">
+
 
                       {/* PRODUCTS */}
 
@@ -324,10 +507,14 @@ function Orders() {
 
                         </div>
 
+
                         <div className="order-products">
 
                           {order.items?.map(
-                            (item, index) => (
+                            (
+                              item,
+                              index
+                            ) => (
 
                               <div
                                 className="order-product"
@@ -335,25 +522,34 @@ function Orders() {
                               >
 
                                 <img
-                                  src={item.image}
-                                  alt={item.name}
+                                  src={
+                                    item.image
+                                  }
+                                  alt={
+                                    item.name
+                                  }
                                 />
 
                                 <div className="order-product-info">
 
                                   <h4>
-                                    {item.name}
+                                    {
+                                      item.name
+                                    }
                                   </h4>
 
                                   <p>
                                     Quantity:{" "}
-                                    {item.quantity}
+                                    {
+                                      item.quantity
+                                    }
                                   </p>
 
                                   <strong>
                                     ₹
                                     {Number(
-                                      item.price || 0
+                                      item.price ||
+                                        0
                                     ).toLocaleString(
                                       "en-IN"
                                     )}
@@ -361,15 +557,18 @@ function Orders() {
 
                                 </div>
 
+
                                 <div className="order-product-total">
 
                                   ₹
                                   {(
                                     Number(
-                                      item.price || 0
+                                      item.price ||
+                                        0
                                     ) *
                                     Number(
-                                      item.quantity || 0
+                                      item.quantity ||
+                                        0
                                     )
                                   ).toLocaleString(
                                     "en-IN"
@@ -386,6 +585,7 @@ function Orders() {
 
                       </div>
 
+
                       {/* PAYMENT */}
 
                       <div className="order-expanded-section">
@@ -399,6 +599,7 @@ function Orders() {
                           </h3>
 
                         </div>
+
 
                         <div className="order-info-row">
 
@@ -415,6 +616,7 @@ function Orders() {
 
                         </div>
 
+
                         <div className="order-info-row">
 
                           <span>
@@ -430,18 +632,22 @@ function Orders() {
 
                       </div>
 
+
                       {/* DELIVERY DETAILS */}
 
                       {order.customer &&
                         Object.keys(
                           order.customer
-                        ).length > 0 && (
+                        ).length >
+                          0 && (
 
                           <div className="order-expanded-section">
 
                             <div className="order-section-title">
 
-                              <MapPin size={20} />
+                              <MapPin
+                                size={20}
+                              />
 
                               <h3>
                                 Delivery Details
@@ -449,68 +655,104 @@ function Orders() {
 
                             </div>
 
+
                             <div className="order-customer">
 
-                              {order.customer.name && (
+                              {order.customer
+                                .name && (
                                 <p>
                                   <strong>
                                     Name:
                                   </strong>{" "}
-                                  {order.customer.name}
+                                  {
+                                    order
+                                      .customer
+                                      .name
+                                  }
                                 </p>
                               )}
 
-                              {order.customer.phone && (
+                              {order.customer
+                                .phone && (
                                 <p>
                                   <strong>
                                     Phone:
                                   </strong>{" "}
-                                  {order.customer.phone}
+                                  {
+                                    order
+                                      .customer
+                                      .phone
+                                  }
                                 </p>
                               )}
 
-                              {order.customer.email && (
+                              {order.customer
+                                .email && (
                                 <p>
                                   <strong>
                                     Email:
                                   </strong>{" "}
-                                  {order.customer.email}
+                                  {
+                                    order
+                                      .customer
+                                      .email
+                                  }
                                 </p>
                               )}
 
-                              {order.customer.address && (
+                              {order.customer
+                                .address && (
                                 <p>
                                   <strong>
                                     Address:
                                   </strong>{" "}
-                                  {order.customer.address}
+                                  {
+                                    order
+                                      .customer
+                                      .address
+                                  }
                                 </p>
                               )}
 
-                              {order.customer.city && (
+                              {order.customer
+                                .city && (
                                 <p>
                                   <strong>
                                     City:
                                   </strong>{" "}
-                                  {order.customer.city}
+                                  {
+                                    order
+                                      .customer
+                                      .city
+                                  }
                                 </p>
                               )}
 
-                              {order.customer.state && (
+                              {order.customer
+                                .state && (
                                 <p>
                                   <strong>
                                     State:
                                   </strong>{" "}
-                                  {order.customer.state}
+                                  {
+                                    order
+                                      .customer
+                                      .state
+                                  }
                                 </p>
                               )}
 
-                              {order.customer.pincode && (
+                              {order.customer
+                                .pincode && (
                                 <p>
                                   <strong>
                                     PIN Code:
                                   </strong>{" "}
-                                  {order.customer.pincode}
+                                  {
+                                    order
+                                      .customer
+                                      .pincode
+                                  }
                                 </p>
                               )}
 
@@ -519,6 +761,7 @@ function Orders() {
                           </div>
 
                         )}
+
 
                       {/* FINAL TOTAL */}
 
@@ -531,7 +774,8 @@ function Orders() {
                         <strong>
                           ₹
                           {Number(
-                            order.total || 0
+                            order.total ||
+                              0
                           ).toLocaleString(
                             "en-IN"
                           )}
@@ -539,18 +783,132 @@ function Orders() {
 
                       </div>
 
+
+                      {/* CANCEL ORDER */}
+
+                      {canCancel && (
+
+                        <div
+                          style={{
+                            marginTop:
+                              "20px",
+                          }}
+                        >
+
+                          {cancelError && (
+                            <p
+                              style={{
+                                color:
+                                  "#b42318",
+                                marginBottom:
+                                  "12px",
+                              }}
+                            >
+                              {cancelError}
+                            </p>
+                          )}
+
+                          {cancelSuccess && (
+                            <p
+                              style={{
+                                color:
+                                  "#067647",
+                                marginBottom:
+                                  "12px",
+                              }}
+                            >
+                              {cancelSuccess}
+                            </p>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              cancelOrder(
+                                displayOrderId
+                              )
+                            }
+                            disabled={
+                              isCancelling
+                            }
+                            style={{
+                              display:
+                                "inline-flex",
+                              alignItems:
+                                "center",
+                              gap: "8px",
+                              padding:
+                                "12px 18px",
+                              border:
+                                "1px solid #b42318",
+                              background:
+                                "transparent",
+                              color:
+                                "#b42318",
+                              fontWeight:
+                                "600",
+                              cursor:
+                                isCancelling
+                                  ? "not-allowed"
+                                  : "pointer",
+                              opacity:
+                                isCancelling
+                                  ? 0.6
+                                  : 1,
+                            }}
+                          >
+
+                            <XCircle
+                              size={18}
+                            />
+
+                            {isCancelling
+                              ? "Cancelling..."
+                              : "Cancel Order"}
+
+                          </button>
+
+                        </div>
+
+                      )}
+
+
+                      {order.status ===
+                        "Cancelled" && (
+
+                        <div
+                          style={{
+                            marginTop:
+                              "20px",
+                            padding:
+                              "12px 16px",
+                            border:
+                              "1px solid #ddd",
+                          }}
+                        >
+                          <strong>
+                            This order has
+                            been cancelled.
+                          </strong>
+                        </div>
+
+                      )}
+
                     </div>
 
                   )}
 
                 </div>
+
               );
             })}
 
           </div>
+
         )}
 
       </div>
+
     </div>
   );
 }
