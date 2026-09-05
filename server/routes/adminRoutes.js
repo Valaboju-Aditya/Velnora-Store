@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const User = require("../models/User");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
+const Review = require("../models/Review");
 
 const protect = require("../middleware/authMiddleware");
 const adminOnly = require("../middleware/adminMiddleware");
@@ -40,7 +41,6 @@ router.get("/stats", async (req, res) => {
         {
           $group: {
             _id: null,
-
             totalSales: {
               $sum: "$total",
             },
@@ -213,11 +213,6 @@ router.put(
 
       session.startTransaction();
 
-
-      // =========================
-      // FIND ORDER
-      // =========================
-
       const order =
         await Order.findById(
           req.params.id
@@ -232,14 +227,8 @@ router.put(
         });
       }
 
-
       const previousStatus =
         order.status;
-
-
-      // =========================
-      // SAME STATUS
-      // =========================
 
       if (
         previousStatus === status
@@ -252,11 +241,6 @@ router.put(
           order,
         });
       }
-
-
-      // =========================
-      // DO NOT REOPEN CANCELLED
-      // =========================
 
       if (
         previousStatus ===
@@ -271,12 +255,6 @@ router.put(
         });
       }
 
-
-      // =========================
-      // OPTIONAL SAFETY:
-      // DO NOT CANCEL DELIVERED
-      // =========================
-
       if (
         previousStatus ===
           "Delivered" &&
@@ -289,12 +267,6 @@ router.put(
             "Delivered orders cannot be cancelled",
         });
       }
-
-
-      // =========================
-      // RESTORE STOCK
-      // ONLY WHEN FIRST CANCELLED
-      // =========================
 
       if (
         status === "Cancelled" &&
@@ -345,11 +317,6 @@ router.put(
         }
       }
 
-
-      // =========================
-      // UPDATE STATUS
-      // =========================
-
       order.status =
         status;
 
@@ -357,13 +324,7 @@ router.put(
         session,
       });
 
-
       await session.commitTransaction();
-
-
-      // =========================
-      // RETURN UPDATED ORDER
-      // =========================
 
       const updatedOrder =
         await Order.findById(
@@ -382,7 +343,6 @@ router.put(
         order:
           updatedOrder,
       });
-
     } catch (error) {
       if (
         session.inTransaction()
@@ -399,9 +359,280 @@ router.put(
         message:
           "Failed to update order status",
       });
-
     } finally {
       await session.endSession();
+    }
+  }
+);
+
+
+// =========================
+// GET ALL REVIEWS
+// =========================
+
+router.get(
+  "/reviews",
+  async (req, res) => {
+    try {
+      const reviews =
+        await Review.find()
+          .populate(
+            "product",
+            "name image"
+          )
+          .populate(
+            "user",
+            "name email"
+          )
+          .sort({
+            createdAt: -1,
+          });
+
+      res.json(reviews);
+    } catch (error) {
+      console.error(
+        "Failed to fetch reviews:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Failed to fetch reviews",
+      });
+    }
+  }
+);
+
+
+// =========================
+// UPDATE REVIEW STATUS
+// =========================
+
+router.put(
+  "/reviews/:id/status",
+  async (req, res) => {
+    try {
+      const { status } =
+        req.body;
+
+      const allowedStatuses = [
+        "Pending",
+        "Approved",
+        "Rejected",
+      ];
+
+      if (
+        !allowedStatuses.includes(
+          status
+        )
+      ) {
+        return res.status(400).json({
+          message:
+            "Invalid review status",
+        });
+      }
+
+      const review =
+        await Review.findById(
+          req.params.id
+        );
+
+      if (!review) {
+        return res.status(404).json({
+          message:
+            "Review not found",
+        });
+      }
+
+      review.status =
+        status;
+
+      await review.save();
+
+      const ratingStats =
+        await Review.aggregate([
+          {
+            $match: {
+              product:
+                review.product,
+              status:
+                "Approved",
+            },
+          },
+          {
+            $group: {
+              _id:
+                "$product",
+
+              ratingAverage: {
+                $avg:
+                  "$rating",
+              },
+
+              ratingCount: {
+                $sum: 1,
+              },
+            },
+          },
+        ]);
+
+      if (
+        ratingStats.length > 0
+      ) {
+        await Product.findByIdAndUpdate(
+          review.product,
+          {
+            ratingAverage:
+              Number(
+                ratingStats[0]
+                  .ratingAverage
+                  .toFixed(1)
+              ),
+
+            ratingCount:
+              ratingStats[0]
+                .ratingCount,
+          }
+        );
+      } else {
+        await Product.findByIdAndUpdate(
+          review.product,
+          {
+            ratingAverage: 0,
+            ratingCount: 0,
+          }
+        );
+      }
+
+      const updatedReview =
+        await Review.findById(
+          review._id
+        )
+          .populate(
+            "product",
+            "name image"
+          )
+          .populate(
+            "user",
+            "name email"
+          );
+
+      res.json({
+        message:
+          "Review status updated successfully",
+
+        review:
+          updatedReview,
+      });
+    } catch (error) {
+      console.error(
+        "Failed to update review status:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Failed to update review status",
+      });
+    }
+  }
+);
+
+
+// =========================
+// DELETE REVIEW
+// =========================
+
+router.delete(
+  "/reviews/:id",
+  async (req, res) => {
+    try {
+      const review =
+        await Review.findById(
+          req.params.id
+        );
+
+      if (!review) {
+        return res.status(404).json({
+          message:
+            "Review not found",
+        });
+      }
+
+      const productId =
+        review.product;
+
+      await review.deleteOne();
+
+      const ratingStats =
+        await Review.aggregate([
+          {
+            $match: {
+              product:
+                productId,
+              status:
+                "Approved",
+            },
+          },
+          {
+            $group: {
+              _id:
+                "$product",
+
+              ratingAverage: {
+                $avg:
+                  "$rating",
+              },
+
+              ratingCount: {
+                $sum: 1,
+              },
+            },
+          },
+        ]);
+
+      if (
+        ratingStats.length > 0
+      ) {
+        await Product.findByIdAndUpdate(
+          productId,
+          {
+            ratingAverage:
+              Number(
+                ratingStats[0]
+                  .ratingAverage
+                  .toFixed(1)
+              ),
+
+            ratingCount:
+              ratingStats[0]
+                .ratingCount,
+          }
+        );
+      } else {
+        await Product.findByIdAndUpdate(
+          productId,
+          {
+            ratingAverage: 0,
+            ratingCount: 0,
+          }
+        );
+      }
+
+      res.json({
+        message:
+          "Review deleted successfully",
+      });
+    } catch (error) {
+      console.error(
+        "Failed to delete review:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Failed to delete review",
+      });
     }
   }
 );
