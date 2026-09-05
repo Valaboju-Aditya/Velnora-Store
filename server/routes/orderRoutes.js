@@ -880,4 +880,146 @@ router.get(
 );
 
 
+// =========================
+// CANCEL COD ORDER
+// =========================
+
+router.patch(
+  "/:orderId/cancel",
+  protect,
+  async (req, res) => {
+    const session =
+      await mongoose.startSession();
+
+    try {
+      session.startTransaction();
+
+      const order =
+        await Order.findOne({
+          orderId:
+            req.params.orderId,
+          userId:
+            req.user.id,
+        }).session(session);
+
+      if (!order) {
+        await session.abortTransaction();
+
+        return res.status(404).json({
+          message:
+            "Order not found",
+        });
+      }
+
+      if (
+        order.paymentMethod !==
+        "cod"
+      ) {
+        await session.abortTransaction();
+
+        return res.status(400).json({
+          message:
+            "Online paid orders cannot be cancelled here",
+        });
+      }
+
+      if (
+        order.status ===
+        "Cancelled"
+      ) {
+        await session.abortTransaction();
+
+        return res.status(400).json({
+          message:
+            "Order is already cancelled",
+        });
+      }
+
+      if (
+        order.status !==
+        "Order Confirmed"
+      ) {
+        await session.abortTransaction();
+
+        return res.status(400).json({
+          message:
+            "This order can no longer be cancelled",
+        });
+      }
+
+      for (
+        const item of
+        order.items
+      ) {
+        if (
+          !mongoose.Types.ObjectId.isValid(
+            item.id
+          )
+        ) {
+          throw new Error(
+            "Invalid product ID in order"
+          );
+        }
+
+        const product =
+          await Product.findById(
+            item.id
+          ).session(session);
+
+        if (!product) {
+          throw new Error(
+            `Product not found: ${item.name}`
+          );
+        }
+
+        product.stock =
+          Number(
+            product.stock || 0
+          ) +
+          Number(
+            item.quantity || 0
+          );
+
+        await product.save({
+          session,
+        });
+      }
+
+      order.status =
+        "Cancelled";
+
+      await order.save({
+        session,
+      });
+
+      await session.commitTransaction();
+
+      return res.json({
+        message:
+          "Order cancelled successfully",
+        order,
+      });
+    } catch (error) {
+      if (
+        session.inTransaction()
+      ) {
+        await session.abortTransaction();
+      }
+
+      console.error(
+        "Cancel order error:",
+        error
+      );
+
+      return res.status(500).json({
+        message:
+          "Failed to cancel order",
+      });
+    } finally {
+      await session.endSession();
+    }
+  }
+);
+
+
 module.exports = router;
