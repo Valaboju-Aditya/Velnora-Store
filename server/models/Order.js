@@ -48,7 +48,7 @@ const orderSchema =
   new mongoose.Schema(
     {
       // =========================
-      // velnora ORDER ID
+      // VELNORA ORDER ID
       // =========================
 
       orderId: {
@@ -81,36 +81,44 @@ const orderSchema =
         name: {
           type: String,
           required: true,
+          trim: true,
         },
 
         phone: {
           type: String,
           required: true,
+          trim: true,
         },
 
         email: {
           type: String,
           required: true,
+          trim: true,
+          lowercase: true,
         },
 
         address: {
           type: String,
           required: true,
+          trim: true,
         },
 
         city: {
           type: String,
           required: true,
+          trim: true,
         },
 
         state: {
           type: String,
           required: true,
+          trim: true,
         },
 
         pincode: {
           type: String,
           required: true,
+          trim: true,
         },
       },
 
@@ -132,6 +140,7 @@ const orderSchema =
       total: {
         type: Number,
         required: true,
+        min: 0,
       },
 
 
@@ -174,7 +183,9 @@ const orderSchema =
 
       razorpayOrderId: {
         type: String,
-        default: null,
+        default: undefined,
+        unique: true,
+        sparse: true,
       },
 
 
@@ -184,7 +195,9 @@ const orderSchema =
 
       razorpayPaymentId: {
         type: String,
-        default: null,
+        default: undefined,
+        unique: true,
+        sparse: true,
       },
 
 
