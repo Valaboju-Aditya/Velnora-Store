@@ -637,5 +637,260 @@ router.delete(
   }
 );
 
+// =========================
+// ADMIN ANALYTICS
+// =========================
+
+router.get(
+  "/analytics",
+  async (req, res) => {
+    try {
+      const [
+        totalCustomers,
+        totalOrders,
+        revenueResult,
+        productsSoldResult,
+        recentOrders,
+        topProducts,
+        salesTrend,
+        orderStatusStats,
+      ] = await Promise.all([
+        User.countDocuments({
+          role: "customer",
+        }),
+
+        Order.countDocuments(),
+
+        Order.aggregate([
+          {
+            $match: {
+              status: {
+                $ne: "Cancelled",
+              },
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              totalRevenue: {
+                $sum: "$total",
+              },
+            },
+          },
+        ]),
+
+        Order.aggregate([
+          {
+            $match: {
+              status: {
+                $ne: "Cancelled",
+              },
+            },
+          },
+          {
+            $unwind: "$items",
+          },
+          {
+            $group: {
+              _id: null,
+              productsSold: {
+                $sum: "$items.quantity",
+              },
+            },
+          },
+        ]),
+
+        Order.find()
+          .populate(
+            "userId",
+            "name email"
+          )
+          .sort({
+            createdAt: -1,
+          })
+          .limit(5)
+          .lean(),
+
+        Order.aggregate([
+          {
+            $match: {
+              status: {
+                $ne: "Cancelled",
+              },
+            },
+          },
+          {
+            $unwind: "$items",
+          },
+          {
+            $group: {
+              _id: "$items.id",
+
+              name: {
+                $first:
+                  "$items.name",
+              },
+
+              image: {
+                $first:
+                  "$items.image",
+              },
+
+              quantitySold: {
+                $sum:
+                  "$items.quantity",
+              },
+
+              revenue: {
+                $sum: {
+                  $multiply: [
+                    "$items.price",
+                    "$items.quantity",
+                  ],
+                },
+              },
+            },
+          },
+          {
+            $sort: {
+              quantitySold: -1,
+            },
+          },
+          {
+            $limit: 5,
+          },
+        ]),
+
+        Order.aggregate([
+          {
+            $match: {
+              status: {
+                $ne: "Cancelled",
+              },
+
+              createdAt: {
+                $gte: new Date(
+                  new Date().setDate(
+                    new Date().getDate() -
+                      29
+                  )
+                ),
+              },
+            },
+          },
+          {
+            $group: {
+              _id: {
+                $dateToString: {
+                  format:
+                    "%Y-%m-%d",
+                  date:
+                    "$createdAt",
+                },
+              },
+
+              revenue: {
+                $sum: "$total",
+              },
+
+              orders: {
+                $sum: 1,
+              },
+            },
+          },
+          {
+            $sort: {
+              _id: 1,
+            },
+          },
+        ]),
+
+        Order.aggregate([
+          {
+            $group: {
+              _id: "$status",
+              count: {
+                $sum: 1,
+              },
+            },
+          },
+          {
+            $sort: {
+              count: -1,
+            },
+          },
+        ]),
+      ]);
+
+      const totalRevenue =
+        revenueResult.length > 0
+          ? revenueResult[0]
+              .totalRevenue
+          : 0;
+
+      const productsSold =
+        productsSoldResult.length >
+        0
+          ? productsSoldResult[0]
+              .productsSold
+          : 0;
+
+      const averageOrderValue =
+        totalOrders > 0
+          ? totalRevenue /
+            totalOrders
+          : 0;
+
+      res.json({
+        overview: {
+          totalRevenue,
+          totalOrders,
+          totalCustomers,
+          productsSold,
+
+          averageOrderValue:
+            Number(
+              averageOrderValue.toFixed(
+                2
+              )
+            ),
+        },
+
+        recentOrders,
+
+        topProducts,
+
+        salesTrend:
+          salesTrend.map(
+            (item) => ({
+              date: item._id,
+              revenue:
+                item.revenue,
+              orders:
+                item.orders,
+            })
+          ),
+
+        orderStatus:
+          orderStatusStats.map(
+            (item) => ({
+              status: item._id,
+              count: item.count,
+            })
+          ),
+      });
+    } catch (error) {
+      console.error(
+        "Failed to fetch admin analytics:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Failed to fetch admin analytics",
+      });
+    }
+  }
+);
 
 module.exports = router;
