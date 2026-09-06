@@ -108,6 +108,16 @@ function AdminDashboard() {
       }
     );
   };
+  
+  const PIE_COLORS = [
+  "#7c3aed",
+  "#2563eb",
+  "#16a34a",
+  "#f59e0b",
+  "#dc2626",
+  "#0891b2",
+  "#db2777",
+];
 
   const formatDate = (value) => {
     if (!value) {
@@ -313,8 +323,13 @@ function AdminDashboard() {
                         {analytics.orderStatus.map(
                           (entry, index) => (
                             <Cell
-                              key={`${entry.status}-${index}`}
-                            />
+  key={`${entry.status}-${index}`}
+  fill={
+    PIE_COLORS[
+      index % PIE_COLORS.length
+    ]
+  }
+/>
                           )
                         )}
                       </Pie>
@@ -547,14 +562,15 @@ function AdminDashboard() {
                     <Legend />
 
                     <Line
-                      type="monotone"
-                      dataKey="revenue"
-                      name="Revenue"
-                      strokeWidth={3}
-                      activeDot={{
-                        r: 6,
-                      }}
-                    />
+  type="monotone"
+  dataKey="revenue"
+  name="Revenue"
+  stroke="#7c3aed"
+  strokeWidth={3}
+  activeDot={{
+    r: 6,
+  }}
+/>
                   </LineChart>
                 </ResponsiveContainer>
               </div>
