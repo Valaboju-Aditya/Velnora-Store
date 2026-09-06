@@ -70,12 +70,12 @@ function Login({ onLogin }) {
       <div className="auth-card">
 
         <div className="auth-header">
-          <p>velnora ACCOUNT</p>
+          <p>VELNORA ACCOUNT</p>
 
           <h1>Welcome Back</h1>
 
           <span>
-            Login to continue shopping with velnora.
+            Login to continue shopping with VELNORA.
           </span>
         </div>
 
@@ -115,6 +115,26 @@ function Login({ onLogin }) {
               autoComplete="current-password"
               required
             />
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              marginTop: "-4px",
+              marginBottom: "16px",
+            }}
+          >
+            <Link
+              to="/forgot-password"
+              style={{
+                fontSize: "14px",
+                fontWeight: "600",
+                textDecoration: "none",
+              }}
+            >
+              Forgot Password?
+            </Link>
           </div>
 
           {error && (

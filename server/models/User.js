@@ -108,6 +108,16 @@ const userSchema =
         default: "customer",
       },
 
+      passwordResetToken: {
+        type: String,
+        default: null,
+      },
+
+      passwordResetExpires: {
+        type: Date,
+        default: null,
+      },
+
       cart: {
         type: [cartItemSchema],
         default: [],

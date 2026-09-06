@@ -53,6 +53,9 @@ import Returns from "./pages/Returns";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 
+import ResetPassword from "./pages/ResetPassword";
+import ForgotPassword from "./pages/ForgotPassword";
+
 
 import "./index.css";
 
@@ -2133,6 +2136,16 @@ async function createOrder(
             />
           }
         />
+
+        <Route
+  path="/forgot-password"
+  element={<ForgotPassword />}
+/>
+
+        <Route
+  path="/reset-password/:token"
+  element={<ResetPassword />}
+/>
 
 
         <Route
