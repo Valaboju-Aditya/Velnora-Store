@@ -1,4 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
 import {
   Plus,
   Pencil,
@@ -7,65 +12,94 @@ import {
   RefreshCw,
   X,
 } from "lucide-react";
+
 import { API_URL } from "../config";
 
 function AdminCoupons() {
-  const [coupons, setCoupons] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  const [coupons, setCoupons] =
+    useState([]);
 
-  const [form, setForm] = useState({
-    code: "",
-    discountType: "percentage",
-    discountValue: "",
-    minimumOrderAmount: "",
-    maximumDiscountAmount: "",
-    usageLimit: "",
-    expiresAt: "",
-    isActive: true,
-  });
+  const [loading, setLoading] =
+    useState(true);
 
-  const token = localStorage.getItem("novaToken");
+  const [saving, setSaving] =
+    useState(false);
+
+  const [editingId, setEditingId] =
+    useState(null);
+
+  const [error, setError] =
+    useState("");
+
+  const [message, setMessage] =
+    useState("");
+
+  const [form, setForm] =
+    useState({
+      code: "",
+      discountType: "percentage",
+      discountValue: "",
+      minimumOrderAmount: "",
+      maximumDiscountAmount: "",
+      usageLimit: "",
+      expiresAt: "",
+      isActive: true,
+    });
+
+  const token =
+    localStorage.getItem(
+      "novaToken"
+    );
 
   const loadCoupons = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const response = await fetch(
-        `${API_URL}/api/coupons`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response =
+        await fetch(
+          `${API_URL}/api/coupons`,
+          {
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
 
       const contentType =
-        response.headers.get("content-type");
+        response.headers.get(
+          "content-type"
+        );
 
       let data = null;
 
       if (
         contentType &&
-        contentType.includes("application/json")
+        contentType.includes(
+          "application/json"
+        )
       ) {
-        data = await response.json();
+        data =
+          await response.json();
       }
 
       if (!response.ok) {
         throw new Error(
-          data?.message || "Failed to load coupons"
+          data?.message ||
+            "Failed to load coupons"
         );
       }
 
-      setCoupons(Array.isArray(data) ? data : []);
+      setCoupons(
+        Array.isArray(data)
+          ? data
+          : []
+      );
     } catch (err) {
       setError(
-        err.message || "Failed to load coupons"
+        err.message ||
+          "Failed to load coupons"
       );
     } finally {
       setLoading(false);
@@ -75,43 +109,58 @@ function AdminCoupons() {
   useEffect(() => {
     let ignore = false;
 
-    fetch(`${API_URL}/api/coupons`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then(async (response) => {
-        const contentType =
-          response.headers.get("content-type");
+    fetch(
+      `${API_URL}/api/coupons`,
+      {
+        headers: {
+          Authorization:
+            `Bearer ${token}`,
+        },
+      }
+    )
+      .then(
+        async (response) => {
+          const contentType =
+            response.headers.get(
+              "content-type"
+            );
 
-        let data = null;
+          let data = null;
 
-        if (
-          contentType &&
-          contentType.includes("application/json")
-        ) {
-          data = await response.json();
+          if (
+            contentType &&
+            contentType.includes(
+              "application/json"
+            )
+          ) {
+            data =
+              await response.json();
+          }
+
+          if (!response.ok) {
+            throw new Error(
+              data?.message ||
+                "Failed to load coupons"
+            );
+          }
+
+          return data;
         }
-
-        if (!response.ok) {
-          throw new Error(
-            data?.message || "Failed to load coupons"
-          );
-        }
-
-        return data;
-      })
+      )
       .then((data) => {
         if (!ignore) {
           setCoupons(
-            Array.isArray(data) ? data : []
+            Array.isArray(data)
+              ? data
+              : []
           );
         }
       })
       .catch((err) => {
         if (!ignore) {
           setError(
-            err.message || "Failed to load coupons"
+            err.message ||
+              "Failed to load coupons"
           );
         }
       })
@@ -131,7 +180,8 @@ function AdminCoupons() {
 
     setForm({
       code: "",
-      discountType: "percentage",
+      discountType:
+        "percentage",
       discountValue: "",
       minimumOrderAmount: "",
       maximumDiscountAmount: "",
@@ -155,158 +205,205 @@ function AdminCoupons() {
     setForm((prev) => ({
       ...prev,
       [name]:
-        type === "checkbox" ? checked : value,
+        type === "checkbox"
+          ? checked
+          : value,
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit =
+    async (e) => {
+      e.preventDefault();
 
-    try {
-      setSaving(true);
-      setError("");
-      setMessage("");
+      try {
+        setSaving(true);
+        setError("");
+        setMessage("");
 
-      if (!form.code.trim()) {
-        throw new Error(
-          "Coupon code is required"
-        );
-      }
+        if (!form.code.trim()) {
+          throw new Error(
+            "Coupon code is required"
+          );
+        }
 
-      if (
-        !form.discountValue ||
-        Number(form.discountValue) <= 0
-      ) {
-        throw new Error(
-          "Enter a valid discount value"
-        );
-      }
+        if (
+          !form.discountValue ||
+          Number(
+            form.discountValue
+          ) <= 0
+        ) {
+          throw new Error(
+            "Enter a valid discount value"
+          );
+        }
 
-      const payload = {
-        code: form.code.trim().toUpperCase(),
-        discountType: form.discountType,
-        discountValue:
-          Number(form.discountValue),
+        const payload = {
+          code: form.code
+            .trim()
+            .toUpperCase(),
 
-        minimumOrderAmount:
-          form.minimumOrderAmount === ""
-            ? 0
-            : Number(
-                form.minimumOrderAmount
+          discountType:
+            form.discountType,
+
+          discountValue:
+            Number(
+              form.discountValue
+            ),
+
+          minimumOrderAmount:
+            form.minimumOrderAmount ===
+            ""
+              ? 0
+              : Number(
+                  form.minimumOrderAmount
+                ),
+
+          maximumDiscountAmount:
+            form.maximumDiscountAmount ===
+            ""
+              ? null
+              : Number(
+                  form.maximumDiscountAmount
+                ),
+
+          usageLimit:
+            form.usageLimit === ""
+              ? null
+              : Number(
+                  form.usageLimit
+                ),
+
+          expiresAt:
+            form.expiresAt ||
+            null,
+
+          isActive:
+            form.isActive,
+        };
+
+        const url = editingId
+          ? `${API_URL}/api/coupons/${editingId}`
+          : `${API_URL}/api/coupons`;
+
+        const response =
+          await fetch(url, {
+            method: editingId
+              ? "PUT"
+              : "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body:
+              JSON.stringify(
+                payload
               ),
+          });
 
-        maximumDiscountAmount:
-          form.maximumDiscountAmount === ""
-            ? null
-            : Number(
-                form.maximumDiscountAmount
-              ),
+        const contentType =
+          response.headers.get(
+            "content-type"
+          );
 
-        usageLimit:
-          form.usageLimit === ""
-            ? null
-            : Number(form.usageLimit),
+        let data = null;
 
-        expiresAt:
-          form.expiresAt || null,
+        if (
+          contentType &&
+          contentType.includes(
+            "application/json"
+          )
+        ) {
+          data =
+            await response.json();
+        }
 
-        isActive: form.isActive,
-      };
+        if (!response.ok) {
+          throw new Error(
+            data?.message ||
+              "Failed to save coupon"
+          );
+        }
 
-      const url = editingId
-        ? `${API_URL}/api/coupons/${editingId}`
-        : `${API_URL}/api/coupons`;
+        const wasEditing =
+          Boolean(editingId);
 
-      const response = await fetch(url, {
-        method: editingId ? "PUT" : "POST",
+        setEditingId(null);
 
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        setForm({
+          code: "",
+          discountType:
+            "percentage",
+          discountValue: "",
+          minimumOrderAmount: "",
+          maximumDiscountAmount: "",
+          usageLimit: "",
+          expiresAt: "",
+          isActive: true,
+        });
 
-        body: JSON.stringify(payload),
-      });
+        setError("");
 
-      const contentType =
-        response.headers.get("content-type");
-
-      let data = null;
-
-      if (
-        contentType &&
-        contentType.includes("application/json")
-      ) {
-        data = await response.json();
-      }
-
-      if (!response.ok) {
-        throw new Error(
-          data?.message || "Failed to save coupon"
+        setMessage(
+          wasEditing
+            ? "Coupon updated successfully"
+            : "Coupon created successfully"
         );
+
+        await loadCoupons();
+      } catch (err) {
+        setError(
+          err.message ||
+            "Failed to save coupon"
+        );
+      } finally {
+        setSaving(false);
       }
+    };
 
-      setEditingId(null);
-
-      setForm({
-        code: "",
-        discountType: "percentage",
-        discountValue: "",
-        minimumOrderAmount: "",
-        maximumDiscountAmount: "",
-        usageLimit: "",
-        expiresAt: "",
-        isActive: true,
-      });
-
-      setError("");
-
-      setMessage(
-        editingId
-          ? "Coupon updated successfully"
-          : "Coupon created successfully"
-      );
-
-      await loadCoupons();
-    } catch (err) {
-      setError(
-        err.message || "Failed to save coupon"
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleEdit = (coupon) => {
+  const handleEdit = (
+    coupon
+  ) => {
     setEditingId(coupon._id);
 
     setForm({
       code: coupon.code || "",
 
       discountType:
-        coupon.discountType || "percentage",
+        coupon.discountType ||
+        "percentage",
 
       discountValue:
-        coupon.discountValue ?? "",
+        coupon.discountValue ??
+        "",
 
       minimumOrderAmount:
-        coupon.minimumOrderAmount ?? "",
+        coupon.minimumOrderAmount ??
+        "",
 
       maximumDiscountAmount:
-        coupon.maximumDiscountAmount ?? "",
+        coupon.maximumDiscountAmount ??
+        "",
 
       usageLimit:
         coupon.usageLimit ?? "",
 
       expiresAt:
         coupon.expiresAt
-          ? new Date(coupon.expiresAt)
+          ? new Date(
+              coupon.expiresAt
+            )
               .toISOString()
               .split("T")[0]
           : "",
 
       isActive:
-        coupon.isActive !== false,
+        coupon.isActive !==
+        false,
     });
 
     setError("");
@@ -318,153 +415,180 @@ function AdminCoupons() {
     });
   };
 
-  const handleDelete = async (coupon) => {
-    const confirmed =
-      window.confirm(
-        `Delete coupon "${coupon.code}"?`
-      );
+  const handleDelete =
+    async (coupon) => {
+      const confirmed =
+        window.confirm(
+          `Delete coupon "${coupon.code}"?`
+        );
 
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      setError("");
-      setMessage("");
-
-      const response = await fetch(
-        `${API_URL}/api/coupons/${coupon._id}`,
-        {
-          method: "DELETE",
-
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const contentType =
-        response.headers.get("content-type");
-
-      let data = null;
-
-      if (
-        contentType &&
-        contentType.includes("application/json")
-      ) {
-        data = await response.json();
+      if (!confirmed) {
+        return;
       }
 
-      if (!response.ok) {
-        throw new Error(
-          data?.message ||
+      try {
+        setError("");
+        setMessage("");
+
+        const response =
+          await fetch(
+            `${API_URL}/api/coupons/${coupon._id}`,
+            {
+              method: "DELETE",
+
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const contentType =
+          response.headers.get(
+            "content-type"
+          );
+
+        let data = null;
+
+        if (
+          contentType &&
+          contentType.includes(
+            "application/json"
+          )
+        ) {
+          data =
+            await response.json();
+        }
+
+        if (!response.ok) {
+          throw new Error(
+            data?.message ||
+              "Failed to delete coupon"
+          );
+        }
+
+        setCoupons((prev) =>
+          prev.filter(
+            (item) =>
+              item._id !==
+              coupon._id
+          )
+        );
+
+        setMessage(
+          "Coupon deleted successfully"
+        );
+      } catch (err) {
+        setError(
+          err.message ||
             "Failed to delete coupon"
         );
       }
+    };
 
-      setCoupons((prev) =>
-        prev.filter(
-          (item) =>
-            item._id !== coupon._id
-        )
-      );
+  const toggleCoupon =
+    async (coupon) => {
+      try {
+        setError("");
+        setMessage("");
 
-      setMessage(
-        "Coupon deleted successfully"
-      );
-    } catch (err) {
-      setError(
-        err.message ||
-          "Failed to delete coupon"
-      );
-    }
-  };
+        const response =
+          await fetch(
+            `${API_URL}/api/coupons/${coupon._id}`,
+            {
+              method: "PUT",
 
-  const toggleCoupon = async (coupon) => {
-    try {
-      setError("");
-      setMessage("");
+              headers: {
+                "Content-Type":
+                  "application/json",
 
-      const response = await fetch(
-        `${API_URL}/api/coupons/${coupon._id}`,
-        {
-          method: "PUT",
+                Authorization:
+                  `Bearer ${token}`,
+              },
 
-          headers: {
-            "Content-Type":
-              "application/json",
+              body:
+                JSON.stringify({
+                  isActive:
+                    !coupon.isActive,
+                }),
+            }
+          );
 
-            Authorization:
-              `Bearer ${token}`,
-          },
+        const contentType =
+          response.headers.get(
+            "content-type"
+          );
 
-          body: JSON.stringify({
-            isActive: !coupon.isActive,
-          }),
+        let data = null;
+
+        if (
+          contentType &&
+          contentType.includes(
+            "application/json"
+          )
+        ) {
+          data =
+            await response.json();
         }
-      );
 
-      const contentType =
-        response.headers.get("content-type");
+        if (!response.ok) {
+          throw new Error(
+            data?.message ||
+              "Failed to update coupon"
+          );
+        }
 
-      let data = null;
+        setCoupons((prev) =>
+          prev.map((item) =>
+            item._id === data._id
+              ? data
+              : item
+          )
+        );
 
-      if (
-        contentType &&
-        contentType.includes("application/json")
-      ) {
-        data = await response.json();
-      }
-
-      if (!response.ok) {
-        throw new Error(
-          data?.message ||
+        setMessage(
+          data.isActive
+            ? "Coupon activated"
+            : "Coupon disabled"
+        );
+      } catch (err) {
+        setError(
+          err.message ||
             "Failed to update coupon"
         );
       }
+    };
 
-      setCoupons((prev) =>
-        prev.map((item) =>
-          item._id === data._id
-            ? data
-            : item
-        )
-      );
+  const activeCoupons =
+    useMemo(
+      () =>
+        coupons.filter(
+          (coupon) =>
+            coupon.isActive
+        ).length,
+      [coupons]
+    );
 
-      setMessage(
-        data.isActive
-          ? "Coupon activated"
-          : "Coupon disabled"
-      );
-    } catch (err) {
-      setError(
-        err.message ||
-          "Failed to update coupon"
-      );
-    }
-  };
-
-  const activeCoupons = useMemo(
-    () =>
-      coupons.filter(
-        (coupon) => coupon.isActive
-      ).length,
-    [coupons]
-  );
-
-  const formatDate = (date) => {
+  const formatDate = (
+    date
+  ) => {
     if (!date) {
       return "No expiry";
     }
 
     return new Date(
       date
-    ).toLocaleDateString("en-IN");
+    ).toLocaleDateString(
+      "en-IN"
+    );
   };
 
-  const formatDiscount = (coupon) => {
+  const formatDiscount = (
+    coupon
+  ) => {
     if (
-      coupon.discountType === "percentage"
+      coupon.discountType ===
+      "percentage"
     ) {
       return `${coupon.discountValue}% OFF`;
     }
@@ -476,13 +600,18 @@ function AdminCoupons() {
     <div
       style={{
         maxWidth: "1200px",
+        width: "100%",
         margin: "0 auto",
-        padding: "40px 20px 70px",
+        padding:
+          "clamp(20px, 5vw, 40px) clamp(14px, 4vw, 20px) 70px",
+        boxSizing: "border-box",
+        overflowX: "hidden",
       }}
     >
       <div
         style={{
-          marginBottom: "32px",
+          marginBottom:
+            "clamp(24px, 5vw, 32px)",
         }}
       >
         <p
@@ -499,8 +628,13 @@ function AdminCoupons() {
 
         <h1
           style={{
-            margin: "8px 0 10px",
-            fontSize: "34px",
+            margin:
+              "8px 0 10px",
+            fontSize:
+              "clamp(26px, 7vw, 34px)",
+            lineHeight: "1.15",
+            overflowWrap:
+              "anywhere",
           }}
         >
           Coupons & Discounts
@@ -510,35 +644,41 @@ function AdminCoupons() {
           style={{
             margin: 0,
             color: "#666",
+            fontSize:
+              "clamp(14px, 3.5vw, 16px)",
+            lineHeight: "1.5",
           }}
         >
-          Create and manage discount codes
-          for your customers.
+          Create and manage
+          discount codes for your
+          customers.
         </p>
       </div>
 
       <div
         style={{
           display: "grid",
-
           gridTemplateColumns:
-            "repeat(auto-fit, minmax(180px, 1fr))",
-
-          gap: "16px",
-          marginBottom: "30px",
+            "repeat(auto-fit, minmax(min(160px, 100%), 1fr))",
+          gap: "14px",
+          marginBottom: "26px",
         }}
       >
         <div
           style={{
-            border: "1px solid #e5e5e5",
+            border:
+              "1px solid #e5e5e5",
             borderRadius: "14px",
-            padding: "20px",
+            padding:
+              "clamp(16px, 4vw, 20px)",
             background: "#fff",
+            minWidth: 0,
           }}
         >
           <p
             style={{
-              margin: "0 0 6px",
+              margin:
+                "0 0 6px",
               color: "#777",
             }}
           >
@@ -557,15 +697,19 @@ function AdminCoupons() {
 
         <div
           style={{
-            border: "1px solid #e5e5e5",
+            border:
+              "1px solid #e5e5e5",
             borderRadius: "14px",
-            padding: "20px",
+            padding:
+              "clamp(16px, 4vw, 20px)",
             background: "#fff",
+            minWidth: 0,
           }}
         >
           <p
             style={{
-              margin: "0 0 6px",
+              margin:
+                "0 0 6px",
               color: "#777",
             }}
           >
@@ -585,28 +729,41 @@ function AdminCoupons() {
 
       <div
         style={{
-          border: "1px solid #e5e5e5",
+          border:
+            "1px solid #e5e5e5",
           borderRadius: "16px",
-          padding: "24px",
+          padding:
+            "clamp(15px, 4vw, 24px)",
           marginBottom: "34px",
           background: "#fff",
+          width: "100%",
+          boxSizing: "border-box",
         }}
       >
         <div
           style={{
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent:
+              "space-between",
             gap: "15px",
-            alignItems: "center",
+            alignItems:
+              "flex-start",
             flexWrap: "wrap",
             marginBottom: "22px",
           }}
         >
-          <div>
+          <div
+            style={{
+              flex: "1 1 200px",
+              minWidth: 0,
+            }}
+          >
             <h2
               style={{
-                margin: "0 0 5px",
-                fontSize: "22px",
+                margin:
+                  "0 0 5px",
+                fontSize:
+                  "clamp(20px, 5vw, 22px)",
               }}
             >
               {editingId
@@ -619,10 +776,11 @@ function AdminCoupons() {
                 margin: 0,
                 color: "#777",
                 fontSize: "14px",
+                lineHeight: "1.5",
               }}
             >
-              Configure discount rules
-              and availability.
+              Configure discount
+              rules and availability.
             </p>
           </div>
 
@@ -631,14 +789,20 @@ function AdminCoupons() {
               type="button"
               onClick={resetForm}
               style={{
-                border: "1px solid #ddd",
+                border:
+                  "1px solid #ddd",
                 background: "#fff",
                 borderRadius: "9px",
-                padding: "9px 13px",
+                padding:
+                  "9px 13px",
                 cursor: "pointer",
                 display: "flex",
-                alignItems: "center",
+                alignItems:
+                  "center",
+                justifyContent:
+                  "center",
                 gap: "6px",
+                minHeight: "40px",
               }}
             >
               <X size={16} />
@@ -650,13 +814,17 @@ function AdminCoupons() {
         {error && (
           <div
             style={{
-              background: "#fff2f2",
+              background:
+                "#fff2f2",
               border:
                 "1px solid #ffc8c8",
               color: "#b42318",
-              padding: "12px 14px",
+              padding:
+                "12px 14px",
               borderRadius: "10px",
               marginBottom: "18px",
+              overflowWrap:
+                "anywhere",
             }}
           >
             {error}
@@ -666,37 +834,45 @@ function AdminCoupons() {
         {message && (
           <div
             style={{
-              background: "#f0fff4",
+              background:
+                "#f0fff4",
               border:
                 "1px solid #b7ebc6",
               color: "#16733d",
-              padding: "12px 14px",
+              padding:
+                "12px 14px",
               borderRadius: "10px",
               marginBottom: "18px",
+              overflowWrap:
+                "anywhere",
             }}
           >
             {message}
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form
+          onSubmit={
+            handleSubmit
+          }
+        >
           <div
             style={{
               display: "grid",
-
               gridTemplateColumns:
-                "repeat(auto-fit, minmax(220px, 1fr))",
-
+                "repeat(auto-fit, minmax(min(220px, 100%), 1fr))",
               gap: "18px",
             }}
           >
-            <div>
+            <div
+              style={{
+                minWidth: 0,
+              }}
+            >
               <label
-                style={{
-                  display: "block",
-                  fontWeight: 600,
-                  marginBottom: "7px",
-                }}
+                style={
+                  labelStyle
+                }
               >
                 Coupon Code
               </label>
@@ -705,28 +881,36 @@ function AdminCoupons() {
                 type="text"
                 name="code"
                 value={form.code}
-                onChange={handleChange}
+                onChange={
+                  handleChange
+                }
                 placeholder="VELNORA10"
                 required
                 style={inputStyle}
               />
             </div>
 
-            <div>
+            <div
+              style={{
+                minWidth: 0,
+              }}
+            >
               <label
-                style={{
-                  display: "block",
-                  fontWeight: 600,
-                  marginBottom: "7px",
-                }}
+                style={
+                  labelStyle
+                }
               >
                 Discount Type
               </label>
 
               <select
                 name="discountType"
-                value={form.discountType}
-                onChange={handleChange}
+                value={
+                  form.discountType
+                }
+                onChange={
+                  handleChange
+                }
                 style={inputStyle}
               >
                 <option value="percentage">
@@ -739,13 +923,15 @@ function AdminCoupons() {
               </select>
             </div>
 
-            <div>
+            <div
+              style={{
+                minWidth: 0,
+              }}
+            >
               <label
-                style={{
-                  display: "block",
-                  fontWeight: 600,
-                  marginBottom: "7px",
-                }}
+                style={
+                  labelStyle
+                }
               >
                 Discount Value
               </label>
@@ -753,8 +939,12 @@ function AdminCoupons() {
               <input
                 type="number"
                 name="discountValue"
-                value={form.discountValue}
-                onChange={handleChange}
+                value={
+                  form.discountValue
+                }
+                onChange={
+                  handleChange
+                }
                 min="0"
                 step="0.01"
                 placeholder={
@@ -768,13 +958,15 @@ function AdminCoupons() {
               />
             </div>
 
-            <div>
+            <div
+              style={{
+                minWidth: 0,
+              }}
+            >
               <label
-                style={{
-                  display: "block",
-                  fontWeight: 600,
-                  marginBottom: "7px",
-                }}
+                style={
+                  labelStyle
+                }
               >
                 Minimum Order ₹
               </label>
@@ -785,20 +977,24 @@ function AdminCoupons() {
                 value={
                   form.minimumOrderAmount
                 }
-                onChange={handleChange}
+                onChange={
+                  handleChange
+                }
                 min="0"
                 placeholder="999"
                 style={inputStyle}
               />
             </div>
 
-            <div>
+            <div
+              style={{
+                minWidth: 0,
+              }}
+            >
               <label
-                style={{
-                  display: "block",
-                  fontWeight: 600,
-                  marginBottom: "7px",
-                }}
+                style={
+                  labelStyle
+                }
               >
                 Maximum Discount ₹
               </label>
@@ -809,20 +1005,24 @@ function AdminCoupons() {
                 value={
                   form.maximumDiscountAmount
                 }
-                onChange={handleChange}
+                onChange={
+                  handleChange
+                }
                 min="0"
                 placeholder="500"
                 style={inputStyle}
               />
             </div>
 
-            <div>
+            <div
+              style={{
+                minWidth: 0,
+              }}
+            >
               <label
-                style={{
-                  display: "block",
-                  fontWeight: 600,
-                  marginBottom: "7px",
-                }}
+                style={
+                  labelStyle
+                }
               >
                 Usage Limit
               </label>
@@ -830,21 +1030,27 @@ function AdminCoupons() {
               <input
                 type="number"
                 name="usageLimit"
-                value={form.usageLimit}
-                onChange={handleChange}
+                value={
+                  form.usageLimit
+                }
+                onChange={
+                  handleChange
+                }
                 min="1"
                 placeholder="100"
                 style={inputStyle}
               />
             </div>
 
-            <div>
+            <div
+              style={{
+                minWidth: 0,
+              }}
+            >
               <label
-                style={{
-                  display: "block",
-                  fontWeight: 600,
-                  marginBottom: "7px",
-                }}
+                style={
+                  labelStyle
+                }
               >
                 Expiry Date
               </label>
@@ -852,8 +1058,12 @@ function AdminCoupons() {
               <input
                 type="date"
                 name="expiresAt"
-                value={form.expiresAt}
-                onChange={handleChange}
+                value={
+                  form.expiresAt
+                }
+                onChange={
+                  handleChange
+                }
                 style={inputStyle}
               />
             </div>
@@ -862,7 +1072,8 @@ function AdminCoupons() {
           <label
             style={{
               display: "flex",
-              alignItems: "center",
+              alignItems:
+                "center",
               gap: "9px",
               marginTop: "20px",
               cursor: "pointer",
@@ -872,8 +1083,12 @@ function AdminCoupons() {
             <input
               type="checkbox"
               name="isActive"
-              checked={form.isActive}
-              onChange={handleChange}
+              checked={
+                form.isActive
+              }
+              onChange={
+                handleChange
+              }
             />
 
             Coupon Active
@@ -886,7 +1101,8 @@ function AdminCoupons() {
               marginTop: "22px",
               border: 0,
               borderRadius: "10px",
-              padding: "12px 18px",
+              padding:
+                "12px 18px",
               background: "#111",
               color: "#fff",
               fontWeight: 700,
@@ -896,9 +1112,17 @@ function AdminCoupons() {
                 : "pointer",
 
               display: "flex",
-              alignItems: "center",
+              alignItems:
+                "center",
+              justifyContent:
+                "center",
               gap: "8px",
-              opacity: saving ? 0.7 : 1,
+              opacity:
+                saving
+                  ? 0.7
+                  : 1,
+              minHeight: "44px",
+              maxWidth: "100%",
             }}
           >
             <Plus size={17} />
@@ -915,17 +1139,27 @@ function AdminCoupons() {
       <div
         style={{
           display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+          justifyContent:
+            "space-between",
+          alignItems:
+            "flex-start",
           gap: "15px",
           flexWrap: "wrap",
           marginBottom: "18px",
         }}
       >
-        <div>
+        <div
+          style={{
+            flex: "1 1 200px",
+            minWidth: 0,
+          }}
+        >
           <h2
             style={{
-              margin: "0 0 4px",
+              margin:
+                "0 0 4px",
+              fontSize:
+                "clamp(20px, 5vw, 24px)",
             }}
           >
             Existing Coupons
@@ -935,27 +1169,39 @@ function AdminCoupons() {
             style={{
               margin: 0,
               color: "#777",
+              lineHeight: "1.5",
             }}
           >
-            Manage all VELNORA discount codes.
+            Manage all VELNORA
+            discount codes.
           </p>
         </div>
 
         <button
           type="button"
-          onClick={loadCoupons}
+          onClick={
+            loadCoupons
+          }
           style={{
-            border: "1px solid #ddd",
+            border:
+              "1px solid #ddd",
             background: "#fff",
-            padding: "10px 14px",
+            padding:
+              "10px 14px",
             borderRadius: "9px",
             display: "flex",
-            alignItems: "center",
+            alignItems:
+              "center",
+            justifyContent:
+              "center",
             gap: "7px",
             cursor: "pointer",
+            minHeight: "42px",
           }}
         >
-          <RefreshCw size={16} />
+          <RefreshCw
+            size={16}
+          />
           Refresh
         </button>
       </div>
@@ -963,32 +1209,38 @@ function AdminCoupons() {
       {loading ? (
         <div
           style={{
-            padding: "50px 20px",
+            padding:
+              "50px 20px",
             textAlign: "center",
             color: "#777",
           }}
         >
           Loading coupons...
         </div>
-      ) : coupons.length === 0 ? (
+      ) : coupons.length ===
+        0 ? (
         <div
           style={{
-            border: "1px dashed #ccc",
+            border:
+              "1px dashed #ccc",
             borderRadius: "14px",
-            padding: "50px 20px",
+            padding:
+              "clamp(35px, 8vw, 50px) 15px",
             textAlign: "center",
           }}
         >
           <TicketPercent
             size={34}
             style={{
-              marginBottom: "12px",
+              marginBottom:
+                "12px",
             }}
           />
 
           <h3
             style={{
-              margin: "0 0 8px",
+              margin:
+                "0 0 8px",
             }}
           >
             No coupons yet
@@ -1000,8 +1252,9 @@ function AdminCoupons() {
               color: "#777",
             }}
           >
-            Create your first VELNORA
-            discount code above.
+            Create your first
+            VELNORA discount code
+            above.
           </p>
         </div>
       ) : (
@@ -1011,196 +1264,269 @@ function AdminCoupons() {
             gap: "16px",
           }}
         >
-          {coupons.map((coupon) => (
-            <div
-              key={coupon._id}
-              style={{
-                border:
-                  "1px solid #e5e5e5",
-                borderRadius: "14px",
-                padding: "20px",
-                background: "#fff",
-              }}
-            >
+          {coupons.map(
+            (coupon) => (
               <div
+                key={
+                  coupon._id
+                }
                 style={{
-                  display: "flex",
-                  justifyContent:
-                    "space-between",
-                  gap: "20px",
-                  flexWrap: "wrap",
+                  border:
+                    "1px solid #e5e5e5",
+                  borderRadius:
+                    "14px",
+                  padding:
+                    "clamp(15px, 4vw, 20px)",
+                  background:
+                    "#fff",
+                  width: "100%",
+                  boxSizing:
+                    "border-box",
+                  overflow:
+                    "hidden",
                 }}
               >
                 <div
                   style={{
-                    flex: "1 1 300px",
+                    display:
+                      "flex",
+                    justifyContent:
+                      "space-between",
+                    alignItems:
+                      "flex-start",
+                    gap: "18px",
+                    flexWrap:
+                      "wrap",
                   }}
                 >
                   <div
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      flexWrap: "wrap",
+                      flex:
+                        "1 1 240px",
+                      minWidth: 0,
                     }}
                   >
-                    <h3
+                    <div
                       style={{
-                        margin: 0,
-                        fontSize: "21px",
+                        display:
+                          "flex",
+                        alignItems:
+                          "center",
+                        gap: "10px",
+                        flexWrap:
+                          "wrap",
                       }}
                     >
-                      {coupon.code}
-                    </h3>
+                      <h3
+                        style={{
+                          margin: 0,
+                          fontSize:
+                            "clamp(18px, 5vw, 21px)",
+                          overflowWrap:
+                            "anywhere",
+                          wordBreak:
+                            "break-word",
+                        }}
+                      >
+                        {
+                          coupon.code
+                        }
+                      </h3>
 
-                    <span
+                      <span
+                        style={{
+                          padding:
+                            "4px 9px",
+                          borderRadius:
+                            "999px",
+                          fontSize:
+                            "12px",
+                          fontWeight:
+                            700,
+
+                          background:
+                            coupon.isActive
+                              ? "#eaf8ef"
+                              : "#f1f1f1",
+
+                          color:
+                            coupon.isActive
+                              ? "#17753b"
+                              : "#666",
+
+                          whiteSpace:
+                            "nowrap",
+                        }}
+                      >
+                        {coupon.isActive
+                          ? "Active"
+                          : "Inactive"}
+                      </span>
+                    </div>
+
+                    <p
                       style={{
-                        padding: "4px 9px",
-                        borderRadius: "999px",
-                        fontSize: "12px",
-                        fontWeight: 700,
+                        margin:
+                          "10px 0 12px",
+                        fontWeight:
+                          700,
+                        fontSize:
+                          "18px",
+                      }}
+                    >
+                      {formatDiscount(
+                        coupon
+                      )}
+                    </p>
+
+                    <div
+                      style={{
+                        display:
+                          "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fit, minmax(min(145px, 100%), 1fr))",
+                        gap:
+                          "9px 16px",
+                        color:
+                          "#666",
+                        fontSize:
+                          "13px",
+                        lineHeight:
+                          "1.45",
+                      }}
+                    >
+                      <span>
+                        Minimum: ₹
+                        {coupon.minimumOrderAmount ||
+                          0}
+                      </span>
+
+                      <span>
+                        Max discount:{" "}
+                        {coupon.maximumDiscountAmount ===
+                        null
+                          ? "No limit"
+                          : `₹${coupon.maximumDiscountAmount}`}
+                      </span>
+
+                      <span>
+                        Used:{" "}
+                        {coupon.usedCount ||
+                          0}
+                        {coupon.usageLimit
+                          ? ` / ${coupon.usageLimit}`
+                          : ""}
+                      </span>
+
+                      <span>
+                        Expiry:{" "}
+                        {formatDate(
+                          coupon.expiresAt
+                        )}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display:
+                        "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fit, minmax(90px, 1fr))",
+                      gap: "8px",
+                      width:
+                        "min(100%, 330px)",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() =>
+                        toggleCoupon(
+                          coupon
+                        )
+                      }
+                      style={{
+                        ...actionButton,
 
                         background:
                           coupon.isActive
-                            ? "#eaf8ef"
-                            : "#f1f1f1",
+                            ? "#f5f5f5"
+                            : "#111",
 
                         color:
                           coupon.isActive
-                            ? "#17753b"
-                            : "#666",
+                            ? "#111"
+                            : "#fff",
                       }}
                     >
                       {coupon.isActive
-                        ? "Active"
-                        : "Inactive"}
-                    </span>
+                        ? "Disable"
+                        : "Enable"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleEdit(
+                          coupon
+                        )
+                      }
+                      style={
+                        actionButton
+                      }
+                    >
+                      <Pencil
+                        size={15}
+                      />
+                      Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleDelete(
+                          coupon
+                        )
+                      }
+                      style={{
+                        ...actionButton,
+                        color:
+                          "#b42318",
+                        borderColor:
+                          "#ffc8c8",
+                      }}
+                    >
+                      <Trash2
+                        size={15}
+                      />
+                      Delete
+                    </button>
                   </div>
-
-                  <p
-                    style={{
-                      margin: "10px 0 12px",
-                      fontWeight: 700,
-                      fontSize: "18px",
-                    }}
-                  >
-                    {formatDiscount(coupon)}
-                  </p>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: "14px 22px",
-                      color: "#666",
-                      fontSize: "14px",
-                    }}
-                  >
-                    <span>
-                      Minimum: ₹
-                      {coupon.minimumOrderAmount ||
-                        0}
-                    </span>
-
-                    <span>
-                      Max discount:{" "}
-                      {coupon.maximumDiscountAmount ===
-                      null
-                        ? "No limit"
-                        : `₹${coupon.maximumDiscountAmount}`}
-                    </span>
-
-                    <span>
-                      Used:{" "}
-                      {coupon.usedCount || 0}
-                      {coupon.usageLimit
-                        ? ` / ${coupon.usageLimit}`
-                        : ""}
-                    </span>
-
-                    <span>
-                      Expiry:{" "}
-                      {formatDate(
-                        coupon.expiresAt
-                      )}
-                    </span>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() =>
-                      toggleCoupon(coupon)
-                    }
-                    style={{
-                      ...actionButton,
-
-                      background:
-                        coupon.isActive
-                          ? "#f5f5f5"
-                          : "#111",
-
-                      color:
-                        coupon.isActive
-                          ? "#111"
-                          : "#fff",
-                    }}
-                  >
-                    {coupon.isActive
-                      ? "Disable"
-                      : "Enable"}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleEdit(coupon)
-                    }
-                    style={actionButton}
-                  >
-                    <Pencil size={15} />
-                    Edit
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleDelete(coupon)
-                    }
-                    style={{
-                      ...actionButton,
-                      color: "#b42318",
-                      borderColor:
-                        "#ffc8c8",
-                    }}
-                  >
-                    <Trash2 size={15} />
-                    Delete
-                  </button>
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          )}
         </div>
       )}
     </div>
   );
 }
 
+const labelStyle = {
+  display: "block",
+  fontWeight: 600,
+  marginBottom: "7px",
+};
+
 const inputStyle = {
   width: "100%",
-  border: "1px solid #dcdcdc",
+  maxWidth: "100%",
+  minWidth: 0,
+  border:
+    "1px solid #dcdcdc",
   borderRadius: "9px",
   padding: "11px 12px",
-  fontSize: "15px",
+  fontSize: "16px",
   outline: "none",
   boxSizing: "border-box",
   background: "#fff",
@@ -1209,13 +1535,16 @@ const inputStyle = {
 const actionButton = {
   border: "1px solid #ddd",
   background: "#fff",
-  padding: "9px 12px",
+  padding: "9px 10px",
+  minHeight: "41px",
   borderRadius: "9px",
   cursor: "pointer",
   display: "flex",
   alignItems: "center",
+  justifyContent: "center",
   gap: "6px",
   fontWeight: 600,
+  whiteSpace: "nowrap",
 };
 
 export default AdminCoupons;

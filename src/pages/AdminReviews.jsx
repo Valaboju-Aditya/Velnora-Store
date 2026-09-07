@@ -14,7 +14,6 @@ import {
 
 import { API_URL } from "../config";
 
-
 function AdminReviews() {
   const [reviews, setReviews] =
     useState([]);
@@ -30,7 +29,6 @@ function AdminReviews() {
 
   const [workingId, setWorkingId] =
     useState(null);
-
 
   useEffect(() => {
     let ignore = false;
@@ -88,7 +86,6 @@ function AdminReviews() {
       ignore = true;
     };
   }, []);
-
 
   async function updateStatus(
     reviewId,
@@ -156,7 +153,6 @@ function AdminReviews() {
     }
   }
 
-
   async function deleteReview(
     reviewId
   ) {
@@ -222,13 +218,13 @@ function AdminReviews() {
     }
   }
 
-
   function renderStars(rating) {
     return (
       <div
         style={{
           display: "flex",
           gap: "3px",
+          flexShrink: 0,
         }}
       >
         {[1, 2, 3, 4, 5].map(
@@ -247,7 +243,6 @@ function AdminReviews() {
       </div>
     );
   }
-
 
   function statusStyle(status) {
     if (status === "Approved") {
@@ -270,56 +265,62 @@ function AdminReviews() {
     };
   }
 
-
   if (loading) {
     return (
       <div
         style={{
-          padding: "40px",
+          minHeight: "100vh",
+          background: "#f6f6f6",
+          padding:
+            "clamp(18px, 4vw, 40px)",
         }}
       >
-        <h2>
-          Reviews
-        </h2>
-
-        <p>
-          Loading reviews...
-        </p>
+        <h2>Reviews</h2>
+        <p>Loading reviews...</p>
       </div>
     );
   }
-
 
   return (
     <div
       style={{
         minHeight: "100vh",
         background: "#f6f6f6",
-        padding: "32px",
+        padding:
+          "clamp(14px, 3vw, 32px)",
+        boxSizing: "border-box",
+        overflowX: "hidden",
       }}
     >
       <div
         style={{
           maxWidth: "1200px",
+          width: "100%",
           margin: "0 auto",
+          boxSizing: "border-box",
         }}
       >
         <div
           style={{
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-start",
             justifyContent:
               "space-between",
-            gap: "20px",
-            marginBottom: "28px",
+            gap: "16px",
+            marginBottom: "24px",
             flexWrap: "wrap",
           }}
         >
-          <div>
+          <div
+            style={{
+              minWidth: 0,
+              flex: "1 1 240px",
+            }}
+          >
             <p
               style={{
                 margin: "0 0 6px",
-                fontSize: "13px",
+                fontSize: "12px",
                 fontWeight: "700",
                 letterSpacing: "1.5px",
               }}
@@ -330,7 +331,11 @@ function AdminReviews() {
             <h1
               style={{
                 margin: 0,
-                fontSize: "32px",
+                fontSize:
+                  "clamp(26px, 7vw, 32px)",
+                lineHeight: "1.15",
+                overflowWrap:
+                  "anywhere",
               }}
             >
               Customer Reviews
@@ -338,9 +343,11 @@ function AdminReviews() {
 
             <p
               style={{
-                margin:
-                  "8px 0 0",
+                margin: "8px 0 0",
                 color: "#666",
+                fontSize:
+                  "clamp(14px, 3.5vw, 16px)",
+                lineHeight: "1.5",
               }}
             >
               Manage product ratings
@@ -352,52 +359,55 @@ function AdminReviews() {
             style={{
               background: "#111",
               color: "#fff",
-              padding:
-                "12px 18px",
+              padding: "10px 15px",
               borderRadius: "8px",
               fontWeight: "700",
+              fontSize: "14px",
+              flexShrink: 0,
             }}
           >
             {reviews.length} Reviews
           </div>
         </div>
 
-
         {error && (
           <div
             style={{
               background: "#ffebee",
               color: "#b71c1c",
-              padding: "14px",
+              padding: "13px",
               borderRadius: "8px",
               marginBottom: "18px",
+              overflowWrap:
+                "anywhere",
             }}
           >
             {error}
           </div>
         )}
 
-
         {message && (
           <div
             style={{
               background: "#e8f5e9",
               color: "#1b5e20",
-              padding: "14px",
+              padding: "13px",
               borderRadius: "8px",
               marginBottom: "18px",
+              overflowWrap:
+                "anywhere",
             }}
           >
             {message}
           </div>
         )}
 
-
         {reviews.length === 0 ? (
           <div
             style={{
               background: "#fff",
-              padding: "50px",
+              padding:
+                "clamp(30px, 8vw, 50px)",
               borderRadius: "12px",
               textAlign: "center",
             }}
@@ -405,14 +415,11 @@ function AdminReviews() {
             <Star
               size={35}
               style={{
-                marginBottom:
-                  "12px",
+                marginBottom: "12px",
               }}
             />
 
-            <h3>
-              No reviews yet
-            </h3>
+            <h3>No reviews yet</h3>
 
             <p
               style={{
@@ -427,7 +434,7 @@ function AdminReviews() {
           <div
             style={{
               display: "grid",
-              gap: "18px",
+              gap: "16px",
             }}
           >
             {reviews.map(
@@ -439,235 +446,105 @@ function AdminReviews() {
                 return (
                   <div
                     key={review._id}
-                    style={{
-                      background:
-                        "#fff",
-                      borderRadius:
-                        "12px",
-                      padding: "22px",
-                      boxShadow:
-                        "0 2px 10px rgba(0,0,0,0.05)",
-                    }}
+                    className="admin-review-card"
                   >
-                    <div
-                      style={{
-                        display:
-                          "flex",
-                        justifyContent:
-                          "space-between",
-                        alignItems:
-                          "flex-start",
-                        gap: "20px",
-                        flexWrap:
-                          "wrap",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display:
-                            "flex",
-                          gap: "15px",
-                          alignItems:
-                            "center",
-                        }}
-                      >
-                        {review.product
-                          ?.image && (
-                          <img
-                            src={
-                              review
-                                .product
-                                .image
-                            }
-                            alt={
-                              review
-                                .product
-                                .name ||
-                              "Product"
-                            }
-                            style={{
-                              width:
-                                "70px",
-                              height:
-                                "80px",
-                              objectFit:
-                                "cover",
-                              borderRadius:
-                                "8px",
-                            }}
-                          />
-                        )}
-
-                        <div>
-                          <h3
-                            style={{
-                              margin:
-                                "0 0 5px",
-                            }}
-                          >
-                            {review
+                    <div className="admin-review-product">
+                      {review.product
+                        ?.image && (
+                        <img
+                          src={
+                            review
                               .product
-                              ?.name ||
-                              "Deleted Product"}
-                          </h3>
+                              .image
+                          }
+                          alt={
+                            review
+                              .product
+                              .name ||
+                            "Product"
+                          }
+                          className="admin-review-image"
+                        />
+                      )}
 
-                          <p
-                            style={{
-                              margin: 0,
-                              color:
-                                "#666",
-                              fontSize:
-                                "14px",
-                            }}
-                          >
-                            {review
-                              .user
-                              ?.name ||
-                              review.userName}
-                          </p>
+                      <div className="admin-review-product-info">
+                        <h3>
+                          {review
+                            .product
+                            ?.name ||
+                            "Deleted Product"}
+                        </h3>
 
+                        <p className="admin-review-user">
                           {review.user
-                            ?.email && (
-                            <p
-                              style={{
-                                margin:
-                                  "3px 0 0",
-                                color:
-                                  "#888",
-                                fontSize:
-                                  "13px",
-                              }}
-                            >
-                              {
-                                review
-                                  .user
-                                  .email
-                              }
-                            </p>
-                          )}
-                        </div>
-                      </div>
+                            ?.name ||
+                            review.userName}
+                        </p>
 
+                        {review.user
+                          ?.email && (
+                          <p className="admin-review-email">
+                            {
+                              review
+                                .user
+                                .email
+                            }
+                          </p>
+                        )}
 
-                      <span
-                        style={{
-                          ...statusStyle(
+                        <span
+                          className="admin-review-status"
+                          style={{
+                            ...statusStyle(
+                              review.status
+                            ),
+                          }}
+                        >
+                          {
                             review.status
-                          ),
-                          padding:
-                            "7px 12px",
-                          borderRadius:
-                            "20px",
-                          fontSize:
-                            "12px",
-                          fontWeight:
-                            "700",
-                        }}
-                      >
-                        {review.status}
-                      </span>
-                    </div>
-
-
-                    <div
-                      style={{
-                        marginTop:
-                          "18px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display:
-                            "flex",
-                          alignItems:
-                            "center",
-                          gap: "12px",
-                          flexWrap:
-                            "wrap",
-                        }}
-                      >
-                        {renderStars(
-                          Number(
-                            review.rating
-                          )
-                        )}
-
-                        <strong>
-                          {review.rating}/5
-                        </strong>
-
-                        {review.verifiedPurchase && (
-                          <span
-                            style={{
-                              display:
-                                "inline-flex",
-                              alignItems:
-                                "center",
-                              gap: "5px",
-                              fontSize:
-                                "13px",
-                              fontWeight:
-                                "700",
-                            }}
-                          >
-                            <BadgeCheck
-                              size={
-                                16
-                              }
-                            />
-                            Verified Purchase
-                          </span>
-                        )}
+                          }
+                        </span>
                       </div>
-
-
-                      <p
-                        style={{
-                          margin:
-                            "15px 0",
-                          lineHeight:
-                            "1.7",
-                          color: "#333",
-                        }}
-                      >
-                        {review.comment}
-                      </p>
-
-
-                      <p
-                        style={{
-                          margin: 0,
-                          color: "#888",
-                          fontSize:
-                            "13px",
-                        }}
-                      >
-                        {review.createdAt
-                          ? new Date(
-                              review.createdAt
-                            ).toLocaleString(
-                              "en-IN"
-                            )
-                          : ""}
-                      </p>
                     </div>
 
+                    <div className="admin-review-rating">
+                      {renderStars(
+                        Number(
+                          review.rating
+                        )
+                      )}
 
-                    <div
-                      style={{
-                        display:
-                          "flex",
-                        gap: "10px",
-                        flexWrap:
-                          "wrap",
-                        marginTop:
-                          "20px",
-                        paddingTop:
-                          "18px",
-                        borderTop:
-                          "1px solid #eee",
-                      }}
-                    >
+                      <strong>
+                        {review.rating}
+                        /5
+                      </strong>
+
+                      {review.verifiedPurchase && (
+                        <span className="admin-review-verified">
+                          <BadgeCheck
+                            size={16}
+                          />
+                          Verified
+                          Purchase
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="admin-review-comment">
+                      {review.comment}
+                    </div>
+
+                    <p className="admin-review-date">
+                      {review.createdAt
+                        ? new Date(
+                            review.createdAt
+                          ).toLocaleString(
+                            "en-IN"
+                          )
+                        : ""}
+                    </p>
+
+                    <div className="admin-review-actions">
                       <button
                         type="button"
                         disabled={
@@ -681,20 +558,14 @@ function AdminReviews() {
                             "Approved"
                           )
                         }
-                        style={{
-                          padding:
-                            "10px 15px",
-                          cursor:
-                            "pointer",
-                        }}
+                        className="admin-review-action admin-review-approve"
                       >
                         <Check
-                          size={15}
-                        />{" "}
+                          size={16}
+                        />
                         Approve
                       </button>
 
-
                       <button
                         type="button"
                         disabled={
@@ -708,44 +579,36 @@ function AdminReviews() {
                             "Rejected"
                           )
                         }
-                        style={{
-                          padding:
-                            "10px 15px",
-                          cursor:
-                            "pointer",
-                        }}
+                        className="admin-review-action admin-review-reject"
                       >
                         <X
-                          size={15}
-                        />{" "}
+                          size={16}
+                        />
                         Reject
                       </button>
 
-
                       <button
                         type="button"
-                        disabled={working}
+                        disabled={
+                          working
+                        }
                         onClick={() =>
                           deleteReview(
                             review._id
                           )
                         }
-                        style={{
-                          padding:
-                            "10px 15px",
-                          cursor:
-                            "pointer",
-                        }}
+                        className="admin-review-action admin-review-delete"
                       >
                         {working ? (
                           <RefreshCw
-                            size={15}
+                            size={16}
                           />
                         ) : (
                           <Trash2
-                            size={15}
+                            size={16}
                           />
-                        )}{" "}
+                        )}
+
                         Delete
                       </button>
                     </div>

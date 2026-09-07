@@ -9702,3 +9702,711 @@ color: #444;
     width: 80px;
   }
 }
+
+.admin-review-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid #eeeeee;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 3px 16px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.admin-review-product {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  min-width: 0;
+}
+
+.admin-review-image {
+  width: 74px;
+  height: 86px;
+  object-fit: cover;
+  border-radius: 11px;
+  flex-shrink: 0;
+  background: #f1f1f1;
+}
+
+.admin-review-product-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-review-product-info h3 {
+  margin: 0 0 5px;
+  font-size: 18px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.admin-review-user {
+  margin: 0;
+  color: #555;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.admin-review-email {
+  margin: 3px 0 9px;
+  color: #888;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.admin-review-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-review-rating {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #eeeeee;
+}
+
+.admin-review-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-review-comment {
+  margin-top: 16px;
+  padding: 15px;
+  border-radius: 10px;
+  background: #f7f7f7;
+  color: #333333;
+  font-size: 15px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.admin-review-date {
+  margin: 11px 0 0;
+  color: #888888;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.admin-review-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #eeeeee;
+}
+
+.admin-review-action {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #dddddd;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #111111;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.admin-review-action:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+
+.admin-review-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.admin-review-approve {
+  border-color: #b8dfc1;
+  color: #1b5e20;
+}
+
+.admin-review-reject {
+  border-color: #f2c1c1;
+  color: #b71c1c;
+}
+
+.admin-review-delete {
+  border-color: #ffc8c8;
+  color: #b42318;
+}
+
+@media (max-width: 600px) {
+  .admin-review-card {
+    padding: 14px;
+    border-radius: 13px;
+  }
+
+  .admin-review-product {
+    align-items: flex-start;
+    gap: 11px;
+  }
+
+  .admin-review-image {
+    width: 60px;
+    height: 72px;
+    border-radius: 8px;
+  }
+
+  .admin-review-product-info h3 {
+    font-size: 15px;
+    line-height: 1.3;
+  }
+
+  .admin-review-user {
+    font-size: 13px;
+  }
+
+  .admin-review-email {
+    font-size: 11px;
+    margin-bottom: 7px;
+  }
+
+  .admin-review-status {
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+
+  .admin-review-rating {
+    gap: 7px;
+    margin-top: 14px;
+    padding-top: 14px;
+  }
+
+  .admin-review-rating strong {
+    font-size: 13px;
+  }
+
+  .admin-review-verified {
+    width: 100%;
+    font-size: 11px;
+  }
+
+  .admin-review-comment {
+    margin-top: 13px;
+    padding: 12px;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .admin-review-date {
+    margin-top: 9px;
+    font-size: 11px;
+  }
+
+  .admin-review-actions {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 15px;
+    padding-top: 15px;
+  }
+
+  .admin-review-action {
+    min-height: 45px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .admin-review-image {
+    width: 54px;
+    height: 66px;
+  }
+
+  .admin-review-card {
+    padding: 12px;
+  }
+
+  .admin-review-product-info h3 {
+    font-size: 14px;
+  }
+}
+
+.admin-dashboard {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.admin-dashboard-header {
+  margin-bottom: 28px;
+}
+
+.admin-dashboard-header p {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  color: #777;
+}
+
+.admin-dashboard-header h1 {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1.15;
+}
+
+.admin-dashboard-header span {
+  display: block;
+  margin-top: 8px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.admin-dashboard-error {
+  margin-bottom: 20px;
+  padding: 14px;
+  border: 1px solid #ffc8c8;
+  border-radius: 9px;
+  background: #fff2f2;
+  color: #b42318;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-loading {
+  padding: 30px 0;
+  color: #666;
+}
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(190px, 1fr)
+  );
+  gap: 16px;
+}
+
+.admin-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #e9e9e9;
+  border-radius: 14px;
+}
+
+.admin-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 10px;
+  background: #f5f5f5;
+  font-size: 21px;
+}
+
+.admin-stat-content {
+  min-width: 0;
+}
+
+.admin-stat-content p {
+  margin: 0 0 5px;
+  color: #777;
+  font-size: 13px;
+}
+
+.admin-stat-content h2 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.admin-analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    2,
+    minmax(0, 1fr)
+  );
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.admin-dashboard-card {
+  min-width: 0;
+  padding: 22px;
+  background: #fff;
+  border: 1px solid #e9e9e9;
+  border-radius: 14px;
+  box-sizing: border-box;
+}
+
+.admin-dashboard-card h2 {
+  margin: 0 0 18px;
+  font-size: 20px;
+}
+
+.admin-dashboard-card p {
+  line-height: 1.55;
+}
+
+.admin-top-products {
+  display: grid;
+  gap: 0;
+}
+
+.admin-top-product {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  padding: 13px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.admin-top-product:first-child {
+  padding-top: 0;
+}
+
+.admin-top-product:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.admin-top-product-info {
+  min-width: 0;
+}
+
+.admin-top-product-info strong {
+  overflow-wrap: anywhere;
+}
+
+.admin-top-product-info p {
+  margin: 4px 0 0;
+  color: #777;
+  font-size: 13px;
+}
+
+.admin-top-product-revenue {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.admin-pie-chart {
+  width: 100%;
+  height: 320px;
+}
+
+.admin-recent-orders-card {
+  margin-top: 30px;
+}
+
+.admin-orders-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-orders-table th {
+  padding: 12px;
+  text-align: left;
+  color: #666;
+  font-size: 13px;
+}
+
+.admin-orders-table td {
+  padding: 12px;
+  border-top: 1px solid #eee;
+  font-size: 14px;
+}
+
+.admin-order-status {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #f2f2f2;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.admin-orders-mobile {
+  display: none;
+}
+
+.admin-sales-card {
+  margin-top: 30px;
+}
+
+.admin-sales-chart {
+  width: 100%;
+  height: 340px;
+}
+
+.admin-management-section {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(230px, 1fr)
+  );
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.admin-management-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-management-card p {
+  flex: 1;
+  margin: 0 0 18px;
+  color: #666;
+}
+
+.admin-dashboard-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 42px;
+  padding: 0 15px;
+  border-radius: 8px;
+  background: #111;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .admin-dashboard {
+    padding: 22px;
+  }
+
+  .admin-analytics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-dashboard {
+    padding: 16px 14px 50px;
+  }
+
+  .admin-dashboard-header {
+    margin-bottom: 22px;
+  }
+
+  .admin-dashboard-header h1 {
+    font-size: 28px;
+  }
+
+  .admin-dashboard-header span {
+    font-size: 14px;
+  }
+
+  .admin-stats {
+    grid-template-columns: repeat(
+      2,
+      minmax(0, 1fr)
+    );
+    gap: 10px;
+  }
+
+  .admin-stat-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .admin-stat-icon {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+    font-size: 18px;
+  }
+
+  .admin-stat-content p {
+    font-size: 11px;
+  }
+
+  .admin-stat-content h2 {
+    font-size: 17px;
+  }
+
+  .admin-analytics-grid {
+    gap: 14px;
+    margin-top: 20px;
+  }
+
+  .admin-dashboard-card {
+    padding: 15px;
+    border-radius: 12px;
+  }
+
+  .admin-dashboard-card h2 {
+    margin-bottom: 15px;
+    font-size: 18px;
+  }
+
+  .admin-top-product {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .admin-top-product-info {
+    font-size: 13px;
+  }
+
+  .admin-top-product-revenue {
+    font-size: 13px;
+  }
+
+  .admin-pie-chart {
+    height: 290px;
+  }
+
+  .admin-recent-orders-card,
+  .admin-sales-card {
+    margin-top: 20px;
+  }
+
+  .admin-orders-desktop {
+    display: none;
+  }
+
+  .admin-orders-mobile {
+    display: grid;
+    gap: 10px;
+  }
+
+  .admin-mobile-order-card {
+    padding: 13px;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    background: #fafafa;
+  }
+
+  .admin-mobile-order-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    padding-bottom: 11px;
+    border-bottom: 1px solid #e8e8e8;
+  }
+
+  .admin-mobile-order-top > div {
+    min-width: 0;
+  }
+
+  .admin-mobile-order-label {
+    display: block;
+    margin-bottom: 3px;
+    color: #888;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .admin-mobile-order-top strong {
+    display: block;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-mobile-order-details {
+    display: grid;
+    grid-template-columns: repeat(
+      2,
+      minmax(0, 1fr)
+    );
+    gap: 13px;
+    padding-top: 12px;
+  }
+
+  .admin-mobile-order-details div {
+    min-width: 0;
+  }
+
+  .admin-mobile-order-details span {
+    display: block;
+    margin-bottom: 3px;
+    color: #888;
+    font-size: 10px;
+  }
+
+  .admin-mobile-order-details strong {
+    display: block;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-sales-chart {
+    height: 280px;
+  }
+
+  .admin-management-section {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .admin-management-card p {
+    font-size: 14px;
+  }
+
+  .admin-dashboard-button {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-stat-card {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .admin-pie-chart {
+    height: 270px;
+  }
+
+  .admin-sales-chart {
+    height: 260px;
+  }
+
+  .admin-mobile-order-details {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+}
