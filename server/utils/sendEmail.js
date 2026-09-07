@@ -1,32 +1,40 @@
-const nodemailer = require("nodemailer");
-
 const sendEmail = async ({
   to,
   subject,
   html,
 }) => {
-  const transporter =
-    nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
+  const response = await fetch(
+    "https://api.resend.com/emails",
+    {
+      method: "POST",
 
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_APP_PASSWORD,
+      headers: {
+        Authorization:
+          `Bearer ${process.env.RESEND_API_KEY}`,
+        "Content-Type":
+          "application/json",
       },
 
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
-    });
+      body: JSON.stringify({
+        from:
+          "VELNORA <onboarding@resend.dev>",
+        to: [to],
+        subject,
+        html,
+      }),
+    }
+  );
 
-  await transporter.sendMail({
-    from: `"VELNORA" <${process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    html,
-  });
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data?.message ||
+        "Failed to send email"
+    );
+  }
+
+  return data;
 };
 
 module.exports = sendEmail;
