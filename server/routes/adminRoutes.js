@@ -9,6 +9,11 @@ const Review = require("../models/Review");
 const protect = require("../middleware/authMiddleware");
 const adminOnly = require("../middleware/adminMiddleware");
 
+const {
+  sendOrderStatusEmail,
+  sendCancellationEmail,
+} = require("../utils/orderEmails");
+
 const router = express.Router();
 
 router.use(protect, adminOnly);
@@ -327,12 +332,34 @@ router.put(
       await session.commitTransaction();
 
       const updatedOrder =
-        await Order.findById(
-          order._id
-        ).populate(
-          "userId",
-          "name email"
-        );
+  await Order.findById(
+    order._id
+  ).populate(
+    "userId",
+    "name email"
+  );
+
+if (status === "Cancelled") {
+  sendCancellationEmail(
+    updatedOrder
+  ).catch((error) => {
+    console.error(
+      "Admin cancellation email error:",
+      error
+    );
+  });
+} else {
+  sendOrderStatusEmail(
+    updatedOrder
+  ).catch((error) => {
+    console.error(
+      "Order status email error:",
+      error
+    );
+  });
+}
+
+
 
       res.json({
         message:

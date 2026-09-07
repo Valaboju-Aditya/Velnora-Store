@@ -295,6 +295,15 @@ const orderSchema =
         default: null,
       },
 
+      // =========================
+// REFUND EMAIL TRACKING
+// =========================
+
+refundEmailSentAt: {
+  type: Date,
+  default: null,
+},
+
 
       // =========================
       // STOCK RESTORE TRACKING

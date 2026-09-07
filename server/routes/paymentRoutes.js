@@ -9,6 +9,10 @@ const Coupon = require("../models/Coupon");
 
 const protect = require("../middleware/authMiddleware");
 
+const {
+  sendRefundEmail,
+} = require("../utils/orderEmails");
+
 const router = express.Router();
 
 const razorpay = new Razorpay({
@@ -1119,28 +1123,92 @@ async function webhookHandler(
     // =========================
 
     if (
-      event ===
-      "refund.processed"
-    ) {
-      const refund =
-        payload.payload
-          ?.refund
-          ?.entity;
+  event ===
+  "refund.processed"
+) {
+  const refund =
+    payload.payload
+      ?.refund
+      ?.entity;
 
-      if (refund) {
-        const order =
-          await findRefundOrder(
-            refund
-          );
+  if (refund) {
+    const order =
+      await findRefundOrder(
+        refund
+      );
 
-        if (order) {
-          await finalizeRefund(
-            order._id,
-            refund
-          );
-        }
+    if (order) {
+      await finalizeRefund(
+        order._id,
+        refund
+      );
+
+      const emailOrder =
+        await Order.findOneAndUpdate(
+          {
+            _id: order._id,
+
+            refundStatus:
+              "Processed",
+
+            refundEmailSentAt:
+              null,
+          },
+          {
+            $set: {
+              refundEmailSentAt:
+                new Date(),
+            },
+          },
+          {
+            new: true,
+          }
+        ).populate(
+          "userId",
+          "name email"
+        );
+
+      if (emailOrder) {
+        sendRefundEmail(
+          emailOrder
+        ).catch(
+          async (error) => {
+            console.error(
+              "Refund webhook email error:",
+              error
+            );
+
+            try {
+              await Order.updateOne(
+                {
+                  _id:
+                    emailOrder._id,
+
+                  refundEmailSentAt:
+                    emailOrder
+                      .refundEmailSentAt,
+                },
+                {
+                  $set: {
+                    refundEmailSentAt:
+                      null,
+                  },
+                }
+              );
+            } catch (
+              resetError
+            ) {
+              console.error(
+                "Failed to reset refund email tracking:",
+                resetError
+              );
+            }
+          }
+        );
       }
     }
+  }
+}
 
 
     // =========================

@@ -8,14 +8,18 @@ const Product = require("../models/Product");
 const Coupon = require("../models/Coupon");
 const protect = require("../middleware/authMiddleware");
 
+const {
+  sendOrderConfirmationEmail,
+  sendCancellationEmail,
+  sendRefundEmail,
+} = require("../utils/orderEmails");
+
 const router = express.Router();
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret:
-    process.env.RAZORPAY_KEY_SECRET,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
-
 
 async function createRazorpayRefund({
   paymentId,
@@ -26,55 +30,52 @@ async function createRazorpayRefund({
   const idempotencyKey =
     `velnora_refund_${orderId}`;
 
-  const credentials =
-    Buffer.from(
-      `${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`
-    ).toString("base64");
+  const credentials = Buffer.from(
+    `${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`
+  ).toString("base64");
 
-  const response =
-    await fetch(
-      `https://api.razorpay.com/v1/payments/${encodeURIComponent(
-        paymentId
-      )}/refund`,
-      {
-        method: "POST",
+  const response = await fetch(
+    `https://api.razorpay.com/v1/payments/${encodeURIComponent(
+      paymentId
+    )}/refund`,
+    {
+      method: "POST",
 
-        headers: {
-          Authorization:
-            `Basic ${credentials}`,
+      headers: {
+        Authorization:
+          `Basic ${credentials}`,
 
-          "Content-Type":
-            "application/json",
+        "Content-Type":
+          "application/json",
 
-          "X-Refund-Idempotency":
-            idempotencyKey,
+        "X-Refund-Idempotency":
+          idempotencyKey,
+      },
+
+      body: JSON.stringify({
+        amount,
+
+        speed: "normal",
+
+        notes: {
+          orderId:
+            String(orderId),
+
+          userId:
+            String(userId),
         },
-
-        body: JSON.stringify({
-          amount,
-
-          speed: "normal",
-
-          notes: {
-            orderId:
-              String(orderId),
-
-            userId:
-              String(userId),
-          },
-        }),
-      }
-    );
+      }),
+    }
+  );
 
   const data =
     await response.json();
 
   if (!response.ok) {
-    const error =
-      new Error(
-        data?.error?.description ||
-          "Razorpay refund request failed"
-      );
+    const error = new Error(
+      data?.error?.description ||
+        "Razorpay refund request failed"
+    );
 
     error.status =
       response.status;
@@ -87,7 +88,6 @@ async function createRazorpayRefund({
 
   return data;
 }
-
 
 async function finalizeRefundedOrder(
   mongoOrderId,
@@ -112,8 +112,7 @@ async function finalizeRefundedOrder(
 
         if (!order.stockRestored) {
           for (
-            const item of
-            order.items
+            const item of order.items
           ) {
             if (
               !mongoose.Types.ObjectId.isValid(
@@ -183,7 +182,6 @@ async function finalizeRefundedOrder(
   }
 }
 
-
 function verifyRazorpayPayment({
   razorpay_order_id,
   razorpay_payment_id,
@@ -236,7 +234,6 @@ function verifyRazorpayPayment({
   );
 }
 
-
 function validateCustomer(
   customer
 ) {
@@ -248,7 +245,6 @@ function validateCustomer(
   ) {
     return {
       valid: false,
-
       message:
         "Customer information is required",
     };
@@ -304,7 +300,6 @@ function validateCustomer(
   ) {
     return {
       valid: false,
-
       message:
         "Please enter a valid customer name",
     };
@@ -319,7 +314,6 @@ function validateCustomer(
   ) {
     return {
       valid: false,
-
       message:
         "Please enter a valid email address",
     };
@@ -334,7 +328,6 @@ function validateCustomer(
   ) {
     return {
       valid: false,
-
       message:
         "Please enter a valid phone number",
     };
@@ -346,7 +339,6 @@ function validateCustomer(
   ) {
     return {
       valid: false,
-
       message:
         "Please enter a valid address",
     };
@@ -358,7 +350,6 @@ function validateCustomer(
   ) {
     return {
       valid: false,
-
       message:
         "Please enter a valid city",
     };
@@ -370,7 +361,6 @@ function validateCustomer(
   ) {
     return {
       valid: false,
-
       message:
         "Please enter a valid state",
     };
@@ -382,7 +372,6 @@ function validateCustomer(
   ) {
     return {
       valid: false,
-
       message:
         "Please enter a valid pincode",
     };
@@ -403,7 +392,6 @@ function validateCustomer(
   };
 }
 
-
 router.post(
   "/",
   protect,
@@ -423,7 +411,6 @@ router.post(
         razorpay_signature,
       } = req.body;
 
-
       if (
         typeof orderId !==
           "string" ||
@@ -439,17 +426,14 @@ router.post(
           });
       }
 
-
       const safeOrderId =
         orderId.trim();
-
 
       const duplicateOrder =
         await Order.exists({
           orderId:
             safeOrderId,
         });
-
 
       if (duplicateOrder) {
         return res
@@ -460,12 +444,10 @@ router.post(
           });
       }
 
-
       const customerValidation =
         validateCustomer(
           customer
         );
-
 
       if (
         !customerValidation.valid
@@ -478,10 +460,8 @@ router.post(
           });
       }
 
-
       const safeCustomer =
         customerValidation.customer;
-
 
       if (
         !Array.isArray(items) ||
@@ -495,7 +475,6 @@ router.post(
           });
       }
 
-
       if (
         items.length > 50
       ) {
@@ -507,10 +486,8 @@ router.post(
           });
       }
 
-
       const selectedPaymentMethod =
         paymentMethod || "cod";
-
 
       if (
         ![
@@ -528,7 +505,6 @@ router.post(
           });
       }
 
-
       if (
         selectedPaymentMethod ===
         "online"
@@ -540,7 +516,6 @@ router.post(
             razorpay_signature,
           });
 
-
         if (
           !paymentVerified
         ) {
@@ -551,7 +526,6 @@ router.post(
                 "Payment verification failed",
             });
         }
-
 
         const existingPayment =
           await Order.findOne({
@@ -568,7 +542,6 @@ router.post(
             ],
           });
 
-
         if (
           existingPayment
         ) {
@@ -581,9 +554,7 @@ router.post(
         }
       }
 
-
       session.startTransaction();
-
 
       const orderItems = [];
 
@@ -592,10 +563,8 @@ router.post(
 
       let calculatedTotal = 0;
 
-
       for (
-        const item of
-        items
+        const item of items
       ) {
         if (
           !item ||
@@ -612,11 +581,9 @@ router.post(
             });
         }
 
-
         const productId =
           item.id ||
           item._id;
-
 
         if (
           !mongoose.Types
@@ -635,10 +602,8 @@ router.post(
             });
         }
 
-
         const productIdString =
           String(productId);
-
 
         if (
           seenProducts.has(
@@ -655,17 +620,14 @@ router.post(
             });
         }
 
-
         seenProducts.add(
           productIdString
         );
-
 
         const quantity =
           Number(
             item.quantity
           );
-
 
         if (
           !Number.isInteger(
@@ -684,14 +646,12 @@ router.post(
             });
         }
 
-
         const product =
           await Product.findById(
             productId
           ).session(
             session
           );
-
 
         if (!product) {
           await session.abortTransaction();
@@ -704,12 +664,10 @@ router.post(
             });
         }
 
-
         const price =
           Number(
             product.price
           );
-
 
         if (
           !Number.isFinite(
@@ -722,12 +680,10 @@ router.post(
           );
         }
 
-
         const availableStock =
           Number(
             product.stock || 0
           );
-
 
         if (
           !Number.isFinite(
@@ -749,11 +705,9 @@ router.post(
             });
         }
 
-
         calculatedTotal +=
           price *
           quantity;
-
 
         orderItems.push({
           id:
@@ -772,24 +726,17 @@ router.post(
         });
       }
 
-
       calculatedTotal =
         Math.round(
           calculatedTotal *
             100
         ) / 100;
 
-
       const shipping =
         calculatedTotal >= 999 ||
         calculatedTotal === 0
           ? 0
           : 99;
-
-
-      // =========================
-      // COUPON VALIDATION
-      // =========================
 
       let appliedCoupon =
         null;
@@ -806,7 +753,6 @@ router.post(
       let couponDiscountValue =
         0;
 
-
       if (
         typeof couponCode ===
           "string" &&
@@ -817,7 +763,6 @@ router.post(
             .trim()
             .toUpperCase();
 
-
         const coupon =
           await Coupon.findOne({
             code:
@@ -825,7 +770,6 @@ router.post(
           }).session(
             session
           );
-
 
         if (!coupon) {
           await session.abortTransaction();
@@ -837,7 +781,6 @@ router.post(
                 "Coupon code is invalid",
             });
         }
-
 
         if (
           !coupon.isActive
@@ -851,7 +794,6 @@ router.post(
                 "This coupon is not active",
             });
         }
-
 
         if (
           coupon.expiresAt &&
@@ -869,7 +811,6 @@ router.post(
                 "This coupon has expired",
             });
         }
-
 
         if (
           coupon.usageLimit !==
@@ -892,13 +833,11 @@ router.post(
             });
         }
 
-
         const minimumOrderAmount =
           Number(
             coupon.minimumOrderAmount ||
               0
           );
-
 
         if (
           calculatedTotal <
@@ -914,12 +853,10 @@ router.post(
             });
         }
 
-
         const discountValue =
           Number(
             coupon.discountValue
           );
-
 
         if (
           !Number.isFinite(
@@ -932,20 +869,17 @@ router.post(
           );
         }
 
-
         if (
           coupon.discountType ===
           "percentage"
         ) {
           if (
-            discountValue >
-            100
+            discountValue > 100
           ) {
             throw new Error(
               "Invalid percentage coupon value"
             );
           }
-
 
           discountAmount =
             calculatedTotal *
@@ -953,7 +887,6 @@ router.post(
               discountValue /
               100
             );
-
 
           if (
             coupon.maximumDiscountAmount !==
@@ -963,7 +896,6 @@ router.post(
               Number(
                 coupon.maximumDiscountAmount
               );
-
 
             if (
               Number.isFinite(
@@ -991,20 +923,17 @@ router.post(
           );
         }
 
-
         discountAmount =
           Math.min(
             discountAmount,
             calculatedTotal
           );
 
-
         discountAmount =
           Math.round(
             discountAmount *
               100
           ) / 100;
-
 
         appliedCoupon =
           coupon;
@@ -1015,7 +944,6 @@ router.post(
         couponDiscountValue =
           discountValue;
       }
-
 
       const finalTotal =
         Math.max(
@@ -1030,17 +958,11 @@ router.post(
           ) / 100
         );
 
-
       const expectedAmountInPaise =
         Math.round(
           finalTotal *
             100
         );
-
-
-      // =========================
-      // ONLINE PAYMENT VERIFY
-      // =========================
 
       if (
         selectedPaymentMethod ===
@@ -1049,7 +971,6 @@ router.post(
         let razorpayOrder;
 
         let razorpayPayment;
-
 
         try {
           razorpayOrder =
@@ -1072,7 +993,6 @@ router.post(
             });
         }
 
-
         if (
           razorpayOrder.id !==
             razorpay_order_id ||
@@ -1092,7 +1012,6 @@ router.post(
                 "Payment amount verification failed",
             });
         }
-
 
         if (
           String(
@@ -1114,7 +1033,6 @@ router.post(
                 "Payment does not belong to this user",
             });
         }
-
 
         if (
           razorpayPayment.id !==
@@ -1138,7 +1056,6 @@ router.post(
             });
         }
 
-
         if (
           razorpayPayment.status !==
           "captured"
@@ -1154,11 +1071,6 @@ router.post(
         }
       }
 
-
-      // =========================
-      // REDUCE STOCK
-      // =========================
-
       for (
         const orderItem of
         orderItems
@@ -1170,20 +1082,17 @@ router.post(
             session
           );
 
-
         if (!product) {
           throw new Error(
             "Product disappeared during order creation"
           );
         }
 
-
         const availableStock =
           Number(
             product.stock ||
               0
           );
-
 
         if (
           availableStock <
@@ -1199,21 +1108,14 @@ router.post(
             });
         }
 
-
         product.stock =
           availableStock -
           orderItem.quantity;
-
 
         await product.save({
           session,
         });
       }
-
-
-      // =========================
-      // CONSUME COUPON
-      // =========================
 
       if (
         appliedCoupon
@@ -1226,7 +1128,6 @@ router.post(
             true,
         };
 
-
         if (
           appliedCoupon.expiresAt
         ) {
@@ -1235,7 +1136,6 @@ router.post(
               new Date(),
           };
         }
-
 
         if (
           appliedCoupon.usageLimit !==
@@ -1250,20 +1150,20 @@ router.post(
           };
         }
 
-
         const couponUpdate =
           await Coupon.updateOne(
             couponFilter,
+
             {
               $inc: {
                 usedCount: 1,
               },
             },
+
             {
               session,
             }
           );
-
 
         if (
           couponUpdate.modifiedCount !==
@@ -1279,11 +1179,6 @@ router.post(
             });
         }
       }
-
-
-      // =========================
-      // CREATE ORDER
-      // =========================
 
       const createdOrders =
         await Order.create(
@@ -1352,18 +1247,25 @@ router.post(
                 false,
             },
           ],
+
           {
             session,
           }
         );
 
-
       const order =
         createdOrders[0];
 
-
       await session.commitTransaction();
 
+      sendOrderConfirmationEmail(
+        order
+      ).catch((error) => {
+        console.error(
+          "Order confirmation email error:",
+          error
+        );
+      });
 
       return res
         .status(201)
@@ -1373,7 +1275,6 @@ router.post(
 
           order,
         });
-
     } catch (error) {
       if (
         session.inTransaction()
@@ -1381,12 +1282,10 @@ router.post(
         await session.abortTransaction();
       }
 
-
       console.error(
         "Create order error:",
         error
       );
-
 
       if (
         error?.code ===
@@ -1400,24 +1299,17 @@ router.post(
           });
       }
 
-
       return res
         .status(500)
         .json({
           message:
             "Failed to create order",
         });
-
     } finally {
       await session.endSession();
     }
   }
 );
-
-
-// =========================
-// MY ORDERS
-// =========================
 
 router.get(
   "/my-orders",
@@ -1432,17 +1324,14 @@ router.get(
           createdAt: -1,
         });
 
-
       return res.json(
         orders
       );
-
     } catch (error) {
       console.error(
         "Failed to fetch user orders:",
         error
       );
-
 
       return res
         .status(500)
@@ -1453,11 +1342,6 @@ router.get(
     }
   }
 );
-
-
-// =========================
-// CUSTOMER CANCEL ORDER
-// =========================
 
 router.patch(
   "/:orderId/cancel",
@@ -1473,7 +1357,6 @@ router.patch(
             req.user.id,
         });
 
-
       if (!order) {
         return res
           .status(404)
@@ -1482,7 +1365,6 @@ router.patch(
               "Order not found",
           });
       }
-
 
       if (
         order.status ===
@@ -1496,7 +1378,6 @@ router.patch(
         });
       }
 
-
       if (
         order.status !==
         "Order Confirmed"
@@ -1509,18 +1390,12 @@ router.patch(
           });
       }
 
-
-      // =========================
-      // COD CANCELLATION
-      // =========================
-
       if (
         order.paymentMethod ===
         "cod"
       ) {
         const session =
           await mongoose.startSession();
-
 
         try {
           await session.withTransaction(
@@ -1532,7 +1407,6 @@ router.patch(
                   session
                 );
 
-
               if (
                 !currentOrder
               ) {
@@ -1541,14 +1415,12 @@ router.patch(
                 );
               }
 
-
               if (
                 currentOrder.status ===
                 "Cancelled"
               ) {
                 return;
               }
-
 
               if (
                 currentOrder.status !==
@@ -1558,7 +1430,6 @@ router.patch(
                   "This order can no longer be cancelled"
                 );
               }
-
 
               if (
                 !currentOrder.stockRestored
@@ -1577,7 +1448,6 @@ router.patch(
                     );
                   }
 
-
                   const product =
                     await Product.findById(
                       item.id
@@ -1585,13 +1455,11 @@ router.patch(
                       session
                     );
 
-
                   if (!product) {
                     throw new Error(
                       `Product not found: ${item.name}`
                     );
                   }
-
 
                   product.stock =
                     Number(
@@ -1603,38 +1471,40 @@ router.patch(
                         0
                     );
 
-
                   await product.save({
                     session,
                   });
                 }
 
-
                 currentOrder.stockRestored =
                   true;
               }
 
-
               currentOrder.status =
                 "Cancelled";
-
 
               await currentOrder.save({
                 session,
               });
             }
           );
-
         } finally {
           await session.endSession();
         }
-
 
         const cancelledOrder =
           await Order.findById(
             order._id
           );
 
+        sendCancellationEmail(
+          cancelledOrder
+        ).catch((error) => {
+          console.error(
+            "Order cancellation email error:",
+            error
+          );
+        });
 
         return res.json({
           message:
@@ -1644,11 +1514,6 @@ router.patch(
             cancelledOrder,
         });
       }
-
-
-      // =========================
-      // ONLINE CANCELLATION
-      // =========================
 
       if (
         order.paymentMethod !==
@@ -1661,7 +1526,6 @@ router.patch(
               "Unsupported payment method",
           });
       }
-
 
       if (
         order.paymentStatus !==
@@ -1677,7 +1541,6 @@ router.patch(
           });
       }
 
-
       if (
         !order.razorpayPaymentId
       ) {
@@ -1688,7 +1551,6 @@ router.patch(
               "Razorpay payment ID is missing",
           });
       }
-
 
       if (
         order.refundStatus ===
@@ -1704,7 +1566,6 @@ router.patch(
         });
       }
 
-
       if (
         order.refundStatus ===
         "Failed"
@@ -1717,9 +1578,7 @@ router.patch(
           });
       }
 
-
       let payment;
-
 
       try {
         payment =
@@ -1727,13 +1586,11 @@ router.patch(
             order
               .razorpayPaymentId
           );
-
       } catch (error) {
         console.error(
           "Razorpay payment fetch error:",
           error
         );
-
 
         return res
           .status(502)
@@ -1743,7 +1600,6 @@ router.patch(
           });
       }
 
-
       const refundAmountPaise =
         Math.round(
           Number(
@@ -1751,7 +1607,6 @@ router.patch(
           ) *
             100
         );
-
 
       if (
         payment.id !==
@@ -1772,7 +1627,6 @@ router.patch(
           });
       }
 
-
       if (
         payment.status !==
         "captured"
@@ -1784,7 +1638,6 @@ router.patch(
               "Only captured payments can be refunded",
           });
       }
-
 
       if (
         order.refundStatus ===
@@ -1801,9 +1654,7 @@ router.patch(
         await order.save();
       }
 
-
       let refund;
-
 
       try {
         refund =
@@ -1821,7 +1672,6 @@ router.patch(
             userId:
               req.user.id,
           });
-
       } catch (error) {
         console.error(
           "Razorpay refund error:",
@@ -1829,7 +1679,6 @@ router.patch(
             .razorpayData ||
             error
         );
-
 
         if (
           error.status !==
@@ -1840,7 +1689,6 @@ router.patch(
 
           await order.save();
         }
-
 
         if (
           error.status ===
@@ -1854,7 +1702,6 @@ router.patch(
             });
         }
 
-
         return res
           .status(502)
           .json({
@@ -1862,7 +1709,6 @@ router.patch(
               "Unable to process refund",
           });
       }
-
 
       if (
         !refund?.id ||
@@ -1882,7 +1728,6 @@ router.patch(
           });
       }
 
-
       order.razorpayRefundId =
         refund.id;
 
@@ -1890,7 +1735,6 @@ router.patch(
         Number(
           refund.amount
         ) / 100;
-
 
       if (
         refund.status ===
@@ -1901,11 +1745,61 @@ router.patch(
           refund
         );
 
-
         const refundedOrder =
-          await Order.findById(
-            order._id
-          );
+  await Order.findOneAndUpdate(
+    {
+      _id: order._id,
+      refundEmailSentAt: null,
+    },
+    {
+      $set: {
+        refundEmailSentAt:
+          new Date(),
+      },
+    },
+    {
+      new: true,
+    }
+  );
+
+if (refundedOrder) {
+  sendRefundEmail(
+    refundedOrder
+  ).catch(async (error) => {
+    console.error(
+      "Refund email error:",
+      error
+    );
+
+    try {
+      await Order.updateOne(
+        {
+          _id: order._id,
+          refundEmailSentAt: {
+            $ne: null,
+          },
+        },
+        {
+          $set: {
+            refundEmailSentAt:
+              null,
+          },
+        }
+      );
+    } catch (resetError) {
+      console.error(
+        "Failed to reset refund email tracking:",
+        resetError
+      );
+    }
+  });
+}
+
+const finalOrder =
+  refundedOrder ||
+  await Order.findById(
+    order._id
+  );
 
 
         return res.json({
@@ -1913,10 +1807,9 @@ router.patch(
             "Order cancelled and refund processed successfully",
 
           order:
-            refundedOrder,
+  finalOrder,
         });
       }
-
 
       if (
         refund.status ===
@@ -1927,7 +1820,6 @@ router.patch(
 
         await order.save();
 
-
         return res
           .status(502)
           .json({
@@ -1936,12 +1828,10 @@ router.patch(
           });
       }
 
-
       order.refundStatus =
         "Pending";
 
       await order.save();
-
 
       return res
         .status(202)
@@ -1951,13 +1841,11 @@ router.patch(
 
           order,
         });
-
     } catch (error) {
       console.error(
         "Cancel order error:",
         error
       );
-
 
       return res
         .status(500)
@@ -1968,6 +1856,5 @@ router.patch(
     }
   }
 );
-
 
 module.exports = router;

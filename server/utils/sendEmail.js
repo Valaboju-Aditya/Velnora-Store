@@ -3,6 +3,45 @@ const sendEmail = async ({
   subject,
   html,
 }) => {
+  const apiKey =
+    process.env.RESEND_API_KEY?.trim();
+
+  if (!apiKey) {
+    throw new Error(
+      "RESEND_API_KEY is missing from environment variables"
+    );
+  }
+
+  if (
+    !to ||
+    typeof to !== "string"
+  ) {
+    throw new Error(
+      "Email recipient is required"
+    );
+  }
+
+  if (
+    !subject ||
+    typeof subject !== "string"
+  ) {
+    throw new Error(
+      "Email subject is required"
+    );
+  }
+
+  if (
+    !html ||
+    typeof html !== "string"
+  ) {
+    throw new Error(
+      "Email content is required"
+    );
+  }
+
+  const recipient =
+    to.trim().toLowerCase();
+
   const response = await fetch(
     "https://api.resend.com/emails",
     {
@@ -10,7 +49,8 @@ const sendEmail = async ({
 
       headers: {
         Authorization:
-          `Bearer ${process.env.RESEND_API_KEY}`,
+          `Bearer ${apiKey}`,
+
         "Content-Type":
           "application/json",
       },
@@ -18,19 +58,36 @@ const sendEmail = async ({
       body: JSON.stringify({
         from:
           "VELNORA <onboarding@resend.dev>",
-        to: [to],
-        subject,
+
+        to: [
+          recipient,
+        ],
+
+        subject:
+          subject.trim(),
+
         html,
       }),
     }
   );
 
-  const data = await response.json();
+  let data;
+
+  try {
+    data =
+      await response.json();
+  } catch {
+    data = null;
+  }
 
   if (!response.ok) {
-    throw new Error(
+    const message =
       data?.message ||
-        "Failed to send email"
+      data?.error?.message ||
+      `Email service returned status ${response.status}`;
+
+    throw new Error(
+      message
     );
   }
 
