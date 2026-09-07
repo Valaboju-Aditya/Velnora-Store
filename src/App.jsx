@@ -56,6 +56,8 @@ import Terms from "./pages/Terms";
 import ResetPassword from "./pages/ResetPassword";
 import ForgotPassword from "./pages/ForgotPassword";
 
+import ScrollToTop from "./components/ScrollToTop";
+
 
 import "./index.css";
 
@@ -1988,6 +1990,7 @@ async function createOrder(
 
   return (
     <BrowserRouter>
+    <ScrollToTop />
 
       <Routes>
 

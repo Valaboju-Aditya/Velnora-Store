@@ -1,5 +1,9 @@
 import { API_URL } from "../config";
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import {
   Link,
@@ -11,16 +15,18 @@ import {
   Heart,
   ShoppingBag,
   SlidersHorizontal,
+  X,
 } from "lucide-react";
-
 
 function Shop({
   addToCart,
   wishlist,
   toggleWishlist,
 }) {
-  const [searchParams] =
-    useSearchParams();
+  const [
+    searchParams,
+    setSearchParams,
+  ] = useSearchParams();
 
   const [search, setSearch] =
     useState("");
@@ -33,6 +39,16 @@ function Shop({
   const [sort, setSort] =
     useState("default");
 
+  const [
+    priceRange,
+    setPriceRange,
+  ] = useState("all");
+
+  const [
+    inStockOnly,
+    setInStockOnly,
+  ] = useState(false);
+
   const [products, setProducts] =
     useState([]);
 
@@ -41,7 +57,6 @@ function Shop({
 
   const [error, setError] =
     useState("");
-
 
   const urlCategory =
     searchParams.get("category");
@@ -59,199 +74,220 @@ function Shop({
     searchParams.get("new") ===
     "true";
 
-
-  /* =========================================================
-     LOAD PRODUCTS
-  ========================================================= */
-
   useEffect(() => {
     let ignore = false;
 
-    const loadProducts =
-      async () => {
-        try {
-          const response =
-            await fetch(
-              `${API_URL}/api/products`
-            );
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-          if (!response.ok) {
-            throw new Error(
-              "Failed to fetch products"
-            );
-          }
+        const response = await fetch(
+          `${API_URL}/api/products`
+        );
 
-          const data =
-            await response.json();
-
-          if (!ignore) {
-            setProducts(data);
-          }
-
-        } catch (error) {
-
-          if (!ignore) {
-
-            console.error(
-              "Failed to load products:",
-              error
-            );
-
-            setError(
-              "Unable to load products"
-            );
-
-          }
-
-        } finally {
-
-          if (!ignore) {
-            setLoading(false);
-          }
-
+        if (!response.ok) {
+          throw new Error(
+            "Failed to fetch products"
+          );
         }
-      };
+
+        const data =
+          await response.json();
+
+        if (!ignore) {
+          setProducts(
+            Array.isArray(data)
+              ? data
+              : []
+          );
+        }
+      } catch (error) {
+        if (!ignore) {
+          console.error(
+            "Failed to load products:",
+            error
+          );
+
+          setError(
+            "Unable to load products"
+          );
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    };
 
     loadProducts();
 
     return () => {
       ignore = true;
     };
-
   }, []);
 
-
-  /* =========================================================
-     CATEGORIES
-  ========================================================= */
-
-  const categories =
-    useMemo(
-      () => [
-        "All",
-
-        ...new Set(
-          products
-            .map(
-              (product) =>
-                product.category
-            )
-            .filter(Boolean)
-        ),
-      ],
-      [products]
-    );
-
-
-  /* =========================================================
-     FILTER PRODUCTS
-  ========================================================= */
+  const categories = useMemo(
+    () => [
+      "All",
+      ...new Set(
+        products
+          .map(
+            (product) =>
+              product.category
+          )
+          .filter(Boolean)
+      ),
+    ],
+    [products]
+  );
 
   let filteredProducts =
-    products.filter(
-      (product) => {
+    products.filter((product) => {
+      const productName =
+        product.name || "";
 
-        const productName =
-          product.name || "";
+      const productCategory =
+        product.category || "";
 
-        const productCategory =
-          product.category || "";
+      const productDescription =
+        product.description || "";
 
+      const productSearchText = [
+        productName,
+        productCategory,
+        productDescription,
+      ]
+        .join(" ")
+        .toLowerCase();
 
-        const matchesSearch =
-          productName
-            .toLowerCase()
-            .includes(
-              search
-                .toLowerCase()
-                .trim()
-            );
+      const searchText =
+        search
+          .trim()
+          .toLowerCase();
 
-
-        const matchesCategory =
-          category === "All" ||
-          productCategory ===
-            category;
-
-
-        const matchesSale =
-          !saleOnly ||
-          product.sale === true;
-
-
-        return (
-          matchesSearch &&
-          matchesCategory &&
-          matchesSale
+      const matchesSearch =
+        !searchText ||
+        productSearchText.includes(
+          searchText
         );
-      }
-    );
 
+      const matchesCategory =
+        category === "All" ||
+        productCategory === category;
 
-  /* =========================================================
-     NEW ARRIVALS
-  ========================================================= */
+      const matchesSale =
+        !saleOnly ||
+        product.sale === true;
 
-  if (newOnly) {
+      const price = Number(
+        product.price || 0
+      );
 
-    filteredProducts = [
-      ...filteredProducts,
-    ].sort(
+      const matchesPrice =
+        priceRange === "all" ||
+        (priceRange ===
+          "under1000" &&
+          price < 1000) ||
+        (priceRange ===
+          "1000to2000" &&
+          price >= 1000 &&
+          price <= 2000) ||
+        (priceRange ===
+          "above2000" &&
+          price > 2000);
+
+      const stock = Number(
+        product.stock ?? 0
+      );
+
+      const matchesStock =
+        !inStockOnly ||
+        stock > 0;
+
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesSale &&
+        matchesPrice &&
+        matchesStock
+      );
+    });
+
+  filteredProducts = [
+    ...filteredProducts,
+  ];
+
+  if (
+    newOnly &&
+    sort === "default"
+  ) {
+    filteredProducts.sort(
       (a, b) => {
+        const dateA = new Date(
+          a.createdAt || 0
+        ).getTime();
 
-        const dateA =
-          new Date(
-            a.createdAt || 0
-          ).getTime();
-
-        const dateB =
-          new Date(
-            b.createdAt || 0
-          ).getTime();
+        const dateB = new Date(
+          b.createdAt || 0
+        ).getTime();
 
         return dateB - dateA;
-
       }
     );
-
-  } else {
-
-    filteredProducts = [
-      ...filteredProducts,
-    ];
-
   }
-
-
-  /* =========================================================
-     SORT
-  ========================================================= */
 
   if (sort === "low") {
-
     filteredProducts.sort(
       (a, b) =>
-        Number(a.price) -
-        Number(b.price)
+        Number(a.price || 0) -
+        Number(b.price || 0)
     );
-
   }
-
 
   if (sort === "high") {
-
     filteredProducts.sort(
       (a, b) =>
-        Number(b.price) -
-        Number(a.price)
+        Number(b.price || 0) -
+        Number(a.price || 0)
     );
-
   }
 
+  if (sort === "newest") {
+    filteredProducts.sort(
+      (a, b) => {
+        const dateA = new Date(
+          a.createdAt || 0
+        ).getTime();
 
-  /* =========================================================
-     PAGE TITLE
-  ========================================================= */
+        const dateB = new Date(
+          b.createdAt || 0
+        ).getTime();
+
+        return dateB - dateA;
+      }
+    );
+  }
+
+  if (sort === "name-az") {
+    filteredProducts.sort(
+      (a, b) =>
+        String(a.name || "")
+          .localeCompare(
+            String(b.name || "")
+          )
+    );
+  }
+
+  if (sort === "name-za") {
+    filteredProducts.sort(
+      (a, b) =>
+        String(b.name || "")
+          .localeCompare(
+            String(a.name || "")
+          )
+    );
+  }
 
   const pageTitle =
     saleOnly
@@ -262,159 +298,183 @@ function Shop({
       ? category
       : "Shop All";
 
-      /* =========================================================
-   SHOP SEO
-========================================================= */
+  const hasActiveFilters =
+    search.trim() !== "" ||
+    selectedCategory !== null ||
+    Boolean(urlCategory) ||
+    saleOnly ||
+    newOnly ||
+    sort !== "default" ||
+    priceRange !== "all" ||
+    inStockOnly;
 
-useEffect(() => {
-  let seoTitle =
-    "Shop Fashion Online | VELNORA";
-
-  let seoDescription =
-    "Shop VELNORA's latest collection of men's fashion, women's fashion and accessories. Discover premium everyday styles online.";
-
-  if (saleOnly) {
-    seoTitle =
-      "Fashion Sale | VELNORA";
-
-    seoDescription =
-      "Shop VELNORA fashion sale and discover selected men's, women's and accessory styles at special prices.";
-  } else if (newOnly) {
-    seoTitle =
-      "New Arrivals | VELNORA";
-
-    seoDescription =
-      "Discover the latest VELNORA new arrivals including men's fashion, women's fashion and modern accessories.";
-  } else if (category !== "All") {
-    seoTitle =
-      `${category} Fashion | VELNORA`;
-
-    seoDescription =
-      `Shop VELNORA ${category.toLowerCase()} collection. Discover premium fashion, modern styles and everyday essentials online.`;
-  }
-
-  const canonicalUrl =
-    `${window.location.origin}/shop`;
-
-  const originalTitle =
-    document.title;
-
-  document.title =
-    seoTitle;
-
-  const descriptionTag =
-    document.querySelector(
-      'meta[name="description"]'
-    );
-
-  const originalDescription =
-    descriptionTag?.getAttribute(
-      "content"
-    );
-
-  if (descriptionTag) {
-    descriptionTag.setAttribute(
-      "content",
-      seoDescription
-    );
-  }
-
-  const canonicalTag =
-    document.querySelector(
-      'link[rel="canonical"]'
-    );
-
-  const originalCanonical =
-    canonicalTag?.getAttribute(
-      "href"
-    );
-
-  if (canonicalTag) {
-    canonicalTag.setAttribute(
-      "href",
-      canonicalUrl
-    );
-  }
-
-  const ogTags = {
-    "og:title": seoTitle,
-    "og:description":
-      seoDescription,
-    "og:url": canonicalUrl,
-    "og:type": "website",
+  const clearFilters = () => {
+    setSearch("");
+    setSelectedCategory(null);
+    setSort("default");
+    setPriceRange("all");
+    setInStockOnly(false);
+    setSearchParams({});
   };
 
-  const originalOgValues = {};
+  useEffect(() => {
+    let seoTitle =
+      "Shop Fashion Online | VELNORA";
 
-  Object.entries(ogTags).forEach(
-    ([property, content]) => {
-      let tag =
-        document.querySelector(
-          `meta[property="${property}"]`
-        );
+    let seoDescription =
+      "Shop VELNORA's latest collection of men's fashion, women's fashion and accessories. Discover premium everyday styles online.";
 
-      if (tag) {
-        originalOgValues[property] =
-          tag.getAttribute("content");
+    if (saleOnly) {
+      seoTitle =
+        "Fashion Sale | VELNORA";
 
-        tag.setAttribute(
-          "content",
-          content
-        );
-      } else {
-        tag =
-          document.createElement(
-            "meta"
-          );
+      seoDescription =
+        "Shop VELNORA fashion sale and discover selected men's, women's and accessory styles at special prices.";
+    } else if (newOnly) {
+      seoTitle =
+        "New Arrivals | VELNORA";
 
-        tag.setAttribute(
-          "property",
-          property
-        );
-
-        tag.setAttribute(
-          "content",
-          content
-        );
-
-        tag.setAttribute(
-          "data-velnora-shop-og",
-          "true"
-        );
-
-        document.head.appendChild(
-          tag
-        );
-      }
-    }
-  );
-
-  return () => {
-    document.title =
-      originalTitle;
-
-    if (
-      descriptionTag &&
-      originalDescription
+      seoDescription =
+        "Discover the latest VELNORA new arrivals including men's fashion, women's fashion and modern accessories.";
+    } else if (
+      category !== "All"
     ) {
+      seoTitle =
+        `${category} Fashion | VELNORA`;
+
+      seoDescription =
+        `Shop VELNORA ${category.toLowerCase()} collection. Discover premium fashion, modern styles and everyday essentials online.`;
+    }
+
+    const canonicalUrl =
+      `${window.location.origin}/shop`;
+
+    const originalTitle =
+      document.title;
+
+    document.title =
+      seoTitle;
+
+    const descriptionTag =
+      document.querySelector(
+        'meta[name="description"]'
+      );
+
+    const originalDescription =
+      descriptionTag?.getAttribute(
+        "content"
+      );
+
+    if (descriptionTag) {
       descriptionTag.setAttribute(
         "content",
-        originalDescription
+        seoDescription
       );
     }
 
-    if (
-      canonicalTag &&
-      originalCanonical
-    ) {
+    const canonicalTag =
+      document.querySelector(
+        'link[rel="canonical"]'
+      );
+
+    const originalCanonical =
+      canonicalTag?.getAttribute(
+        "href"
+      );
+
+    if (canonicalTag) {
       canonicalTag.setAttribute(
         "href",
-        originalCanonical
+        canonicalUrl
       );
     }
 
-    Object.keys(ogTags).forEach(
-      (property) => {
+    const ogTags = {
+      "og:title": seoTitle,
+      "og:description":
+        seoDescription,
+      "og:url": canonicalUrl,
+      "og:type": "website",
+    };
+
+    const originalOgValues = {};
+
+    Object.entries(
+      ogTags
+    ).forEach(
+      ([property, content]) => {
+        let tag =
+          document.querySelector(
+            `meta[property="${property}"]`
+          );
+
+        if (tag) {
+          originalOgValues[
+            property
+          ] =
+            tag.getAttribute(
+              "content"
+            );
+
+          tag.setAttribute(
+            "content",
+            content
+          );
+        } else {
+          tag =
+            document.createElement(
+              "meta"
+            );
+
+          tag.setAttribute(
+            "property",
+            property
+          );
+
+          tag.setAttribute(
+            "content",
+            content
+          );
+
+          tag.setAttribute(
+            "data-velnora-shop-og",
+            "true"
+          );
+
+          document.head.appendChild(
+            tag
+          );
+        }
+      }
+    );
+
+    return () => {
+      document.title =
+        originalTitle;
+
+      if (
+        descriptionTag &&
+        originalDescription
+      ) {
+        descriptionTag.setAttribute(
+          "content",
+          originalDescription
+        );
+      }
+
+      if (
+        canonicalTag &&
+        originalCanonical
+      ) {
+        canonicalTag.setAttribute(
+          "href",
+          originalCanonical
+        );
+      }
+
+      Object.keys(
+        ogTags
+      ).forEach((property) => {
         const tag =
           document.querySelector(
             `meta[property="${property}"]`
@@ -431,7 +491,9 @@ useEffect(() => {
         ) {
           tag.remove();
         } else if (
-          originalOgValues[property]
+          originalOgValues[
+            property
+          ]
         ) {
           tag.setAttribute(
             "content",
@@ -440,138 +502,99 @@ useEffect(() => {
             ]
           );
         }
-      }
-    );
-  };
-}, [
-  category,
-  saleOnly,
-  newOnly,
-]);
-
-  /* =========================================================
-     LOADING
-  ========================================================= */
+      });
+    };
+  }, [
+    category,
+    saleOnly,
+    newOnly,
+  ]);
 
   if (loading) {
-
     return (
-
       <div className="shop-page">
-
         <div className="no-products">
-
           <h2>
             Loading products...
           </h2>
 
           <p>
-            Please wait while velnora
+            Please wait while VELNORA
             loads the collection.
           </p>
-
         </div>
-
       </div>
-
     );
-
   }
 
-
-  /* =========================================================
-     ERROR
-  ========================================================= */
-
   if (error) {
-
     return (
-
       <div className="shop-page">
-
         <div className="no-products">
-
           <h2>
             Unable to load products
           </h2>
 
-          <p>
-            {error}
-          </p>
-
+          <p>{error}</p>
         </div>
-
       </div>
-
     );
-
   }
 
-
   return (
-
     <div className="shop-page">
-
-
-      {/* =====================================================
-          SHOP HEADER
-      ===================================================== */}
-
       <section className="shop-header">
+        <p>OUR COLLECTION</p>
 
-        <p>
-          OUR COLLECTION
-        </p>
-
-        <h1>
-          {pageTitle}
-        </h1>
+        <h1>{pageTitle}</h1>
 
         <span>
-          Discover our latest collection
-          of premium fashion.
+          Discover our latest
+          collection of premium
+          fashion.
         </span>
-
       </section>
 
-
-      {/* =====================================================
-          MOBILE / DESKTOP SEARCH
-      ===================================================== */}
-
       <section className="shop-controls">
-
-
-        {/* SEARCH */}
-
         <div className="search-box">
-
           <Search size={18} />
 
           <input
             type="text"
             placeholder="Search products, styles and more..."
             value={search}
-            onChange={
-              (event) =>
-                setSearch(
-                  event.target.value
-                )
+            onChange={(event) =>
+              setSearch(
+                event.target.value
+              )
             }
           />
 
+          {search && (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={() =>
+                setSearch("")
+              }
+              style={{
+                border: "none",
+                background:
+                  "transparent",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                padding: 0,
+              }}
+            >
+              <X size={17} />
+            </button>
+          )}
         </div>
 
-
-        {/* =================================================
-            CATEGORY CHIPS
-        ================================================= */}
-
         <div className="category-buttons">
-
           {categories.map(
             (item) => (
-
               <button
                 type="button"
                 key={item}
@@ -588,35 +611,74 @@ useEffect(() => {
               >
                 {item}
               </button>
-
             )
           )}
-
         </div>
 
+        <div className="sort-box">
+          <select
+            value={priceRange}
+            onChange={(event) =>
+              setPriceRange(
+                event.target.value
+              )
+            }
+            aria-label="Filter by price"
+          >
+            <option value="all">
+              All Prices
+            </option>
 
-        {/* =================================================
-            SORT
-        ================================================= */}
+            <option value="under1000">
+              Under ₹1,000
+            </option>
+
+            <option value="1000to2000">
+              ₹1,000 - ₹2,000
+            </option>
+
+            <option value="above2000">
+              Above ₹2,000
+            </option>
+          </select>
+        </div>
+
+        <label className="stock-filter">
+          <input
+            type="checkbox"
+            checked={inStockOnly}
+            onChange={(event) =>
+              setInStockOnly(
+                event.target.checked
+              )
+            }
+          />
+
+          <span>
+            In Stock Only
+          </span>
+        </label>
 
         <div className="sort-box">
-
           <SlidersHorizontal
             size={17}
           />
 
           <select
             value={sort}
-            onChange={
-              (event) =>
-                setSort(
-                  event.target.value
-                )
+            onChange={(event) =>
+              setSort(
+                event.target.value
+              )
             }
+            aria-label="Sort products"
           >
-
             <option value="default">
               Sort By
+            </option>
+
+            <option value="newest">
+              Newest First
             </option>
 
             <option value="low">
@@ -627,56 +689,54 @@ useEffect(() => {
               Price: High to Low
             </option>
 
-          </select>
+            <option value="name-az">
+              Name: A to Z
+            </option>
 
+            <option value="name-za">
+              Name: Z to A
+            </option>
+          </select>
         </div>
 
+        {hasActiveFilters && (
+          <button
+            type="button"
+            className="clear-filters-btn"
+            onClick={
+              clearFilters
+            }
+          >
+            <X size={16} />
+            Clear Filters
+          </button>
+        )}
       </section>
 
-
-      {/* =====================================================
-          PRODUCT RESULTS HEADER
-      ===================================================== */}
-
       <div className="shop-results-bar">
-
         <div className="shop-count">
-
           {filteredProducts.length}{" "}
-
-          {filteredProducts.length === 1
+          {filteredProducts.length ===
+          1
             ? "product"
             : "products"}
-
         </div>
 
-
         {category !== "All" && (
-
           <span className="shop-current-category">
             {category}
           </span>
-
         )}
-
       </div>
 
-
-      {/* =====================================================
-          PRODUCTS
-      ===================================================== */}
-
-      {filteredProducts.length > 0 ? (
-
+      {filteredProducts.length >
+      0 ? (
         <div className="shop-grid">
-
           {filteredProducts.map(
             (product) => {
-
               const productId =
                 product._id ||
                 product.id;
-
 
               const liked =
                 wishlist.some(
@@ -684,72 +744,53 @@ useEffect(() => {
                     (
                       item._id ||
                       item.id
-                    ) === productId
+                    ) ===
+                    productId
                 );
-
 
               const stock =
                 Number(
                   product.stock ?? 0
                 );
 
-
               const outOfStock =
                 stock <= 0;
-
 
               const lowStock =
                 stock > 0 &&
                 stock <= 5;
 
-
               return (
-
                 <article
                   className="shop-product"
                   key={productId}
                 >
-
-
-                  {/* PRODUCT IMAGE */}
-
                   <div className="shop-product-image">
-
-
                     <Link
                       to={`/product/${productId}`}
                     >
-
                       <img
-                        src={product.image}
-                        alt={product.name}
+                        src={
+                          product.image
+                        }
+                        alt={
+                          product.name
+                        }
                         loading="lazy"
                       />
-
                     </Link>
 
-
-                    {/* STOCK BADGE */}
-
                     {outOfStock && (
-
                       <span className="shop-stock-badge out">
                         Out of Stock
                       </span>
-
                     )}
 
-
                     {lowStock && (
-
                       <span className="shop-stock-badge low">
                         Only {stock} left
                       </span>
-
                     )}
-
-
-                    {/* WISHLIST */}
 
                     <button
                       type="button"
@@ -765,7 +806,6 @@ useEffect(() => {
                           : "Add to wishlist"
                       }
                     >
-
                       <Heart
                         size={19}
                         fill={
@@ -774,29 +814,24 @@ useEffect(() => {
                             : "none"
                         }
                       />
-
                     </button>
-
-
-                    {/* ADD TO CART */}
 
                     <button
                       type="button"
                       className="add-cart"
-                      disabled={outOfStock}
+                      disabled={
+                        outOfStock
+                      }
                       onClick={() => {
-
-                        if (!outOfStock) {
-
+                        if (
+                          !outOfStock
+                        ) {
                           addToCart(
                             product
                           );
-
                         }
-
                       }}
                     >
-
                       <ShoppingBag
                         size={17}
                       />
@@ -806,66 +841,45 @@ useEffect(() => {
                           ? "Out of Stock"
                           : "Add to Cart"}
                       </span>
-
                     </button>
-
                   </div>
 
-
-                  {/* PRODUCT INFORMATION */}
-
                   <div className="shop-product-info">
-
                     <Link
                       to={`/product/${productId}`}
                     >
-
                       <h3>
-                        {product.name}
+                        {
+                          product.name
+                        }
                       </h3>
-
                     </Link>
 
-
                     <p className="shop-product-price">
-
                       ₹
                       {Number(
                         product.price ||
-                        0
+                          0
                       ).toLocaleString(
                         "en-IN"
                       )}
-
                     </p>
 
-
                     {lowStock && (
-
                       <span className="shop-low-stock-text">
-
                         Hurry, only{" "}
-                        {stock} remaining
-
+                        {stock}{" "}
+                        remaining
                       </span>
-
                     )}
-
                   </div>
-
                 </article>
-
               );
-
             }
           )}
-
         </div>
-
       ) : (
-
         <div className="no-products">
-
           <Search size={32} />
 
           <h2>
@@ -873,18 +887,27 @@ useEffect(() => {
           </h2>
 
           <p>
-            Try another search
-            or category.
+            Try changing your
+            search, category, price
+            or stock filters.
           </p>
 
+          {hasActiveFilters && (
+            <button
+              type="button"
+              className="clear-filters-btn"
+              onClick={
+                clearFilters
+              }
+            >
+              <X size={16} />
+              Clear All Filters
+            </button>
+          )}
         </div>
-
       )}
-
     </div>
-
   );
-
 }
 
 export default Shop;
