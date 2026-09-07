@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+
 const reviewRoutes = require("./routes/reviewRoutes");
 const couponRoutes = require("./routes/couponRoutes");
 
@@ -30,6 +31,9 @@ const {
 } = require("./routes/paymentRoutes");
 
 const app = express();
+
+app.set("trust proxy", 1);
+
 app.use(
   helmet({
     crossOriginResourcePolicy: false,
@@ -57,18 +61,26 @@ app.use(
   })
 );
 
+
+// =========================
+// RATE LIMIT
+// =========================
+
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
-    message: "Too many requests. Please try again later.",
+    message:
+      "Too many requests. Please try again later.",
   },
 });
 
-app.use("/api", apiLimiter);
-
+app.use(
+  "/api",
+  apiLimiter
+);
 
 
 // =========================
@@ -130,8 +142,15 @@ app.use(
   userDataRoutes
 );
 
-app.use("/api/reviews", reviewRoutes);  
-app.use("/api/coupons", couponRoutes);
+app.use(
+  "/api/reviews",
+  reviewRoutes
+);
+
+app.use(
+  "/api/coupons",
+  couponRoutes
+);
 
 
 // =========================
@@ -142,8 +161,9 @@ app.get(
   "/",
   (req, res) => {
     res.json({
-  message: "VELNORA Fashion Store API is running",
-});
+      message:
+        "VELNORA Fashion Store API is running",
+    });
   }
 );
 
@@ -163,7 +183,7 @@ mongoose
       PORT,
       () => {
         console.log(
-          `Server running on http://localhost:${PORT}`
+          `Server running on port ${PORT}`
         );
       }
     );
