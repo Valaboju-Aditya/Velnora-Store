@@ -181,8 +181,7 @@ VELNORA is in final launch preparation.
 
 Remaining checks:
 
-- Investigate the cancellation email showing `Refund status: None` after an online-payment cancellation.
-- Verify refund processing and refund email delivery end-to-end.
+
 - Verify login, checkout, payments, cancellations, and stock updates on the deployed website.
 - Confirm production payment and webhook configuration before accepting live payments.
 - Add desktop and mobile screenshots to this README.
