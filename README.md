@@ -27,6 +27,21 @@ VELNORA is a full-stack fashion e-commerce project built with React, Express, an
 - Order and refund email notifications
 - Refund email tracking
 
+## Screenshots
+
+### Home Page
+![VELNORA home page](docs/screenshots/home.png)
+
+### Shop Page
+![VELNORA shop page](docs/screenshots/shop.png)
+
+
+### Product Details
+![VELNORA product details](docs/screenshots/product.png)
+
+### Shopping Cart
+![VELNORA shopping cart](docs/screenshots/cart.png)
+
 ## Tech Stack
 
 | Area | Technologies |
@@ -182,9 +197,7 @@ VELNORA is in final launch preparation.
 Remaining checks:
 
 
-- Verify login, checkout, payments, cancellations, and stock updates on the deployed website.
 - Confirm production payment and webhook configuration before accepting live payments.
-- Add desktop and mobile screenshots to this README.
 
 ## Maintainer
 
